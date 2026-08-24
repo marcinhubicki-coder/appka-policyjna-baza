@@ -1,4 +1,7 @@
 /* Mobile navigation: hamburger, drawer and swipe feedback */
+html,body{max-width:100%;overflow-x:hidden;overscroll-behavior-x:none}
+#actview,.act-card,.legal-unit,.unit-body,.subunit,.txt{max-width:100%;min-width:0}
+#actview{touch-action:pan-y}
 .hamburger{flex:0 0 42px;width:42px;height:42px;border:1px solid #d3dce5;border-radius:12px;background:#fff;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;cursor:pointer;color:var(--accent);-webkit-tap-highlight-color:transparent}
 .hamburger span{display:block;width:19px;height:2px;border-radius:2px;background:currentColor}
 .drawer-backdrop{position:fixed;inset:0;z-index:109;background:rgba(15,23,42,.28);opacity:0;pointer-events:none;transition:opacity .22s ease}

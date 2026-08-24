@@ -136,15 +136,30 @@
       const t=e.target;
       if(t.closest('input,button,a,summary,.quickbar,.navrefs,.drawer')){touchStart=null;return}
       const p=e.touches[0];
-      touchStart={x:p.clientX,y:p.clientY,time:Date.now(),edge:p.clientX<28||p.clientX>window.innerWidth-28};
+      touchStart={x:p.clientX,y:p.clientY,time:Date.now(),edge:p.clientX<28||p.clientX>window.innerWidth-28,axis:null,lastX:p.clientX};
     },{passive:true});
+
+    document.addEventListener('touchmove',e=>{
+      if(!touchStart||e.touches.length!==1||touchStart.edge)return;
+      const p=e.touches[0],dx=p.clientX-touchStart.x,dy=p.clientY-touchStart.y;
+      if(!touchStart.axis&&Math.max(Math.abs(dx),Math.abs(dy))>16){
+        if(Math.abs(dx)>Math.abs(dy)*1.18)touchStart.axis='x';
+        else if(Math.abs(dy)>Math.abs(dx)*1.05)touchStart.axis='y';
+      }
+      if(touchStart.axis==='x'){
+        e.preventDefault();
+        touchStart.lastX=p.clientX;
+      }
+    },{passive:false});
+
     document.addEventListener('touchend',e=>{
       if(!touchStart||!e.changedTouches.length)return;
-      const p=e.changedTouches[0],dx=p.clientX-touchStart.x,dy=p.clientY-touchStart.y,dt=Date.now()-touchStart.time,edge=touchStart.edge;
+      const p=e.changedTouches[0],dx=p.clientX-touchStart.x,dy=p.clientY-touchStart.y,dt=Date.now()-touchStart.time,edge=touchStart.edge,axis=touchStart.axis;
       touchStart=null;
-      if(edge||dt>850||Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.45)return;
+      if(edge||axis==='y'||dt>950||Math.abs(dx)<58||Math.abs(dx)<Math.abs(dy)*1.2)return;
       goArticle(dx<0?1:-1);
     },{passive:true});
+    document.addEventListener('touchcancel',()=>{touchStart=null},{passive:true});
 
     let ds=null;
     drawer.addEventListener('touchstart',e=>{if(e.touches.length===1){const p=e.touches[0];ds={x:p.clientX,y:p.clientY}}},{passive:true});

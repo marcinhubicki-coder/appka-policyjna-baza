@@ -42,13 +42,9 @@
   body.drawer-open .unit-title .art-prefix{font-size:0!important}
   body.drawer-open .unit-title .art-prefix::after{content:'A.'!important;font-size:8.8px!important;font-weight:inherit!important}
 
-  /* Right split column: ust. -> u. and pkt -> p. only while the menu is open. */
+  /* Right split column: compact marker prefix but preserve the exact number/letter. */
   body.drawer-open .subunit .marker{font-size:0!important}
-  body.drawer-open .subunit .marker::first-letter{font-size:inherit}
-  body.drawer-open .level-u .marker::before{content:'u. ';font-size:9px!important;font-weight:800!important;color:#274d70}
-  body.drawer-open .level-p .marker::before{content:'p. ';font-size:9px!important;font-weight:800!important;color:#274d70}
-  body.drawer-open .level-i .marker{font-size:9px!important}
-  body.drawer-open .level-l .marker{font-size:9px!important}
+  body.drawer-open .subunit .marker::after{content:attr(data-compact-marker)!important;font-size:9px!important;line-height:1.2!important;font-weight:800!important;color:#274d70!important;white-space:nowrap!important}
 
   .editorial-title[data-ai-summary="1"]{grid-column:1/3!important;grid-row:2!important;margin-top:2px!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important;line-height:1.2!important;height:2.4em!important;max-height:2.4em!important}
   body.drawer-open .editorial-title[data-ai-summary="1"]{font-size:7.5px!important}

@@ -1,6 +1,5 @@
 /* Mobile split-menu corrections */
 @media (max-width:650px){
-  /* Same header geometry in both states; hamburger becomes the close control. */
   .topline{align-items:center!important}
   body.drawer-open .topline{display:grid!important;grid-template-columns:40px minmax(0,1fr)!important;gap:6px!important;align-items:center!important}
   body.drawer-open .hamburger{display:inline-grid!important;visibility:visible!important;pointer-events:auto!important;grid-column:1!important;grid-row:1!important;position:static!important;width:40px!important;height:40px!important;font-size:0!important}
@@ -9,36 +8,30 @@
   body.drawer-open .search-wrap{grid-column:2!important;grid-row:1!important;min-width:0!important}
   body.drawer-open .topline::after{content:none!important;display:none!important}
   body.drawer-open .drawer-expand{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
-
-  /* Keep the existing header flow; only nudge the pill contents to the close-control edge. */
   body.drawer-open .quickbar{display:flex!important;padding:5px 8px!important;margin:0!important;box-sizing:border-box!important;align-items:center!important;transform:translateX(-8px)!important;width:calc(100% + 8px)!important}
   body.drawer-open .top-inner{padding-bottom:0!important}
-
-  /* The old drawer title row adds no information: remove it completely. */
   body.drawer-open .drawer-head{display:none!important}
-
-  /* Keep both split panes on the same viewport geometry. */
   body.drawer-open{background:#fafbfc!important;overscroll-behavior-y:auto!important}
   body.drawer-open .drawer{top:var(--topH,72px)!important;bottom:0!important;height:calc(100dvh - var(--topH,72px))!important;min-height:0!important;max-height:none!important;background:#fafbfc!important;overflow:visible!important}
   body.drawer-open .drawer::after{content:none!important}
   body.drawer-open .drawer-scroll{flex:1 1 auto!important;height:100%!important;min-height:0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;background:#fafbfc!important;padding:5px 4px calc(110px + env(safe-area-inset-bottom))!important;scroll-padding-bottom:calc(110px + env(safe-area-inset-bottom))!important;box-sizing:border-box!important}
-
-  /* Right pane: tiny breathing room at the top, same visible bottom runway as TOC. */
   body.drawer-open main{height:auto!important;min-height:calc(100dvh - var(--topH,72px))!important;max-height:none!important;overflow:visible!important;-webkit-overflow-scrolling:auto!important;overscroll-behavior-y:auto!important;padding:3px 3px calc(110px + env(safe-area-inset-bottom))!important;scroll-padding-bottom:calc(110px + env(safe-area-inset-bottom))!important;box-sizing:border-box!important}
-
-  /* Slider stays visually small but sits above both panes. */
   body.drawer-open .split-handle{z-index:145!important;top:50%!important;right:-8px!important;transform:translateY(-50%)!important;width:16px!important;height:45px!important;overflow:visible!important;touch-action:none!important}
   body.drawer-open .split-handle::before{content:'';position:absolute;left:-14px;right:-14px;top:-18px;bottom:-18px;background:transparent;pointer-events:auto}
   body.drawer-open .split-handle span{position:relative;z-index:1;pointer-events:none}
 
-  /* Approved mockup: only the LEFT TOC shortens Art. -> A.; the right document keeps Art. */
-  body.drawer-open .drawer-article{display:grid!important;grid-template-columns:52px minmax(0,1fr)!important;column-gap:5px!important;align-items:start!important}
-  body.drawer-open .drawer-article > b:first-child{font-size:0!important;line-height:1.25!important;white-space:nowrap!important;min-width:52px!important;color:var(--accent)!important}
-  body.drawer-open .drawer-article > b:first-child::before{content:'A. '!important;font-size:10px!important;font-weight:800!important}
-  body.drawer-open .drawer-article > b:first-child::after{content:attr(data-num)!important;font-size:10px!important;font-weight:800!important}
-  body.drawer-open .drawer-article .drawer-snippet{min-width:0!important;margin:0!important}
+  /* Left TOC: compact article prefix and a per-act measured number column. */
+  body.drawer-open .drawer-article{display:grid!important;grid-template-columns:var(--tocNumW,38px) minmax(0,1fr)!important;column-gap:5px!important;align-items:start!important}
+  body.drawer-open .drawer-article .da-num{width:var(--tocNumW,38px)!important;min-width:0!important;font-size:8px!important;line-height:1.16!important;font-weight:850!important;white-space:nowrap!important;color:var(--accent)!important}
+  body.drawer-open .drawer-article .da-topic{min-width:0!important;margin:0!important}
 
-  /* Article heading: full Art. on right + chapter at the right edge. */
+  /* Chapter number and title: no dash, title on its own aligned line. */
+  body.drawer-open .drawer-chapter summary{display:grid!important;grid-template-columns:12px minmax(0,1fr)!important;column-gap:0!important;align-items:start!important;padding:6px 5px!important;line-height:1.08!important}
+  body.drawer-open .chapter-ico{grid-column:1!important;grid-row:1!important;width:12px!important;margin-top:1px!important}
+  body.drawer-open .chapter-heading{grid-column:2!important;display:block!important;min-width:0!important}
+  body.drawer-open .chapter-no{display:block!important;font-size:9.5px!important;font-weight:850!important}
+  body.drawer-open .chapter-title{display:block!important;margin-top:1px!important;font-size:8.2px!important;line-height:1.08!important;font-weight:700!important}
+
   .unit-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;column-gap:6px!important;align-items:baseline!important}
   .unit-title{grid-column:1!important;grid-row:1!important}
   .section-label{grid-column:2!important;grid-row:1!important;text-align:right!important;margin:0!important;white-space:nowrap!important}
@@ -46,7 +39,6 @@
   body.drawer-open .section-label{padding:0!important;margin-right:0!important}
   .editorial-title[data-ai-summary="1"]{grid-column:1/3!important;grid-row:2!important;margin-top:2px!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important;line-height:1.2!important;height:2.4em!important;max-height:2.4em!important}
   body.drawer-open .editorial-title[data-ai-summary="1"]{font-size:7.5px!important}
-
   .article-pager{left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;transform:none!important;width:auto!important;height:48px!important;border-radius:14px!important}
   .article-pager button{min-height:48px!important;padding:5px 14px!important}
   .article-pager b{font-size:25px!important}.article-pager span{font-size:14px!important}

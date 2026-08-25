@@ -10,8 +10,8 @@
   body.drawer-open .topline::after{content:none!important;display:none!important}
   body.drawer-open .drawer-expand{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 
-  /* Pills remain in normal header flow and push both columns down. */
-  body.drawer-open .quickbar{display:flex!important;padding:5px 8px!important;margin:0!important;box-sizing:border-box!important;align-items:center!important}
+  /* Pills remain in normal header flow and align with the close control. */
+  body.drawer-open .quickbar{display:flex!important;padding:5px 0!important;margin:0!important;box-sizing:border-box!important;align-items:center!important}
   body.drawer-open .top-inner{padding-bottom:0!important}
 
   /* The old drawer title row adds no information: remove it completely. */

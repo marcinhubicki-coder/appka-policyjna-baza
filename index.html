@@ -7,6 +7,7 @@
 <title>Policyjna baza prawa</title>
 <link href="app.css" rel="stylesheet">
 <link href="nav.css" rel="stylesheet">
+<link href="menu-hotfix.css" rel="stylesheet">
 </head>
 <body>
 <header class="top"><div class="top-inner">
@@ -15,13 +16,17 @@
 </div></header>
 <main id="start">
 <section class="hero"><h1>Policyjna baza prawna</h1><p>Wersja po audycie · bieżąca treść oddzielona od zmian przyszłych.</p></section>
-<section class="menu-card" id="menu"><h2>Szybkie menu aktów</h2><div class="act-grid" id="actgrid"></div></section>
+<div id="actgrid" hidden aria-hidden="true"></div>
 <section class="act-card" id="actcard"><div id="actview"></div></section>
 </main>
 <div class="return" id="return"><button>← Wróć do odwołania</button></div>
 <script src="data.js"></script>
 <script src="app.js"></script>
+<script src="uop-summaries.js"></script>
 <script src="cleanup.js"></script>
 <script src="nav.js"></script>
+<script src="chapter-titles.js"></script>
+<script src="ux-fixes.js"></script>
+<script src="menu-sync-fix.js"></script>
 </body>
 </html>

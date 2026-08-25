@@ -1,4 +1,11 @@
 (function(){
+  function syncHeaderHeight(){
+    const h=document.querySelector('.top');
+    if(!h)return;
+    const px=Math.ceil(h.getBoundingClientRect().height||h.offsetHeight||0);
+    if(px>0)document.documentElement.style.setProperty('--topH',px+'px');
+  }
+
   function topOffset(){
     return (document.querySelector('.top')?.getBoundingClientRect().height || 0) + 8;
   }
@@ -25,6 +32,34 @@
     window.scrollTo({top:Math.max(0,y),behavior:'auto'});
   }
 
+  function settleHeaderAndArticle(id){
+    syncHeaderHeight();
+    requestAnimationFrame(()=>{
+      syncHeaderHeight();
+      requestAnimationFrame(()=>{
+        syncHeaderHeight();
+        pinArticleToTop(id);
+      });
+    });
+    setTimeout(()=>{syncHeaderHeight();pinArticleToTop(id)},90);
+    setTimeout(()=>{
+      syncHeaderHeight();
+      pinArticleToTop(id);
+      const active=document.querySelector('.drawer-article[data-id="'+CSS.escape(id||'')+'"]');
+      if(active)active.scrollIntoView({block:'nearest',behavior:'auto'});
+    },240);
+  }
+
+  // Keep --topH equal to the actual fixed header height, including the pill row.
+  const header=document.querySelector('.top');
+  if(header){
+    syncHeaderHeight();
+    try{new ResizeObserver(syncHeaderHeight).observe(header)}catch(_){}
+  }
+  window.addEventListener('orientationchange',()=>setTimeout(syncHeaderHeight,80));
+  window.addEventListener('resize',syncHeaderHeight,{passive:true});
+  if(window.visualViewport)visualViewport.addEventListener('resize',syncHeaderHeight,{passive:true});
+
   // Capture the article BEFORE split mode changes widths/font wrapping.
   document.addEventListener('pointerdown',function(e){
     if(e.target.closest('#hamburger')){
@@ -35,14 +70,7 @@
   document.addEventListener('click',function(e){
     if(!e.target.closest('#hamburger')) return;
     const id=document.documentElement.dataset.splitArticle || visibleArticleId();
-    // Two passes: first after class/layout switch, second after Safari has reflowed text.
-    requestAnimationFrame(()=>requestAnimationFrame(()=>pinArticleToTop(id)));
-    setTimeout(()=>pinArticleToTop(id),120);
-    setTimeout(()=>{
-      pinArticleToTop(id);
-      const active=document.querySelector('.drawer-article[data-id="'+CSS.escape(id||'')+'"]');
-      if(active) active.scrollIntoView({block:'nearest',behavior:'auto'});
-    },260);
+    settleHeaderAndArticle(id);
   },true);
 
   const style=document.createElement('style');

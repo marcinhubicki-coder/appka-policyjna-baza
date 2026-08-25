@@ -10,9 +10,33 @@
   body.drawer-open .search-wrap{grid-column:2!important;grid-row:1!important;min-width:0!important}
   body.drawer-open .topline::after{content:none!important;display:none!important}
   body.drawer-open .drawer-expand{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
-  body.drawer-open .drawer{top:var(--topH,72px)!important;bottom:0!important;height:auto!important;min-height:calc(100dvh - var(--topH,72px))!important;background:#fafbfc!important}
-  body.drawer-open .drawer-scroll{flex:1 1 auto!important;height:auto!important;min-height:0!important;overflow-y:auto!important;background:#fafbfc!important;padding-bottom:calc(24px + env(safe-area-inset-bottom))!important}
-  body.drawer-open main{min-height:calc(100dvh - var(--topH,72px))!important}
+
+  /* A saved return-to-reference remains logically active, but never covers the
+     split navigator. Closing the menu reveals it again, even after browsing to
+     a different article. */
+  body.drawer-open .return.show{display:none!important}
+
+  /* Safari's dynamic bottom toolbar changes the visual viewport while scrolling.
+     Use the largest viewport height so the left pane continues underneath the
+     browser UI instead of exposing a strip at the bottom. */
+  body.drawer-open .drawer{
+    top:var(--topH,72px)!important;
+    bottom:auto!important;
+    height:calc(100lvh - var(--topH,72px) + env(safe-area-inset-bottom))!important;
+    min-height:calc(100lvh - var(--topH,72px))!important;
+    background:#fafbfc!important;
+  }
+  body.drawer-open .drawer-scroll{
+    flex:1 1 auto!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+    background:#fafbfc!important;
+    padding-bottom:calc(90px + env(safe-area-inset-bottom))!important;
+  }
+  body.drawer-open main{min-height:calc(100lvh - var(--topH,72px))!important}
 
   /* Compact article heading: chapter sits on the same row as the article number. */
   body:not(.drawer-open) .unit-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;column-gap:8px!important;align-items:baseline!important;padding-right:0!important}

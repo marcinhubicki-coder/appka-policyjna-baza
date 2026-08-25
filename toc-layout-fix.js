@@ -16,9 +16,8 @@
     ctx.font=`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
     let max=0;
     nums.forEach(n=>{ max=Math.max(max,ctx.measureText(n.textContent.trim()).width); });
-    // Width follows the actual longest label in the current act (e.g. A. 15aab in UoP).
-    // Only 2px optical breathing room; inter-column spacing is handled by CSS gap.
-    root.style.setProperty('--tocNumW',Math.ceil(max+2)+'px');
+    // Labels are visually compressed to 90% in CSS, so reserve only their real displayed width.
+    root.style.setProperty('--tocNumW',Math.ceil(max*.9+1)+'px');
   }
 
   function fixChapter(summary){

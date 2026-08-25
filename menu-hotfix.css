@@ -17,4 +17,10 @@
   body.drawer-open .drawer{top:var(--topH,72px)!important;bottom:0!important;height:auto!important;min-height:calc(100dvh - var(--topH,72px))!important;background:#fafbfc!important}
   body.drawer-open .drawer-scroll{flex:1 1 auto!important;height:auto!important;min-height:0!important;overflow-y:auto!important;background:#fafbfc!important;padding-bottom:calc(24px + env(safe-area-inset-bottom))!important}
   body.drawer-open main{min-height:calc(100dvh - var(--topH,72px))!important}
+
+  /* Article navigation uses the same outer dimensions as "Wróć do odwołania". */
+  .article-pager{left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;transform:none!important;width:auto!important;height:48px!important;border-radius:14px!important}
+  .article-pager button{min-height:48px!important;padding:5px 14px!important}
+  .article-pager b{font-size:25px!important}
+  .article-pager span{font-size:14px!important}
 }

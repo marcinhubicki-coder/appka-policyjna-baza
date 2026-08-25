@@ -19,55 +19,31 @@
 
   /* Keep both split panes on the same viewport geometry. */
   body.drawer-open{background:#fafbfc!important;overscroll-behavior-y:auto!important}
-  body.drawer-open .drawer{
-    top:var(--topH,72px)!important;
-    bottom:0!important;
-    height:calc(100dvh - var(--topH,72px))!important;
-    min-height:0!important;
-    max-height:none!important;
-    background:#fafbfc!important;
-    overflow:visible!important;
-  }
+  body.drawer-open .drawer{top:var(--topH,72px)!important;bottom:0!important;height:calc(100dvh - var(--topH,72px))!important;min-height:0!important;max-height:none!important;background:#fafbfc!important;overflow:visible!important}
   body.drawer-open .drawer::after{content:none!important}
-  body.drawer-open .drawer-scroll{
-    flex:1 1 auto!important;height:100%!important;min-height:0!important;
-    overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;
-    overscroll-behavior-y:contain!important;background:#fafbfc!important;
-    padding:5px 4px calc(110px + env(safe-area-inset-bottom))!important;
-    scroll-padding-bottom:calc(110px + env(safe-area-inset-bottom))!important;
-    box-sizing:border-box!important;
-  }
+  body.drawer-open .drawer-scroll{flex:1 1 auto!important;height:100%!important;min-height:0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;background:#fafbfc!important;padding:5px 4px calc(110px + env(safe-area-inset-bottom))!important;scroll-padding-bottom:calc(110px + env(safe-area-inset-bottom))!important;box-sizing:border-box!important}
 
   /* Right pane: tiny breathing room at the top, same visible bottom runway as TOC. */
-  body.drawer-open main{
-    height:auto!important;min-height:calc(100dvh - var(--topH,72px))!important;
-    max-height:none!important;overflow:visible!important;-webkit-overflow-scrolling:auto!important;
-    overscroll-behavior-y:auto!important;
-    padding:3px 3px calc(110px + env(safe-area-inset-bottom))!important;
-    scroll-padding-bottom:calc(110px + env(safe-area-inset-bottom))!important;
-    box-sizing:border-box!important;
-  }
+  body.drawer-open main{height:auto!important;min-height:calc(100dvh - var(--topH,72px))!important;max-height:none!important;overflow:visible!important;-webkit-overflow-scrolling:auto!important;overscroll-behavior-y:auto!important;padding:3px 3px calc(110px + env(safe-area-inset-bottom))!important;scroll-padding-bottom:calc(110px + env(safe-area-inset-bottom))!important;box-sizing:border-box!important}
 
-  /* Slider stays visually small but sits above both panes. ::before is an invisible
-     touch target, so it is much easier to grab without making the control bulky. */
-  body.drawer-open .split-handle{
-    z-index:145!important;top:50%!important;right:-8px!important;
-    transform:translateY(-50%)!important;width:16px!important;height:45px!important;
-    overflow:visible!important;touch-action:none!important;
-  }
-  body.drawer-open .split-handle::before{
-    content:'';position:absolute;left:-14px;right:-14px;top:-18px;bottom:-18px;
-    background:transparent;pointer-events:auto;
-  }
+  /* Slider stays visually small but sits above both panes. */
+  body.drawer-open .split-handle{z-index:145!important;top:50%!important;right:-8px!important;transform:translateY(-50%)!important;width:16px!important;height:45px!important;overflow:visible!important;touch-action:none!important}
+  body.drawer-open .split-handle::before{content:'';position:absolute;left:-14px;right:-14px;top:-18px;bottom:-18px;background:transparent;pointer-events:auto}
   body.drawer-open .split-handle span{position:relative;z-index:1;pointer-events:none}
 
-  /* Article heading: article number + chapter on one row. */
+  /* Approved mockup: only the LEFT TOC shortens Art. -> A.; the right document keeps Art. */
+  body.drawer-open .drawer-article{display:grid!important;grid-template-columns:52px minmax(0,1fr)!important;column-gap:5px!important;align-items:start!important}
+  body.drawer-open .drawer-article > b:first-child{font-size:0!important;line-height:1.25!important;white-space:nowrap!important;min-width:52px!important;color:var(--accent)!important}
+  body.drawer-open .drawer-article > b:first-child::before{content:'A. '!important;font-size:10px!important;font-weight:800!important}
+  body.drawer-open .drawer-article > b:first-child::after{content:attr(data-num)!important;font-size:10px!important;font-weight:800!important}
+  body.drawer-open .drawer-article .drawer-snippet{min-width:0!important;margin:0!important}
+
+  /* Article heading: full Art. on right + chapter at the right edge. */
   .unit-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;column-gap:6px!important;align-items:baseline!important}
   .unit-title{grid-column:1!important;grid-row:1!important}
   .section-label{grid-column:2!important;grid-row:1!important;text-align:right!important;margin:0!important;white-space:nowrap!important}
   body.drawer-open .unit-head{padding-left:2px!important;padding-right:2px!important}
   body.drawer-open .section-label{padding:0!important;margin-right:0!important}
-
   .editorial-title[data-ai-summary="1"]{grid-column:1/3!important;grid-row:2!important;margin-top:2px!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important;line-height:1.2!important;height:2.4em!important;max-height:2.4em!important}
   body.drawer-open .editorial-title[data-ai-summary="1"]{font-size:7.5px!important}
 

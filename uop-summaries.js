@@ -176,6 +176,25 @@
     const source=clean(row?._sourceTopic||text).replace(/[.…]+$/,'');
     return clip(source||'Zakres przepisów',48).replace(/[.…]+$/,'');
   }
+  function toRoman(value){
+    let number=Number.parseInt(value,10);if(!Number.isFinite(number)||number<1)return String(value||'');
+    const numerals=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+    let result='';for(const [amount,symbol] of numerals)while(number>=amount){result+=symbol;number-=amount}return result;
+  }
+  function sectionInfo(row,actCode){
+    const raw=String(row?.[1]||'').replace(/\s+/g,' ').trim();
+    const match=raw.match(/^((?:Dział|Rozdział|Oddział))\s+([IVXLCDM]+|\d+)([a-z]?)\)?(?:\s*[.:-]\s*(.*))?$/i);
+    let prefix='Przepisy',title='',generated=false;
+    if(match){
+      const kind=match[1][0].toUpperCase()+match[1].slice(1).toLowerCase();
+      const number=/^Rozdział$/i.test(kind)&&/^\d+$/.test(match[2])?toRoman(match[2]):match[2].toUpperCase();
+      prefix=`${kind} ${number}${match[3]||''}`;
+      title=String(match[4]||'').trim().replace(/[.]$/,'');
+    } else if(/^Oddział dodany\b/i.test(raw))prefix='Oddział';
+    else if(raw)prefix=raw.replace(/[.]$/,'');
+    if(!title&&row){title=chapterSuggestion(actCode,row)||'Przepisy szczególne';generated=true}
+    return {prefix,title,generated};
+  }
   function prepare(){
     if(typeof DATA==='undefined'||!Array.isArray(DATA))return;
     for(const act of DATA)for(const row of act[3]||[]){
@@ -188,8 +207,15 @@
     if(typeof document==='undefined'||typeof ACT==='undefined'||!Array.isArray(ACT))return;
     const rows=new Map((ACT[3]||[]).map(row=>[row[0],row]));
     document.querySelectorAll('#actview article.legal-unit').forEach(article=>{
-      const row=rows.get(article.id),el=article.querySelector(':scope > .unit-head .editorial-title');
-      if(!row||!el)return;if(el.textContent!==row[3])el.textContent=row[3];el.dataset.aiSummary='1';el.setAttribute('aria-label','Redakcyjne podsumowanie artykułu');
+      const row=rows.get(article.id),head=article.querySelector(':scope > .unit-head'),el=head?.querySelector('.editorial-title');
+      if(!row||!head||!el)return;if(el.textContent!==row[3])el.textContent=row[3];el.dataset.aiSummary='1';el.setAttribute('aria-label','Redakcyjne podsumowanie artykułu');
+      const section=head.querySelector('.section-label'),info=sectionInfo(row,ACT[0]);
+      if(section&&section.dataset.sectionKey!==`${info.prefix}|${info.title}|${info.generated}`){
+        section.textContent='';
+        const no=document.createElement('span');no.className='section-no';no.textContent=info.prefix;section.appendChild(no);
+        if(info.title){const title=document.createElement('span');title.className='section-title'+(info.generated?' generated':'');title.textContent=info.title;section.appendChild(title)}
+        section.dataset.sectionKey=`${info.prefix}|${info.title}|${info.generated}`;
+      }
     });
     document.querySelectorAll('#actview .toc-link').forEach(link=>{
       const row=rows.get((link.getAttribute('href')||'').slice(1)),topic=link.querySelector('.topic');
@@ -200,7 +226,7 @@
       if(row&&topic&&topic.textContent!==row[3])topic.textContent=row[3];
     });
   }
-  globalThis.__EDITORIAL={summarize,chapterSuggestion,articleText,clip};
+  globalThis.__EDITORIAL={summarize,chapterSuggestion,sectionInfo,toRoman,articleText,clip};
   prepare();
   if(typeof document==='undefined')return;
   const root=document.getElementById('actview');if(!root)return;

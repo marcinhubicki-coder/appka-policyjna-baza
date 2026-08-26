@@ -25,12 +25,9 @@
     const id=details?.querySelector('.drawer-article')?.dataset.id;
     let row=null;try{row=ACT?.[3]?.find(item=>item[0]===id)}catch(_){}
     const displayed=summary.textContent.replace(/^\s*▾\s*/,'').trim();
-    const raw=String(row?.[1]||displayed).replace(/\s+/g,' ').trim();
-    const displayMatch=displayed.match(/^((?:DZIAŁ|ROZDZIAŁ|ODDZIAŁ)\s+[IVXLCDM0-9]+(?:[A-Z])?\)?)(?:\s*[—–-]\s*(.+))?$/i);
-    const sourceMatch=raw.match(/^((?:DZIAŁ|ROZDZIAŁ|ODDZIAŁ)\s+[IVXLCDM0-9]+(?:[A-Z])?\)?)(?:\s*[.:-]\s*(.*))?$/i);
-    let prefix=sourceMatch?.[1]||displayMatch?.[1]||'Przepisy',title=(sourceMatch?.[2]||displayMatch?.[2]||'').trim().replace(/[.]$/,''),generated=false;
-    if(/^Oddział dodany\b/i.test(raw)){prefix='Oddział';title='';}
-    if(!title&&row){try{title=window.__EDITORIAL?.chapterSuggestion(ACT[0],row)||'Przepisy szczególne';generated=true}catch(_){title='Przepisy szczególne';generated=true}}
+    let info=null;try{if(row)info=window.__EDITORIAL?.sectionInfo(row,ACT[0])}catch(_){}
+    const fallback=displayed.match(/^((?:DZIAŁ|ROZDZIAŁ|ODDZIAŁ)\s+[IVXLCDM0-9]+(?:[A-Z])?\)?)(?:\s*[.—–:-]\s*(.*))?$/i);
+    const prefix=info?.prefix||fallback?.[1]||'Przepisy',title=info?.title||(fallback?.[2]||'').trim().replace(/[.]$/,''),generated=info?.generated||false;
     const key=[prefix,title,generated].join('|');if(summary.dataset.chapterKey===key)return;
     const ico=summary.querySelector('.chapter-ico');
     summary.textContent='';

@@ -19,8 +19,13 @@ for (const act of DATA) {
     assert.ok(row[3].trim(), `${row[0]} ma pusty opis`);
     assert.ok(row[3].length <= 90, `${row[0]} ma zbyt długi opis (${row[3].length})`);
     assert.ok(context.__EDITORIAL.chapterSuggestion(act[0], row).trim(), `${row[0]} nie daje tytułu rozdziału`);
-
     const rawSection = String(row[1] || "").trim();
+    const section = context.__EDITORIAL.sectionInfo(row, act[0]);
+    assert.ok(section.prefix.trim(), `${row[0]} nie ma etykiety działu lub rozdziału`);
+    assert.ok(section.title.trim(), `${row[0]} nie ma tytułu działu lub rozdziału`);
+    if (/^Rozdział\s+\d/i.test(rawSection)) {
+      assert.doesNotMatch(section.prefix, /^Rozdział\s+\d/i, `${row[0]} zachował arabską numerację rozdziału`);
+    }
     if (rawSection !== previousSection) {
       const hasSourceTitle = /^(?:DZIAŁ|ROZDZIAŁ|ODDZIAŁ)\s+[IVXLCDM0-9]+(?:[A-Z])?\)?\s*[.:-]\s*\S/i.test(rawSection);
       if (!hasSourceTitle) generatedChapterTitles += 1;
@@ -30,6 +35,11 @@ for (const act of DATA) {
 }
 
 const prd = DATA.find((act) => act[0] === "prd");
+const z360 = DATA.find((act) => act[0] === "z360");
+const z360Chapter = context.__EDITORIAL.sectionInfo(z360[3].find((row) => /^Rozdział 2\b/.test(row[1])), "z360");
+assert.equal(z360Chapter.prefix, "Rozdział II");
+assert.equal(z360Chapter.title, "Wykonywanie konwojów osób");
+assert.equal(context.__EDITORIAL.toRoman(14), "XIV");
 assert.equal(
   prd[3].find((row) => row[0] === "prd-art-21")[3],
   "Dopuszczalna prędkość i zasady jej ustalania.",

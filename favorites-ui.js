@@ -1,125 +1,71 @@
-/* Favorites: filter/highlight controls and an article-edge swipe action. */
+/* Favorites: article filter, fragment editor and article-edge swipe actions. */
 (function(){
-  const KEY='police-law-bookmarks-v1';
-  const FILTER_KEY='police-law-favorites-filter-v1';
-  const HIGHLIGHT_KEY='police-law-favorites-highlight-v1';
-  const view=document.getElementById('actview');
-  if(!view)return;
-
-  let filter=false,highlight=false,activeArticle=null,touch=null,pointer=null,queued=false;
+  const KEY='police-law-bookmarks-v1',FILTER_KEY='police-law-favorites-filter-v1',HIGHLIGHT_KEY='police-law-favorites-highlight-v1';
+  const view=document.getElementById('actview'),M=globalThis.__FAVORITES_MODEL;if(!view||!M)return;
+  let filter=false,highlight=false,activeArticle=null,touch=null,pointer=null,editor=null,queued=false,lastReadingArticle='';
+  const expanded=new Set();
   try{filter=localStorage.getItem(FILTER_KEY)==='1';highlight=localStorage.getItem(HIGHLIGHT_KEY)==='1'}catch(_){}
-
   const read=()=>{try{const value=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(value)?value:[]}catch(_){return[]}};
-  const ids=()=>new Set(read().map(item=>item.id));
   const rowFor=id=>{try{return ACT?.[3]?.find(row=>row[0]===id)||null}catch(_){return null}};
-  function save(items){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(_){};window.dispatchEvent(new CustomEvent('police-law-favorites-change'))}
-  function isFavorite(id){return ids().has(id)}
-  function toggleFavorite(id){
-    const items=read(),index=items.findIndex(item=>item.id===id),row=rowFor(id);
-    if(index>=0)items.splice(index,1);
-    else if(row)items.unshift({id,act:ACT[0],num:row[2],topic:row[3]||''});
-    save(items);closeSwipe();
-    try{if(typeof populateDrawer==='function')populateDrawer();if(typeof updateUI==='function')updateUI()}catch(_){}
-    refresh();
-  }
-  const icon=(name)=>name==='star'
-    ?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.75 5.57 6.15.9-4.45 4.33 1.05 6.12L12 17.03l-5.5 2.89 1.05-6.12L3.1 9.47l6.15-.9L12 3Z"/></svg>'
-    :'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.45-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3.45 5.5-9.5 5.5S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></svg>';
-
+  const itemFor=id=>read().find(item=>item.id===id)||null;
+  function save(items){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(_){}window.dispatchEvent(new CustomEvent('police-law-favorites-change'))}
+  function persistModes(){try{localStorage.setItem(FILTER_KEY,filter?'1':'0');localStorage.setItem(HIGHLIGHT_KEY,highlight?'1':'0')}catch(_){}}
+  function syncLegacy(){try{if(typeof populateDrawer==='function')populateDrawer();if(typeof updateUI==='function')updateUI()}catch(_){}}
+  const icon=name=>({
+    star:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.75 5.57 6.15.9-4.45 4.33 1.05 6.12L12 17.03l-5.5 2.89 1.05-6.12L3.1 9.47l6.15-.9L12 3Z"/></svg>',
+    eye:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.45-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3.45 5.5-9.5 5.5S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></svg>',
+    edit:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10.9-10.9a2.1 2.1 0 0 0-3-3L5.2 16 4 20Z"/><path d="m14.7 6.5 3 3"/></svg>',
+    trash:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3m-8 0 1 13h8l1-13M10 10v7m4-7v7"/></svg>'
+  }[name]||'');
+  function removeFavorite(id){save(read().filter(item=>item.id!==id));closeSwipe();syncLegacy();refresh()}
+  function addFavorite(id){const items=read(),row=rowFor(id);if(!row||items.some(item=>item.id===id))return;items.unshift({id,act:ACT[0],num:row[2],topic:row[3]||''});save(items);closeSwipe();syncLegacy();refresh()}
   function controls(){
-    const list=document.getElementById('drawerArticles'),section=list?.closest('.drawer-section'),label=section?.querySelector(':scope > .drawer-label');
-    if(!label)return null;
-    let box=label.querySelector('.favorites-controls');
-    if(!box){
-      label.classList.add('favorites-label');
-      const title=document.createElement('span');title.className='favorites-label-text';title.textContent=label.textContent.trim();label.textContent='';label.appendChild(title);
-      box=document.createElement('span');box.className='favorites-controls';
-      const filterButton=document.createElement('button');filterButton.type='button';filterButton.className='favorites-control favorites-filter';filterButton.innerHTML=icon('star');filterButton.title='Pokaż tylko ulubione';filterButton.setAttribute('aria-label',filterButton.title);filterButton.onclick=()=>{filter=!filter;persist();refresh()};
-      const highlightButton=document.createElement('button');highlightButton.type='button';highlightButton.className='favorites-control favorites-highlight';highlightButton.innerHTML=icon('eye');highlightButton.title='Wyróżnij ulubione';highlightButton.setAttribute('aria-label',highlightButton.title);highlightButton.onclick=()=>{highlight=!highlight;persist();refresh()};
-      box.append(filterButton,highlightButton);label.appendChild(box);
-    }
-    return box;
+    const list=document.getElementById('drawerArticles'),label=list?.closest('.drawer-section')?.querySelector(':scope > .drawer-label');if(!label)return null;
+    let box=label.querySelector('.favorites-controls');if(box)return box;
+    label.classList.add('favorites-label');const title=document.createElement('span');title.className='favorites-label-text';title.textContent=label.textContent.trim();label.textContent='';label.appendChild(title);
+    box=document.createElement('span');box.className='favorites-controls';
+    const filterButton=document.createElement('button');filterButton.type='button';filterButton.className='favorites-control favorites-filter';filterButton.innerHTML=icon('star');filterButton.title='Pokaż tylko ulubione';filterButton.setAttribute('aria-label',filterButton.title);filterButton.onclick=()=>{filter=!filter;expanded.clear();persistModes();refresh()};
+    const highlightButton=document.createElement('button');highlightButton.type='button';highlightButton.className='favorites-control favorites-highlight';highlightButton.innerHTML=icon('eye');highlightButton.title='Wyróżnij ulubione';highlightButton.setAttribute('aria-label',highlightButton.title);highlightButton.onclick=()=>{highlight=!highlight;persistModes();refresh()};
+    box.append(filterButton,highlightButton);label.appendChild(box);return box;
   }
-  function persist(){try{localStorage.setItem(FILTER_KEY,filter?'1':'0');localStorage.setItem(HIGHLIGHT_KEY,highlight?'1':'0')}catch(_){}}
-  function ensureEmpty(container,className,text){
-    let empty=container?.querySelector(':scope > .'+className);
-    if(!empty&&container){empty=document.createElement('div');empty.className=className;empty.textContent=text;container.appendChild(empty)}
-    return empty;
+  function ensureEmpty(container,className,text){let empty=container?.querySelector(':scope > .'+className);if(!empty&&container){empty=document.createElement('div');empty.className=className;empty.textContent=text;container.appendChild(empty)}return empty}
+  function annotate(article,row){const parts=M.describe(row),nodes=[...article.querySelectorAll(':scope > .unit-body > .subunit')];nodes.forEach((node,index)=>{const part=parts[index];if(part){node.dataset.favoritePart=part.key;node.dataset.favoriteRank=String(part.rank)}});return{parts,nodes}}
+  function clearFragmentView(article){article.querySelector(':scope > .favorite-fragment-status')?.remove();article.querySelectorAll('.favorite-omission').forEach(node=>node.remove());article.querySelectorAll('.favorite-part-hidden,.favorite-part-context').forEach(node=>node.classList.remove('favorite-part-hidden','favorite-part-context'));delete article.dataset.favoriteViewKey}
+  function applyFragmentView(article,item,row){
+    const partial=Array.isArray(item?.parts),isExpanded=expanded.has(article.id),signature=`${filter}|${isExpanded}|${partial?item.parts.join(','):'all'}`;if(article.dataset.favoriteViewKey===signature)return;clearFragmentView(article);article.dataset.favoriteViewKey=signature;if(!filter||!partial)return;
+    const {parts,nodes}=annotate(article,row),valid=new Set(parts.map(part=>part.key)),selected=new Set(item.parts.filter(key=>valid.has(key))),visible=isExpanded?valid:M.visibleKeys(parts,selected);
+    nodes.forEach((node,index)=>{const key=parts[index]?.key,show=visible.has(key);node.classList.toggle('favorite-part-hidden',!show);node.classList.toggle('favorite-part-context',show&&!selected.has(key))});
+    const status=document.createElement('div');status.className='favorite-fragment-status';const copy=document.createElement('span');copy.className='favorite-fragment-copy';copy.innerHTML=icon('star')+'<b>'+(isExpanded?'Pełny artykuł':`Wybrane fragmenty · ${selected.size} z ${parts.length}`)+'</b>';
+    const toggle=document.createElement('button');toggle.type='button';toggle.textContent=isExpanded?'Pokaż tylko zapisane':'Rozwiń cały artykuł';toggle.onclick=()=>{if(isExpanded)expanded.delete(article.id);else{expanded.clear();expanded.add(article.id);lastReadingArticle=article.id}delete article.dataset.favoriteViewKey;applyFragmentView(article,item,row)};status.append(copy,toggle);article.querySelector(':scope > .unit-head')?.after(status);if(isExpanded)return;
+    let hidden=0;for(let i=0;i<nodes.length;i++){if(nodes[i].classList.contains('favorite-part-hidden')){hidden++;continue}if(hidden){const gap=document.createElement('div');gap.className='favorite-omission';gap.textContent=M.omissionLabel(hidden);nodes[i].before(gap);hidden=0}}if(hidden){const gap=document.createElement('div');gap.className='favorite-omission';gap.textContent=M.omissionLabel(hidden);article.querySelector(':scope > .unit-body')?.appendChild(gap)}
   }
-  function addSwipeAction(article){
-    let panel=article.querySelector(':scope > .favorite-swipe-action');
-    if(panel)return panel;
-    panel=document.createElement('div');panel.className='favorite-swipe-action';panel.setAttribute('aria-hidden','true');panel.inert=true;
-    const cue=document.createElement('span');cue.className='favorite-swipe-cue';cue.textContent='←';cue.setAttribute('aria-hidden','true');
-    const action=document.createElement('button');action.type='button';action.className='favorite-swipe-toggle';
-    const cancel=document.createElement('button');cancel.type='button';cancel.className='favorite-swipe-cancel';cancel.textContent='Anuluj';cancel.onclick=closeSwipe;
-    panel.append(cue,action,cancel);article.appendChild(panel);return panel;
-  }
-  function updateSwipeAction(article,on){
-    const button=addSwipeAction(article).querySelector('.favorite-swipe-toggle');
-    const state=on?'remove':'add';if(button.dataset.state===state)return;button.dataset.state=state;
-    button.innerHTML=icon('star')+'<span>'+(on?'Usuń z<br>ulubionych':'Dodaj do<br>ulubionych')+'</span>';
-    button.setAttribute('aria-label',on?'Usuń z ulubionych':'Dodaj do ulubionych');
-    button.onclick=()=>toggleFavorite(article.id);
-  }
-  function closeSwipe(){
-    if(!activeArticle)return;
-    activeArticle.classList.remove('favorite-swipe-open','favorite-swiping');activeArticle.style.removeProperty('--favorite-swipe-x');
-    const panel=activeArticle.querySelector(':scope > .favorite-swipe-action');panel?.setAttribute('aria-hidden','true');if(panel)panel.inert=true;activeArticle=null;
-  }
-  function openSwipe(article){
-    closeSwipe();activeArticle=article;updateSwipeAction(article,isFavorite(article.id));article.classList.add('favorite-swipe-open');
-    const panel=article.querySelector(':scope > .favorite-swipe-action');panel?.setAttribute('aria-hidden','false');if(panel)panel.inert=false;
+  function addSwipePanel(article){let panel=article.querySelector(':scope > .favorite-swipe-action');if(panel)return panel;panel=document.createElement('div');panel.className='favorite-swipe-action';panel.setAttribute('aria-hidden','true');panel.inert=true;const cue=document.createElement('span');cue.className='favorite-swipe-cue';cue.textContent='←';cue.setAttribute('aria-hidden','true');const actions=document.createElement('div');actions.className='favorite-swipe-actions';const cancel=document.createElement('button');cancel.type='button';cancel.className='favorite-swipe-cancel';cancel.textContent='Anuluj';cancel.onclick=closeSwipe;panel.append(cue,actions,cancel);article.appendChild(panel);return panel}
+  function actionButton(className,svg,label,handler){const button=document.createElement('button');button.type='button';button.className=className;button.innerHTML=svg+'<span>'+label+'</span>';button.onclick=handler;return button}
+  function updateSwipePanel(article,on){const panel=addSwipePanel(article),actions=panel.querySelector('.favorite-swipe-actions'),state=on?'saved':'new';if(actions.dataset.state===state)return;actions.dataset.state=state;actions.textContent='';if(!on){actions.append(actionButton('favorite-swipe-toggle',icon('star'),'Dodaj do<br>ulubionych',()=>addFavorite(article.id)));return}actions.append(actionButton('favorite-swipe-edit',icon('edit'),'Edytuj wybór',()=>startEditor(article)),actionButton('favorite-swipe-remove',icon('trash'),'Usuń z<br>ulubionych',()=>removeFavorite(article.id)))}
+  function closeSwipe(){if(!activeArticle)return;activeArticle.classList.remove('favorite-swipe-open','favorite-swiping');activeArticle.style.removeProperty('--favorite-swipe-x');const panel=activeArticle.querySelector(':scope > .favorite-swipe-action');panel?.setAttribute('aria-hidden','true');if(panel)panel.inert=true;activeArticle=null}
+  function openSwipe(article){closeSwipe();activeArticle=article;updateSwipePanel(article,!!itemFor(article.id));article.classList.add('favorite-swipe-open');const panel=article.querySelector(':scope > .favorite-swipe-action');panel?.setAttribute('aria-hidden','false');if(panel)panel.inert=false}
+  function setEditorButtons(){if(!editor)return;const {parts,selected,article}=editor;article.querySelectorAll('.favorite-part-toggle').forEach(button=>{const index=Number(button.dataset.index),group=M.groupKeys(parts,index),count=group.filter(key=>selected.has(key)).length,state=count===0?'off':count===group.length?'on':'mixed';button.dataset.state=state;button.setAttribute('aria-checked',state==='mixed'?'mixed':String(state==='on'));button.title=state==='on'?'Odznacz ten fragment':'Zaznacz ten fragment'});const saveButton=article.querySelector('.favorite-editor-save');if(saveButton)saveButton.disabled=selected.size===0;const helper=article.querySelector('.favorite-editor-helper');if(helper)helper.textContent=selected.size?'Odznacz fragmenty, których nie chcesz zapisywać.':'Wybierz co najmniej jeden fragment.'}
+  function toggleEditorPart(index){if(!editor)return;const group=M.groupKeys(editor.parts,index),all=group.every(key=>editor.selected.has(key));group.forEach(key=>all?editor.selected.delete(key):editor.selected.add(key));setEditorButtons()}
+  function exitEditor(restoreDrawer=true){if(!editor)return;const {article,wasDrawerOpen}=editor;article.querySelector(':scope > .favorite-editor-bar')?.remove();article.querySelectorAll('.favorite-part-toggle').forEach(button=>button.remove());article.querySelectorAll('.favorite-editor-has-marker,.favorite-editor-no-marker').forEach(node=>node.classList.remove('favorite-editor-has-marker','favorite-editor-no-marker'));article.classList.remove('favorite-edit-target');document.body.classList.remove('favorite-editing');editor=null;if(restoreDrawer&&wasDrawerOpen)setTimeout(()=>document.getElementById('hamburger')?.click(),60);refresh()}
+  function saveEditor(){if(!editor||!editor.selected.size)return;const items=read(),index=items.findIndex(item=>item.id===editor.article.id);if(index<0)return;const all=editor.parts.map(part=>part.key),selected=all.filter(key=>editor.selected.has(key));if(selected.length===all.length)delete items[index].parts;else items[index].parts=selected;items[index].favoriteVersion=2;save(items);expanded.delete(editor.article.id);exitEditor();syncLegacy()}
+  function startEditor(article){
+    const item=itemFor(article.id),row=rowFor(article.id);if(!item||!row)return;closeSwipe();const wasDrawerOpen=document.body.classList.contains('drawer-open');if(wasDrawerOpen)document.querySelector('.drawer-expand')?.click();clearFragmentView(article);const {parts,nodes}=annotate(article,row),valid=new Set(parts.map(part=>part.key)),selected=new Set(Array.isArray(item.parts)?item.parts.filter(key=>valid.has(key)):parts.map(part=>part.key));editor={article,row,parts,nodes,selected,wasDrawerOpen};document.body.classList.add('favorite-editing');article.classList.add('favorite-edit-target');
+    const bar=document.createElement('div');bar.className='favorite-editor-bar';const top=document.createElement('div');top.className='favorite-editor-top';const cancel=document.createElement('button');cancel.type='button';cancel.className='favorite-editor-cancel';cancel.textContent='Anuluj';cancel.onclick=()=>exitEditor();const title=document.createElement('b');title.textContent='Edytujesz ulubione · '+row[2];const saveButton=document.createElement('button');saveButton.type='button';saveButton.className='favorite-editor-save';saveButton.textContent='Zapisz';saveButton.onclick=saveEditor;const helper=document.createElement('div');helper.className='favorite-editor-helper';top.append(cancel,title,saveButton);bar.append(top,helper);article.prepend(bar);
+    nodes.forEach((node,index)=>{const button=document.createElement('button');button.type='button';button.className='favorite-part-toggle';button.dataset.index=String(index);button.setAttribute('role','checkbox');button.setAttribute('aria-label','Wybierz '+(parts[index].marker||'tekst główny'));button.onclick=()=>toggleEditorPart(index);node.prepend(button);node.classList.add(node.querySelector(':scope > .marker')?'favorite-editor-has-marker':'favorite-editor-no-marker')});setEditorButtons();requestAnimationFrame(()=>article.scrollIntoView({block:'start',behavior:'smooth'}));
   }
   function refresh(){
-    const set=ids(),box=controls();
-    document.body.classList.toggle('favorites-filter-on',filter);document.body.classList.toggle('favorites-highlight-on',highlight);
-    box?.querySelector('.favorites-filter')?.classList.toggle('on',filter);box?.querySelector('.favorites-highlight')?.classList.toggle('on',highlight);
-    box?.querySelector('.favorites-filter')?.setAttribute('aria-pressed',String(filter));box?.querySelector('.favorites-highlight')?.setAttribute('aria-pressed',String(highlight));
-    const articles=[...view.querySelectorAll('article.legal-unit')];
-    articles.forEach(article=>{const on=set.has(article.id);article.classList.toggle('is-favorite',on);updateSwipeAction(article,on)});
-    const drawerRows=[...document.querySelectorAll('.drawer-article')];
-    drawerRows.forEach(row=>row.classList.toggle('is-favorite',set.has(row.dataset.id)));
-    document.querySelectorAll('.drawer-chapter').forEach(chapter=>chapter.classList.toggle('favorites-chapter-empty',filter&&!chapter.querySelector('.drawer-article.is-favorite')));
-    const currentCount=articles.filter(article=>set.has(article.id)).length;
-    const mainEmpty=ensureEmpty(view,'favorites-empty-main','Brak ulubionych artykułów w tej ustawie.');mainEmpty.hidden=!filter||currentCount>0;
-    const list=document.getElementById('drawerArticles'),drawerEmpty=ensureEmpty(list,'favorites-empty-drawer','Brak ulubionych w tej ustawie.');drawerEmpty.hidden=!filter||currentCount>0;
+    if(editor)return;const items=read(),map=new Map(items.map(item=>[item.id,item])),set=new Set(map.keys()),box=controls();document.body.classList.toggle('favorites-filter-on',filter);document.body.classList.toggle('favorites-highlight-on',highlight);const filterButton=box?.querySelector('.favorites-filter'),highlightButton=box?.querySelector('.favorites-highlight');filterButton?.classList.toggle('on',filter);highlightButton?.classList.toggle('on',highlight);filterButton?.setAttribute('aria-pressed',String(filter));highlightButton?.setAttribute('aria-pressed',String(highlight));
+    const articles=[...view.querySelectorAll('article.legal-unit')];articles.forEach(article=>{const item=map.get(article.id),on=!!item,row=rowFor(article.id);article.classList.toggle('is-favorite',on);article.classList.toggle('is-partial-favorite',Array.isArray(item?.parts));updateSwipePanel(article,on);if(row&&on)applyFragmentView(article,item,row);else clearFragmentView(article)});
+    const drawerRows=[...document.querySelectorAll('.drawer-article')];drawerRows.forEach(row=>{const item=map.get(row.dataset.id);row.classList.toggle('is-favorite',!!item);row.classList.toggle('is-partial-favorite',Array.isArray(item?.parts))});document.querySelectorAll('.drawer-chapter').forEach(chapter=>chapter.classList.toggle('favorites-chapter-empty',filter&&!chapter.querySelector('.drawer-article.is-favorite')));
+    const currentCount=articles.filter(article=>set.has(article.id)).length,mainEmpty=ensureEmpty(view,'favorites-empty-main','Brak ulubionych artykułów w tej ustawie.');mainEmpty.hidden=!filter||currentCount>0;const list=document.getElementById('drawerArticles'),drawerEmpty=ensureEmpty(list,'favorites-empty-drawer','Brak ulubionych w tej ustawie.');drawerEmpty.hidden=!filter||currentCount>0;
   }
-
-  function eligibleArticle(target,x){
-    if(document.body.classList.contains('drawer-open'))return null;
-    if(target.closest('a,button,input,summary,.navrefs'))return null;
-    const article=target.closest('article.legal-unit');if(!article)return null;
-    const rect=article.getBoundingClientRect();return x>=rect.right-Math.min(54,rect.width*.14)?article:null;
-  }
-  view.addEventListener('touchstart',event=>{
-    if(event.touches.length!==1)return;const point=event.touches[0],article=eligibleArticle(event.target,point.clientX);if(!article)return;
-    event.stopPropagation();touch={article,x:point.clientX,y:point.clientY,axis:null};
-  },{capture:true,passive:true});
-  view.addEventListener('touchmove',event=>{
-    if(!touch||event.touches.length!==1)return;event.stopPropagation();const point=event.touches[0],dx=point.clientX-touch.x,dy=point.clientY-touch.y;
-    if(!touch.axis&&Math.max(Math.abs(dx),Math.abs(dy))>10)touch.axis=Math.abs(dx)>Math.abs(dy)*1.15?'x':'y';
-    if(touch.axis==='x'){event.preventDefault();const amount=Math.max(-112,Math.min(0,dx));touch.article.classList.add('favorite-swiping');touch.article.style.setProperty('--favorite-swipe-x',amount+'px')}
-  },{capture:true,passive:false});
-  view.addEventListener('touchend',event=>{
-    if(!touch)return;event.stopPropagation();const point=event.changedTouches[0],dx=point?point.clientX-touch.x:0,article=touch.article,axis=touch.axis;touch=null;
-    article.classList.remove('favorite-swiping');article.style.removeProperty('--favorite-swipe-x');if(axis==='x'&&dx<-52)openSwipe(article);else if(article===activeArticle)closeSwipe();
-  },{capture:true,passive:true});
+  function eligibleArticle(target,x){if(editor||document.body.classList.contains('drawer-open')||target.closest('a,button,input,summary,.navrefs'))return null;const article=target.closest('article.legal-unit');if(!article)return null;const rect=article.getBoundingClientRect();return x>=rect.right-Math.min(54,rect.width*.14)?article:null}
+  view.addEventListener('touchstart',event=>{if(event.touches.length!==1)return;const point=event.touches[0],article=eligibleArticle(event.target,point.clientX);if(!article)return;event.stopPropagation();touch={article,x:point.clientX,y:point.clientY,axis:null}},{capture:true,passive:true});
+  view.addEventListener('touchmove',event=>{if(!touch||event.touches.length!==1)return;event.stopPropagation();const point=event.touches[0],dx=point.clientX-touch.x,dy=point.clientY-touch.y;if(!touch.axis&&Math.max(Math.abs(dx),Math.abs(dy))>10)touch.axis=Math.abs(dx)>Math.abs(dy)*1.15?'x':'y';if(touch.axis==='x'){event.preventDefault();touch.article.classList.add('favorite-swiping');touch.article.style.setProperty('--favorite-swipe-x',Math.max(-112,Math.min(0,dx))+'px')}},{capture:true,passive:false});
+  view.addEventListener('touchend',event=>{if(!touch)return;event.stopPropagation();const point=event.changedTouches[0],dx=point?point.clientX-touch.x:0,article=touch.article,axis=touch.axis;touch=null;article.classList.remove('favorite-swiping');article.style.removeProperty('--favorite-swipe-x');if(axis==='x'&&dx<-52)openSwipe(article);else if(article===activeArticle)closeSwipe()},{capture:true,passive:true});
   view.addEventListener('touchcancel',()=>{if(touch){touch.article.classList.remove('favorite-swiping');touch.article.style.removeProperty('--favorite-swipe-x')}touch=null},{capture:true,passive:true});
-
-  view.addEventListener('pointerdown',event=>{
-    if(event.pointerType==='touch'||event.button!==0)return;const article=eligibleArticle(event.target,event.clientX);if(!article)return;
-    pointer={article,x:event.clientX,y:event.clientY,id:event.pointerId};article.setPointerCapture?.(event.pointerId);
-  });
-  view.addEventListener('pointermove',event=>{
-    if(!pointer||event.pointerId!==pointer.id)return;const dx=event.clientX-pointer.x,dy=event.clientY-pointer.y;if(Math.abs(dx)<=Math.abs(dy)||dx>0)return;
-    pointer.article.classList.add('favorite-swiping');pointer.article.style.setProperty('--favorite-swipe-x',Math.max(-112,dx)+'px');
-  });
-  view.addEventListener('pointerup',event=>{
-    if(!pointer||event.pointerId!==pointer.id)return;const state=pointer,dx=event.clientX-state.x;pointer=null;state.article.classList.remove('favorite-swiping');state.article.style.removeProperty('--favorite-swipe-x');if(dx<-52)openSwipe(state.article);
-  });
-  document.addEventListener('click',event=>{if(activeArticle&&!event.target.closest('.favorite-swipe-action')&&!event.target.closest('.favorite-swipe-open'))closeSwipe()});
-  window.addEventListener('storage',event=>{if(event.key===KEY)refresh()});window.addEventListener('police-law-favorites-change',refresh);
-  new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;refresh()})}).observe(document.body,{childList:true,subtree:true});
-  refresh();
+  view.addEventListener('pointerdown',event=>{if(event.pointerType==='touch'||event.button!==0)return;const article=eligibleArticle(event.target,event.clientX);if(!article)return;pointer={article,x:event.clientX,y:event.clientY,id:event.pointerId};article.setPointerCapture?.(event.pointerId)});view.addEventListener('pointermove',event=>{if(!pointer||event.pointerId!==pointer.id)return;const dx=event.clientX-pointer.x,dy=event.clientY-pointer.y;if(Math.abs(dx)<=Math.abs(dy)||dx>0)return;pointer.article.classList.add('favorite-swiping');pointer.article.style.setProperty('--favorite-swipe-x',Math.max(-112,dx)+'px')});view.addEventListener('pointerup',event=>{if(!pointer||event.pointerId!==pointer.id)return;const state=pointer,dx=event.clientX-state.x;pointer=null;state.article.classList.remove('favorite-swiping');state.article.style.removeProperty('--favorite-swipe-x');if(dx<-52)openSwipe(state.article)});
+  document.addEventListener('click',event=>{if(activeArticle&&!event.target.closest('.favorite-swipe-action')&&!event.target.closest('.favorite-swipe-open'))closeSwipe()});window.addEventListener('storage',event=>{if(event.key===KEY)refresh()});window.addEventListener('police-law-favorites-change',refresh);
+  window.addEventListener('scroll',()=>{if(!expanded.size||editor)return;const y=(document.querySelector('.top')?.getBoundingClientRect().height||0)+12;let current='';for(const article of view.querySelectorAll('article.legal-unit')){const rect=article.getBoundingClientRect();if(rect.top<=y&&rect.bottom>y){current=article.id;break}}if(current&&lastReadingArticle&&current!==lastReadingArticle){expanded.clear();document.querySelectorAll('.legal-unit').forEach(article=>delete article.dataset.favoriteViewKey);refresh()}lastReadingArticle=current||lastReadingArticle},{passive:true});
+  new MutationObserver(()=>{if(queued||editor)return;queued=true;requestAnimationFrame(()=>{queued=false;refresh()})}).observe(document.body,{childList:true,subtree:true});refresh();
 })();

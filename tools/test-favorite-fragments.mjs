@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';import {loadLegalData} from './legal-content.mjs';
+const context=vm.createContext({});vm.runInContext(fs.readFileSync('favorites-model.js','utf8'),context);const M=context.__FAVORITES_MODEL,data=loadLegalData('data.js');
+let units=0,fallbackKeys=0;for(const act of data)for(const row of act[3]){const parts=M.describe(row);assert.equal(parts.length,row[4].length);assert.equal(new Set(parts.map(part=>part.key)).size,parts.length,`${row[0]} ma powtórzone klucze fragmentów`);units+=parts.length;fallbackKeys+=parts.filter(part=>part.key.includes('@@')).length}
+const uop=data.find(act=>act[0]==='uop'),art15=uop[3].find(row=>row[0]==='uop-art-15'),parts=M.describe(art15),letter=parts.find(part=>part.key.endsWith('pkt-2a-lit-b')),visible=M.visibleKeys(parts,new Set([letter.key]));
+assert.ok(visible.has('uop-art-15-ust-1'));assert.ok(visible.has('uop-art-15-ust-1-pkt-2a'));assert.ok(visible.has(letter.key));assert.equal(M.groupKeys(parts,parts.findIndex(part=>part.key.endsWith('pkt-2a'))).length,4);assert.equal(M.omissionLabel(1),'1 pominięty fragment');assert.equal(M.omissionLabel(3),'3 pominięte fragmenty');assert.equal(M.omissionLabel(12),'12 pominiętych fragmentów');
+assert.doesNotMatch(fs.readFileSync('favorites-ui.js','utf8'),/Tylko w tym podglądzie/i);console.log(JSON.stringify({status:'ok',units,fallbackKeys},null,2));

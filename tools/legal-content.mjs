@@ -265,6 +265,34 @@ export function referenceCandidates(text, articleId, unitId, actCode, resolver) 
   const numExpr = String.raw`((?:\d+[a-z]?(?:\s*[–-]\s*\d+[a-z]?)?)(?:\s*(?:,|i|lub|oraz)\s*(?:\d+[a-z]?(?:\s*[–-]\s*\d+[a-z]?)?))*)`;
   const letExpr = String.raw`((?:[a-z](?:\s*[–-]\s*[a-z])?)(?:\s*(?:,|i|lub|oraz)\s*(?:[a-z](?:\s*[–-]\s*[a-z])?))*)(?![a-z])`;
 
+  const localScopes = [...text.matchAll(/(ust\.|§)\s*(\d+[a-z]*)/gi)];
+  for (let scopeIndex = 0; scopeIndex < localScopes.length; scopeIndex += 1) {
+    const scope = localScopes[scopeIndex];
+    const before = text.slice(Math.max(0, scope.index - 30), scope.index);
+    if (/\bart\.\s*\d+[a-z]*\s*$/i.test(before)) continue;
+
+    let end = scopeIndex + 1 < localScopes.length
+      ? localScopes[scopeIndex + 1].index
+      : text.length;
+    const tail = text.slice(scope.index + scope[0].length, end);
+    const sentenceEnd = tail.search(/[.;](?=\s+[A-ZĄĆĘŁŃÓŚŹŻ])/);
+    if (sentenceEnd >= 0) end = scope.index + scope[0].length + sentenceEnd + 1;
+    const body = text.slice(scope.index + scope[0].length, end);
+    const pointRe = new RegExp(String.raw`\bpkt\s+${numExpr}`, "gi");
+    for (const point of body.matchAll(pointRe)) {
+      const expression = point[1];
+      if (!/[–-]|,|\s(?:i|lub|oraz)\s/i.test(expression)) continue;
+      if (/\bart\.\s*\d+[a-z]*/i.test(body.slice(0, point.index))) continue;
+      const segment = scope[1] === "§" ? "par" : "ust";
+      const parent = `${articleId}-${segment}-${scope[2].toLowerCase()}`;
+      const rows = rowsAtPrefix(articleId, "p", `${parent}-pkt-`);
+      if (expandRows(rows, expression).length) {
+        const start = scope.index + scope[0].length + point.index;
+        add(start, start + point[0].length, 8);
+      }
+    }
+  }
+
   const articleSubRange = new RegExp(String.raw`art\.\s*(\d+[a-z]*)\s+(ust\.|§)\s*${numExpr}`, "gi");
   for (const match of text.matchAll(articleSubRange)) {
     const expression = match[3];

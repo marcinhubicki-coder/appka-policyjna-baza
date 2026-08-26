@@ -52,4 +52,27 @@ context.TEST_TEXT = "określonych w art. 134, art. 135 § 1 oraz art. 310 § 1, 
 const externalSeriesHtml = vm.runInContext("linkify(TEST_TEXT, 'uop-art-19', 'uop-art-19-ust-1-pkt-2', 'uop')", context);
 assert.ok(!externalSeriesHtml.includes("<a"), "Lista z obcego kodeksu została błędnie podlinkowana");
 
+context.TEST_TEXT = "uprawnień, o których mowa w ust. 1 pkt 1, 2a, 3, pkt 3a lit. b–d, pkt 3b, 5a–7, 9 i 10";
+const inheritedPointHtml = vm.runInContext("linkify(TEST_TEXT, 'uop-art-15', 'uop-art-15-ust-8', 'uop')", context);
+for (const point of ["3b", "5a", "5b", "6", "7", "9", "10"]) {
+  assert.ok(
+    inheritedPointHtml.includes(`href="#uop-art-15-ust-1-pkt-${point}"`),
+    `Brak odziedziczonego linku do ust. 1 pkt ${point}`,
+  );
+}
+
+context.TEST_TEXT = "środki określone w art. 12 ust. 1 pkt 3 lub 4";
+const otherArticlePointsHtml = vm.runInContext("linkify(TEST_TEXT, 'spb-art-35', 'spb-art-35-ust-6', 'spb')", context);
+assert.ok(!otherArticlePointsHtml.includes('href="#spb-art-35-ust-1-pkt-'), "Punkty obcego art. 12 podlinkowano do art. 35");
+for (const point of [3, 4]) {
+  assert.ok(otherArticlePointsHtml.includes(`href="#spb-art-12-ust-1-pkt-${point}"`), `Brak linku do art. 12 ust. 1 pkt ${point}`);
+}
+
+context.TEST_TEXT = "w przypadkach z ust. 1 oraz na podstawie art. 44 pkt 4–8";
+const interruptedScopeHtml = vm.runInContext("linkify(TEST_TEXT, 'nieletni-art-48', 'nieletni-art-48-ust-10', 'nieletni')", context);
+assert.ok(!interruptedScopeHtml.includes('href="#nieletni-art-48-ust-1-pkt-4"'), "Kontekst ust. 1 nie został przerwany przez art. 44");
+for (const point of [4, 5, 6, 7, 8]) {
+  assert.ok(interruptedScopeHtml.includes(`href="#nieletni-art-44-pkt-${point}"`), `Brak linku do art. 44 pkt ${point}`);
+}
+
 console.log(JSON.stringify({ status: "ok", links }, null, 2));

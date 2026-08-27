@@ -39,6 +39,26 @@ assert.match(favoriteJs,/highlightButton\.disabled=allActs/);
 assert.match(favoriteJs,/syncAllActive/);
 assert.match(favoriteJs,/collapsedActs/);
 assert.match(favoriteJs,/favorites-all-law-title/);
+assert.match(favoriteJs,/collapsedActs\.clear\(\);allViewCycle\+\+/);
+assert.match(favoriteJs,/delete list\.dataset\.favoritesAllSignature/);
+assert.match(favoriteJs,/allViewCycle\+'\|'/);
+assert.match(favoriteJs,/applyAllActVisibility/);
+assert.match(favoriteJs,/main\.hidden=collapsed/);
+assert.match(favoriteJs,/favorites-all-act:not\(\[hidden\]\)/);
+assert.match(favoriteJs,/favorites-all-law-name/);
+assert.match(favoriteJs,/dataset\.short=shortTitle/);
+assert.match(favoriteJs,/fitAllLawTitles/);
+assert.match(favoriteJs,/favorite-article-popover/);
+assert.match(favoriteJs,/installArticleActionGesture/);
+assert.match(favoriteJs,/,340\)\}/);
+assert.match(favoriteJs,/editable=M\.describe\(row\)\.length>1/);
+assert.match(favoriteJs,/favorite-edit-act/);
+assert.match(favoriteCss,/translateX\(calc\(-50% \+ var\(--scope-shift-x/);
+assert.match(favoriteCss,/favorites-all-law-name\{[^}]*white-space:nowrap/);
+assert.match(favoriteCss,/favorites-all-law-arrow\{display:grid;place-items:center;width:15px;font-size:13px/);
+assert.match(favoriteCss,/favorite-article-menu-actions\{[^}]*border-radius:999px/);
+assert.match(favoriteCss,/favorite-article-popover::before/);
+assert.match(favoriteCss,/favorites-all-act:not\(\.favorite-edit-act\)/);
 assert.match(favoriteJs,/\},360\)/);
 assert.match(favoriteCss,/favorites-scope-popover/);
 assert.match(favoriteCss,/favorites-label\{[^}]*-webkit-user-select:none[^}]*-webkit-touch-callout:none/);
@@ -56,4 +76,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:38,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:58,activeArticleLinks:links},null,2));

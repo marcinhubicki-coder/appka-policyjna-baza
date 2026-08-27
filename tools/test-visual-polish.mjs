@@ -31,8 +31,18 @@ assert.match(favoriteJs,/Wszystkie ustawy/);
 assert.match(favoriteJs,/favorites-all-visible/);
 assert.match(favoriteJs,/favorites-scope-info[^<]*<\/span><span class="favorites-scope-switch"/);
 assert.doesNotMatch(favoriteJs,/function setAllActs[^\n]*hamburger/);
+assert.match(favoriteJs,/allActs=false;filter=false;highlight=true/);
+assert.match(favoriteJs,/highlightButton\.disabled=allActs/);
+assert.match(favoriteJs,/syncAllActive/);
+assert.match(favoriteJs,/collapsedActs/);
+assert.match(favoriteJs,/favorites-all-law-title/);
+assert.match(favoriteJs,/\},360\)/);
 assert.match(favoriteCss,/favorites-scope-popover/);
 assert.match(favoriteCss,/favorites-label\{[^}]*-webkit-user-select:none[^}]*-webkit-touch-callout:none/);
+assert.match(favoriteCss,/favorites-scope-popover::before\{[^}]*--scope-caret-x/);
+assert.match(favoriteCss,/favorites-all-act>h2\{position:static/);
+assert.match(favoriteCss,/favorites-all-view \.editorial-title\{grid-column:1\/4!important/);
+assert.match(favoriteCss,/body\.favorites-all-acts \.favorites-highlight\{opacity:/);
 assert.match(favoriteCss,/favorites-all-law-title/);
 
 const data=loadLegalData('data.js');
@@ -43,4 +53,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:26,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:36,activeArticleLinks:links},null,2));

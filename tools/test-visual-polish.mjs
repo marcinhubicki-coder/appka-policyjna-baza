@@ -8,6 +8,7 @@ const favoriteJs=fs.readFileSync('favorites-ui.js','utf8');
 const favoriteCss=fs.readFileSync('favorites-ui.css','utf8');
 const menuCss=fs.readFileSync('menu-hotfix.css','utf8');
 const nav=fs.readFileSync('nav.js','utf8');
+const ux=fs.readFileSync('ux-fixes.js','utf8');
 
 assert.match(app,/class="toc is-collapsed"/);
 assert.match(app,/id="tocgrid" hidden/);
@@ -24,6 +25,10 @@ assert.match(appCss,/minmax\(44px,1fr\)/);
 assert.match(favoriteCss,/drawer-article\.is-favorite\.active/);
 assert.match(favoriteCss,/drawer-article\.is-favorite\.active\{background:#eaf2ff;box-shadow:none/);
 assert.match(menuCss,/body:not\(\.drawer-open\) \.section-no/);
+assert.match(ux,/Array\.isArray\(DATA\)&&DATA\.length&&ACT/);
+assert.doesNotMatch(ux,/window\.(?:DATA|ACT)/);
+assert.match(ux,/b\.className='unit-star'/);
+assert.match(menuCss,/grid-template-columns:max-content 30px minmax\(0,1fr\)/);
 assert.match(favoriteJs,/favorite-swipe-active/);
 assert.match(favoriteCss,/body\.favorite-swipe-active\{overscroll-behavior:none/);
 assert.doesNotMatch(favoriteCss,/body\.favorite-swipe-active\{position:fixed/);
@@ -93,4 +98,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:75,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:79,activeArticleLinks:links},null,2));

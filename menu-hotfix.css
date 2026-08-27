@@ -61,6 +61,7 @@
   .article-pager button{min-height:48px!important;padding:5px 14px!important}
   .article-pager b{font-size:25px!important}.article-pager span{font-size:14px!important}
 }
+
 .chapter-title.generated{font-style:italic!important;font-weight:550!important;color:#52697f!important}
 .drawer-article .editorial-topic{font-style:italic!important;color:#52697f!important}
 @media (min-width:651px){
@@ -78,3 +79,10 @@
 }
 body.drawer-open .unit-title .art-prefix{font-size:inherit!important}
 body.drawer-open .unit-title .art-prefix::after{content:none!important}
+
+/* Original star appearance with a larger, invisible long-press target.
+   Empty stars are intentionally available only in the one-column view. */
+.unit-star{position:relative!important}
+.unit-star.on::before{content:'';position:absolute;inset:-7px;border-radius:12px}
+.unit-star:not(.on){visibility:hidden!important;pointer-events:none!important}
+body.drawer-open .unit-star.on{visibility:visible!important;pointer-events:auto!important}

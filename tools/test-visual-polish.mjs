@@ -41,12 +41,16 @@ assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{conten
 assert.match(ux,/compactMarkers\(document\.body\.classList\.contains\('drawer-open'\)\);install\(\)/);
 assert.match(ux,/CustomEvent\('police-law-stars-ready'\)/);
 assert.match(favoriteJs,/favorite-swipe-active/);
+assert.match(favoriteJs,/function eligibleArticle/);
 assert.match(favoriteCss,/body\.favorite-swipe-active\{overscroll-behavior:none/);
 assert.doesNotMatch(favoriteCss,/body\.favorite-swipe-active\{position:fixed/);
 assert.match(favoriteCss,/favorite-swipe-closing>\.favorite-swipe-action/);
+assert.doesNotMatch(nav,/goArticle\(dx<0\?1:-1\)/);
+assert.doesNotMatch(nav,/touchStart|let ds=null/);
+assert.match(nav,/split-handle/);
 assert.match(favoriteCss,/\.favorite-editor-bar\{position:fixed/);
 assert.match(favoriteCss,/favorite-fragment-status\{[^}]*margin:5px 0 7px 6px/);
-assert.match(favoriteJs,/if\(!filter\|\|!item\|\|!row\|\|M\.describe\(row\)\.length<=1\)return/);
+assert.match(favoriteJs,/if\(!item\|\|!row\|\|M\.describe\(row\)\.length<=1\)return/);
 assert.match(favoriteJs,/captureEditorAnchor/);
 assert.match(favoriteJs,/Wszystkie ustawy/);
 assert.match(favoriteJs,/favorites-all-visible/);
@@ -80,7 +84,11 @@ assert.match(favoriteJs,/icon\('trash'\),'Usuń z ulubionych'/);
 assert.match(favoriteJs,/installArticleActionGesture/);
 assert.match(favoriteJs,/,340\)\}/);
 assert.match(favoriteJs,/editable=M\.describe\(row\)\.length>1/);
-assert.match(favoriteJs,/editable=on&&filter&&M\.describe/);
+assert.match(ux,/CustomEvent\('police-law-article-star-click',\{cancelable:true/);
+assert.match(favoriteJs,/window\.addEventListener\('police-law-article-star-click'/);
+assert.match(favoriteJs,/window\.addEventListener\('police-law-article-star-click',event=>event\.preventDefault\(\)\)/);
+assert.match(menuCss,/\.unit-star:not\(\.on\)\{visibility:hidden!important;pointer-events:none!important\}/);
+assert.match(menuCss,/\.unit-star\.on::before\{[^}]*inset:-7px/);
 assert.match(favoriteJs,/favorite-edit-act/);
 assert.match(favoriteCss,/favorites-scope-popover\{position:fixed;z-index:220/);
 assert.match(favoriteJs,/pop\.appendChild\(toggle\);document\.body\.appendChild\(pop\)/);
@@ -121,4 +129,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:102,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:110,activeArticleLinks:links},null,2));

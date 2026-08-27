@@ -21,6 +21,9 @@ assert.match(app,/<b>\$\{esc\(tocNumber\(R\[2\]\)\)\}<\/b>/);
 assert.match(app,/jump\(id,true,a\.classList\.contains\("toc-link"\)\)/);
 assert.match(app,/function jump\(id,smooth,alignTop=false\)/);
 assert.match(app,/getBoundingClientRect\(\)\.top-top/);
+assert.match(app,/document\.body\.classList\.add\('act-selected'\)/);
+assert.match(app,/renderAct\(target\?idMap\.get\(target\):'uop',target,false\)/);
+assert.doesNotMatch(app,/hash\.startsWith\("act-"\)/);
 assert.match(appCss,/minmax\(44px,1fr\)/);
 assert.match(favoriteCss,/drawer-article\.is-favorite\.active/);
 assert.match(favoriteCss,/drawer-article\.is-favorite\.active\{background:#eaf2ff;box-shadow:none/);
@@ -48,9 +51,14 @@ assert.match(favoriteJs,/favorites-all-visible/);
 assert.match(favoriteJs,/favorites-scope-info[^<]*<\/span><span class="favorites-scope-switch"/);
 assert.doesNotMatch(favoriteJs,/function setAllActs[^\n]*hamburger/);
 assert.match(favoriteJs,/allActs=false;filter=false;highlight=true/);
+assert.match(favoriteJs,/let filter=false,highlight=true,allActs=false/);
+assert.match(favoriteJs,/localStorage\.setItem\(FILTER_KEY,'0'\);localStorage\.setItem\(HIGHLIGHT_KEY,'1'\)/);
+assert.doesNotMatch(favoriteJs,/localStorage\.getItem\(FILTER_KEY\)/);
 assert.match(favoriteJs,/__POLICE_DRAWER_REFRESH/);
 assert.match(nav,/__POLICE_DRAWER_REFRESH=\(\)=>populateDrawer\(\)/);
-assert.match(favoriteJs,/highlightButton\.disabled=allActs/);
+assert.match(favoriteJs,/highlightDisabled=filter\|\|allActs/);
+assert.match(favoriteJs,/highlightButton\.disabled=highlightDisabled/);
+assert.match(favoriteJs,/highlightButton\.onclick=\(\)=>\{if\(filter\|\|allActs\)return/);
 assert.match(favoriteJs,/syncAllActive/);
 assert.match(favoriteJs,/collapsedActs/);
 assert.match(favoriteJs,/favorites-all-law-title/);
@@ -80,7 +88,7 @@ assert.match(favoriteJs,/\.toc-link\[href\^="#"\]/);
 assert.match(favoriteJs,/classList\.toggle\('is-favorite',set\.has\(id\)\)/);
 assert.match(favoriteCss,/toc-link\.is-favorite\{background:#fff2cf/);
 assert.match(favoriteCss,/legal-unit\.is-favorite \.unit-title::after\{content:none!important;display:none!important/);
-assert.doesNotMatch(favoriteCss,/drawer-article\.is-favorite \.da-num::after/);
+assert.match(favoriteCss,/drawer-article\.is-favorite \.da-num::after\{content:none!important;display:none!important/);
 assert.match(favoriteCss,/body\.favorite-editing \.act-landing/);
 assert.match(favoriteJs,/classList\.add\('favorite-editing','act-selected'\)/);
 assert.match(favoriteJs,/function mutationNeedsRefresh/);
@@ -97,6 +105,7 @@ assert.match(favoriteCss,/favorites-scope-popover::before\{[^}]*--scope-caret-x/
 assert.match(favoriteCss,/favorites-all-act>h2\{position:static/);
 assert.match(favoriteCss,/favorites-all-view \.editorial-title\{grid-column:1\/4!important/);
 assert.match(favoriteCss,/body\.favorites-all-acts \.favorites-highlight\{opacity:/);
+assert.match(favoriteCss,/body\.favorites-filter-on \.favorites-highlight\{opacity:/);
 assert.match(favoriteCss,/favorites-all-law-title/);
 
 const data=loadLegalData('data.js');
@@ -107,4 +116,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:88,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:97,activeArticleLinks:links},null,2));

@@ -36,7 +36,7 @@ assert.match(ux,/observer\.disconnect\(\).*observer\.observe\(view/);
 assert.match(ux,/const ACT_LANDING_ENABLED=false/);
 assert.match(ux,/if\(ACT_LANDING_ENABLED\)actLanding\(\);else document\.body\.classList\.add\('act-selected'\)/);
 assert.match(menuCss,/grid-template-columns:max-content 30px minmax\(0,1fr\)/);
-assert.match(menuCss,/\.unit-star\{[^}]*width:30px!important;height:30px!important/);
+assert.match(menuCss,/\.unit-star\.on\{[^}]*width:14px!important;height:18px!important/);
 assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:none!important\}/);
 assert.match(ux,/compactMarkers\(document\.body\.classList\.contains\('drawer-open'\)\);install\(\)/);
 assert.match(ux,/CustomEvent\('police-law-stars-ready'\)/);
@@ -84,11 +84,12 @@ assert.match(favoriteJs,/icon\('trash'\),'Usuń z ulubionych'/);
 assert.match(favoriteJs,/installArticleActionGesture/);
 assert.match(favoriteJs,/,340\)\}/);
 assert.match(favoriteJs,/editable=M\.describe\(row\)\.length>1/);
-assert.match(ux,/CustomEvent\('police-law-article-star-click',\{cancelable:true/);
-assert.match(favoriteJs,/window\.addEventListener\('police-law-article-star-click'/);
-assert.match(favoriteJs,/window\.addEventListener\('police-law-article-star-click',event=>event\.preventDefault\(\)\)/);
+assert.doesNotMatch(ux,/police-law-article-star-click/);
+assert.match(ux,/b\.title='Przytrzymaj, aby edytować ulubione';h\.appendChild\(b\)/);
+assert.doesNotMatch(favoriteJs,/police-law-article-star-click|favoriteClickSync/);
+assert.match(favoriteJs,/addEventListener\('click',event=>\{event\.preventDefault\(\);event\.stopImmediatePropagation\(\)\},true\)/);
 assert.match(menuCss,/\.unit-star:not\(\.on\)\{visibility:hidden!important;pointer-events:none!important\}/);
-assert.match(menuCss,/\.unit-star\.on::before\{[^}]*inset:-7px/);
+assert.match(menuCss,/\.unit-star\.on::before\{[^}]*inset:-13px -15px/);
 assert.match(favoriteJs,/favorite-edit-act/);
 assert.match(favoriteCss,/favorites-scope-popover\{position:fixed;z-index:220/);
 assert.match(favoriteJs,/pop\.appendChild\(toggle\);document\.body\.appendChild\(pop\)/);
@@ -129,4 +130,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:110,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:111,activeArticleLinks:links},null,2));

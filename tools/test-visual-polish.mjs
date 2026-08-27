@@ -17,6 +17,9 @@ assert.doesNotMatch(app,/class="topic"/);
 assert.match(app,/function tocNumber\(/);
 assert.match(app,/href="#\$\{R\[0\]\}"/);
 assert.match(app,/<b>\$\{esc\(tocNumber\(R\[2\]\)\)\}<\/b>/);
+assert.match(app,/jump\(id,true,a\.classList\.contains\("toc-link"\)\)/);
+assert.match(app,/function jump\(id,smooth,alignTop=false\)/);
+assert.match(app,/getBoundingClientRect\(\)\.top-top/);
 assert.match(appCss,/minmax\(44px,1fr\)/);
 assert.match(favoriteCss,/drawer-article\.is-favorite\.active/);
 assert.match(favoriteCss,/drawer-article\.is-favorite\.active\{background:#eaf2ff;box-shadow:none/);
@@ -59,6 +62,15 @@ assert.match(favoriteCss,/favorites-all-law-arrow\{display:grid;place-items:cent
 assert.match(favoriteCss,/favorite-article-menu-actions\{[^}]*border-radius:999px/);
 assert.match(favoriteCss,/favorite-article-popover::before/);
 assert.match(favoriteCss,/favorites-all-act:not\(\.favorite-edit-act\)/);
+assert.match(favoriteJs,/\.toc-link\[href\^="#"\]/);
+assert.match(favoriteJs,/classList\.toggle\('is-favorite',set\.has\(id\)\)/);
+assert.match(favoriteCss,/toc-link\.is-favorite\{background:#fff2cf/);
+assert.match(favoriteCss,/legal-unit\.is-favorite \.unit-title::after\{content:none!important;display:none!important/);
+assert.match(favoriteJs,/function mutationNeedsRefresh/);
+assert.match(favoriteJs,/cosmeticMutationSelector/);
+assert.match(favoriteJs,/mutations\.some\(mutationNeedsRefresh\)/);
+assert.match(favoriteJs,/closeSwipe\(true\);items\.unshift/);
+assert.match(favoriteJs,/const restore=\(\)=>\{if\(Math\.abs\(window\.scrollY-targetY\)>\.5\)/);
 assert.match(favoriteJs,/\},360\)/);
 assert.match(favoriteCss,/favorites-scope-popover/);
 assert.match(favoriteCss,/favorites-label\{[^}]*-webkit-user-select:none[^}]*-webkit-touch-callout:none/);
@@ -76,4 +88,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:58,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:70,activeArticleLinks:links},null,2));

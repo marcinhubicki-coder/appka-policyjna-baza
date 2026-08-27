@@ -72,6 +72,7 @@ assert.match(favoriteCss,/legal-unit\.is-favorite \.unit-title::after\{content:n
 assert.match(favoriteJs,/function mutationNeedsRefresh/);
 assert.match(favoriteJs,/cosmeticMutationSelector/);
 assert.match(favoriteJs,/mutations\.some\(mutationNeedsRefresh\)/);
+assert.match(favoriteJs,/if\(drawerEmpty\)drawerEmpty\.hidden/);
 assert.match(favoriteJs,/closeSwipe\(true\);items\.unshift/);
 assert.match(favoriteJs,/function blockSwipeScroll\(event\).*favorite-swipe-active.*event\.preventDefault/);
 assert.doesNotMatch(favoriteJs,/document\.body\.style\.top/);
@@ -92,4 +93,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:74,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:75,activeArticleLinks:links},null,2));

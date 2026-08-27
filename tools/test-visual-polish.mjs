@@ -29,7 +29,10 @@ assert.match(favoriteJs,/M\.describe\(row\)\.length<=1/);
 assert.match(favoriteJs,/captureEditorAnchor/);
 assert.match(favoriteJs,/Wszystkie ustawy/);
 assert.match(favoriteJs,/favorites-all-visible/);
+assert.match(favoriteJs,/favorites-scope-info[^<]*<\/span><span class="favorites-scope-switch"/);
+assert.doesNotMatch(favoriteJs,/function setAllActs[^\n]*hamburger/);
 assert.match(favoriteCss,/favorites-scope-popover/);
+assert.match(favoriteCss,/favorites-label\{[^}]*-webkit-user-select:none[^}]*-webkit-touch-callout:none/);
 assert.match(favoriteCss,/favorites-all-law-title/);
 
 const data=loadLegalData('data.js');
@@ -40,4 +43,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:23,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:26,activeArticleLinks:links},null,2));

@@ -28,6 +28,8 @@ assert.match(menuCss,/body:not\(\.drawer-open\) \.section-no/);
 assert.match(ux,/Array\.isArray\(DATA\)&&DATA\.length&&ACT/);
 assert.doesNotMatch(ux,/window\.(?:DATA|ACT)/);
 assert.match(ux,/b\.className='unit-star'/);
+assert.match(ux,/if\(b\.textContent!==next\)b\.textContent=next/);
+assert.match(ux,/observer\.disconnect\(\).*observer\.observe\(view/);
 assert.match(menuCss,/grid-template-columns:max-content 30px minmax\(0,1fr\)/);
 assert.match(favoriteJs,/favorite-swipe-active/);
 assert.match(favoriteCss,/body\.favorite-swipe-active\{overscroll-behavior:none/);
@@ -98,4 +100,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:79,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:81,activeArticleLinks:links},null,2));

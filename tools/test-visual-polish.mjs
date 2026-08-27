@@ -37,7 +37,7 @@ assert.match(ux,/const ACT_LANDING_ENABLED=false/);
 assert.match(ux,/if\(ACT_LANDING_ENABLED\)actLanding\(\);else document\.body\.classList\.add\('act-selected'\)/);
 assert.match(menuCss,/grid-template-columns:max-content 30px minmax\(0,1fr\)/);
 assert.match(menuCss,/\.unit-star\{[^}]*width:30px!important;height:30px!important/);
-assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:'A\.'!important/);
+assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:none!important\}/);
 assert.match(ux,/compactMarkers\(document\.body\.classList\.contains\('drawer-open'\)\);install\(\)/);
 assert.match(ux,/CustomEvent\('police-law-stars-ready'\)/);
 assert.match(favoriteJs,/favorite-swipe-active/);

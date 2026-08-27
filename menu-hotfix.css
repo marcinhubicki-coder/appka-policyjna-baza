@@ -87,6 +87,7 @@ body.drawer-open .unit-title .art-prefix::after{content:none!important}
 .unit-star.on{display:inline-grid!important;place-items:center!important;width:14px!important;height:18px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--accent)!important;font-size:11px!important;line-height:1!important;font-weight:800!important}
 .unit-star.on::before{content:'';position:absolute;inset:-13px -15px;border-radius:12px}
 .unit-star:not(.on){visibility:hidden!important;pointer-events:none!important}
-body.drawer-open .unit-star.on{visibility:visible!important;pointer-events:auto!important}
+body:not(.drawer-open) .unit-star.on{pointer-events:none!important}
+body.drawer-open .unit-star.on{visibility:visible!important;pointer-events:auto!important;align-self:center!important}
 body.drawer-open .unit-head{grid-template-columns:max-content 11px minmax(0,1fr)!important;column-gap:1px!important}
-body.drawer-open .unit-star.on{width:11px!important;height:12px!important;font-size:8px!important}
+body.drawer-open .unit-star.on{width:11px!important;height:12px!important;font-size:8px!important;transform:translateY(-1px)}

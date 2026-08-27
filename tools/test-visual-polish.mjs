@@ -82,6 +82,7 @@ assert.match(favoriteJs,/window\.addEventListener\('police-law-stars-ready',refr
 assert.match(favoriteJs,/icon\('edit'\),'Edytuj'/);
 assert.match(favoriteJs,/icon\('trash'\),'Usuń z ulubionych'/);
 assert.match(favoriteJs,/installArticleActionGesture/);
+assert.match(favoriteJs,/const enabled=\(\)=>document\.body\.classList\.contains\('drawer-open'\)&&!!itemFor\(article\.id\)/);
 assert.match(favoriteJs,/,340\)\}/);
 assert.match(favoriteJs,/editable=M\.describe\(row\)\.length>1/);
 assert.doesNotMatch(ux,/police-law-article-star-click/);
@@ -89,6 +90,8 @@ assert.match(ux,/b\.title='Przytrzymaj, aby edytować ulubione';h\.appendChild\(
 assert.doesNotMatch(favoriteJs,/police-law-article-star-click|favoriteClickSync/);
 assert.match(favoriteJs,/addEventListener\('click',event=>\{event\.preventDefault\(\);event\.stopImmediatePropagation\(\)\},true\)/);
 assert.match(menuCss,/\.unit-star:not\(\.on\)\{visibility:hidden!important;pointer-events:none!important\}/);
+assert.match(menuCss,/body:not\(\.drawer-open\) \.unit-star\.on\{pointer-events:none!important\}/);
+assert.match(menuCss,/body\.drawer-open \.unit-star\.on\{[^}]*align-self:center!important/);
 assert.match(menuCss,/\.unit-star\.on::before\{[^}]*inset:-13px -15px/);
 assert.match(favoriteJs,/favorite-edit-act/);
 assert.match(favoriteCss,/favorites-scope-popover\{position:fixed;z-index:220/);
@@ -130,4 +133,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:111,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:114,activeArticleLinks:links},null,2));

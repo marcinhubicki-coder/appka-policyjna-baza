@@ -1,5 +1,6 @@
 (function(){
 const wait=()=>{if(!(Array.isArray(DATA)&&DATA.length&&ACT&&document.getElementById('actview')))return setTimeout(wait,100);init()};
+const ACT_LANDING_ENABLED=false;
 const CHAPTER_HINTS={uop:['Postanowienia ogólne','Zakres działania Policji','Organizacja Policji','Uprawnienia policjantów','Służba w Policji','Prawa i obowiązki','Świadczenia i mieszkania','Odpowiedzialność dyscyplinarna'],kw:['Zasady odpowiedzialności','Kary i środki','Wykroczenia'],kk:['Zasady odpowiedzialności karnej','Kary i środki karne','Przestępstwa'],kpk:['Przepisy ogólne','Uczestnicy postępowania','Dowody','Środki przymusu','Postępowanie przygotowawcze','Postępowanie sądowe'],kpow:['Zasady postępowania','Uczestnicy i czynności','Postępowanie przed sądem'],spb:['Zasady stosowania środków','Środki przymusu bezpośredniego','Broń palna'],prd:['Zasady ruchu drogowego','Pojazdy i kierujący','Kontrola ruchu drogowego'],cudz:['Zasady pobytu','Kontrola i powrót'],nieletni:['Zasady i środki','Postępowanie wobec nieletnich']};
 const ACT_ICONS={uop:'🛡️',kw:'⚠️',kk:'⚖️',kpk:'🔎',kpow:'📋',spb:'✋',prd:'🚓',cudz:'🪪',nieletni:'👥',z768:'👮',z360:'🚐',z805:'⭐'};
 function headerH(){return document.querySelector('.top')?.getBoundingClientRect().height||0}
@@ -22,5 +23,5 @@ function articleStars(){
 }
 function forceFixedHeader(){const h=document.querySelector('.top');if(!h)return;const sync=()=>document.documentElement.style.setProperty('--topH',h.offsetHeight+'px');sync();new ResizeObserver(()=>requestAnimationFrame(sync)).observe(h)}
 function watchDrawer(){const d=document.querySelector('.drawer');if(!d)return;new MutationObserver(()=>{const on=d.classList.contains('open');document.body.classList.toggle('drawer-visible',on);requestAnimationFrame(()=>{patchChapters();patchArticlePrefixes();compactMarkers(on)})}).observe(d,{attributes:true,attributeFilter:['class']})}
-function init(){forceFixedHeader();enhanceSearch();simplifyDrawerTools();articleStars();actLanding();watchDrawer();setTimeout(()=>{patchChapters();patchArticlePrefixes();compactMarkers(document.body.classList.contains('drawer-open'))},120)}wait();
+function init(){forceFixedHeader();enhanceSearch();simplifyDrawerTools();articleStars();if(ACT_LANDING_ENABLED)actLanding();else document.body.classList.add('act-selected');watchDrawer();setTimeout(()=>{patchChapters();patchArticlePrefixes();compactMarkers(document.body.classList.contains('drawer-open'))},120)}wait();
 })();

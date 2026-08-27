@@ -30,7 +30,11 @@ assert.doesNotMatch(ux,/window\.(?:DATA|ACT)/);
 assert.match(ux,/b\.className='unit-star'/);
 assert.match(ux,/if\(b\.textContent!==next\)b\.textContent=next/);
 assert.match(ux,/observer\.disconnect\(\).*observer\.observe\(view/);
-assert.match(menuCss,/grid-template-columns:max-content 30px minmax\(0,1fr\)/);
+assert.match(ux,/const ACT_LANDING_ENABLED=false/);
+assert.match(ux,/if\(ACT_LANDING_ENABLED\)actLanding\(\);else document\.body\.classList\.add\('act-selected'\)/);
+assert.match(menuCss,/grid-template-columns:max-content 22px minmax\(0,1fr\)/);
+assert.match(menuCss,/body\.drawer-open \.unit-head\{[^}]*grid-template-columns:max-content 17px minmax\(0,1fr\)/);
+assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:none!important\}/);
 assert.match(favoriteJs,/favorite-swipe-active/);
 assert.match(favoriteCss,/body\.favorite-swipe-active\{overscroll-behavior:none/);
 assert.doesNotMatch(favoriteCss,/body\.favorite-swipe-active\{position:fixed/);
@@ -76,6 +80,9 @@ assert.match(favoriteJs,/\.toc-link\[href\^="#"\]/);
 assert.match(favoriteJs,/classList\.toggle\('is-favorite',set\.has\(id\)\)/);
 assert.match(favoriteCss,/toc-link\.is-favorite\{background:#fff2cf/);
 assert.match(favoriteCss,/legal-unit\.is-favorite \.unit-title::after\{content:none!important;display:none!important/);
+assert.doesNotMatch(favoriteCss,/drawer-article\.is-favorite \.da-num::after/);
+assert.match(favoriteCss,/body\.favorite-editing \.act-landing/);
+assert.match(favoriteJs,/classList\.add\('favorite-editing','act-selected'\)/);
 assert.match(favoriteJs,/function mutationNeedsRefresh/);
 assert.match(favoriteJs,/cosmeticMutationSelector/);
 assert.match(favoriteJs,/mutations\.some\(mutationNeedsRefresh\)/);
@@ -100,4 +107,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:81,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:88,activeArticleLinks:links},null,2));

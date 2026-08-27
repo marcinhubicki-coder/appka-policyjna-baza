@@ -7,6 +7,7 @@ const appCss=fs.readFileSync('app.css','utf8');
 const favoriteJs=fs.readFileSync('favorites-ui.js','utf8');
 const favoriteCss=fs.readFileSync('favorites-ui.css','utf8');
 const menuCss=fs.readFileSync('menu-hotfix.css','utf8');
+const nav=fs.readFileSync('nav.js','utf8');
 
 assert.match(app,/class="toc is-collapsed"/);
 assert.match(app,/id="tocgrid" hidden/);
@@ -32,6 +33,8 @@ assert.match(favoriteJs,/favorites-all-visible/);
 assert.match(favoriteJs,/favorites-scope-info[^<]*<\/span><span class="favorites-scope-switch"/);
 assert.doesNotMatch(favoriteJs,/function setAllActs[^\n]*hamburger/);
 assert.match(favoriteJs,/allActs=false;filter=false;highlight=true/);
+assert.match(favoriteJs,/__POLICE_DRAWER_REFRESH/);
+assert.match(nav,/__POLICE_DRAWER_REFRESH=\(\)=>populateDrawer\(\)/);
 assert.match(favoriteJs,/highlightButton\.disabled=allActs/);
 assert.match(favoriteJs,/syncAllActive/);
 assert.match(favoriteJs,/collapsedActs/);
@@ -53,4 +56,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:36,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:38,activeArticleLinks:links},null,2));

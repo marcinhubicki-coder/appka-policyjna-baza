@@ -37,6 +37,7 @@
     document.body.classList.remove('favorites-all-acts');view.classList.remove('favorites-all-view');
     document.querySelectorAll('.quickbar button').forEach(button=>button.classList.remove('favorites-all-visible'));
     if(target&&typeof renderAct==='function')renderAct(target,targetId,false);
+    globalThis.__POLICE_DRAWER_REFRESH?.();
     setTimeout(refresh,40);
   }
   globalThis.__FAVORITES_OPEN_SINGLE=(code,id)=>setAllActs(false,code,id);

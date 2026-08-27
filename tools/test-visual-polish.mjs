@@ -35,9 +35,11 @@ assert.match(ux,/if\(b\.textContent!==next\)b\.textContent=next/);
 assert.match(ux,/observer\.disconnect\(\).*observer\.observe\(view/);
 assert.match(ux,/const ACT_LANDING_ENABLED=false/);
 assert.match(ux,/if\(ACT_LANDING_ENABLED\)actLanding\(\);else document\.body\.classList\.add\('act-selected'\)/);
-assert.match(menuCss,/grid-template-columns:max-content 22px minmax\(0,1fr\)/);
-assert.match(menuCss,/body\.drawer-open \.unit-head\{[^}]*grid-template-columns:max-content 17px minmax\(0,1fr\)/);
-assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:none!important\}/);
+assert.match(menuCss,/grid-template-columns:max-content 30px minmax\(0,1fr\)/);
+assert.match(menuCss,/\.unit-star\{[^}]*width:30px!important;height:30px!important/);
+assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:'A\.'!important/);
+assert.match(ux,/compactMarkers\(document\.body\.classList\.contains\('drawer-open'\)\);install\(\)/);
+assert.match(ux,/CustomEvent\('police-law-stars-ready'\)/);
 assert.match(favoriteJs,/favorite-swipe-active/);
 assert.match(favoriteCss,/body\.favorite-swipe-active\{overscroll-behavior:none/);
 assert.doesNotMatch(favoriteCss,/body\.favorite-swipe-active\{position:fixed/);
@@ -72,6 +74,9 @@ assert.match(favoriteJs,/favorites-all-law-name/);
 assert.match(favoriteJs,/dataset\.short=shortTitle/);
 assert.match(favoriteJs,/fitAllLawTitles/);
 assert.match(favoriteJs,/favorite-article-popover/);
+assert.match(favoriteJs,/window\.addEventListener\('police-law-stars-ready',refresh\)/);
+assert.match(favoriteJs,/icon\('edit'\),'Edytuj'/);
+assert.match(favoriteJs,/icon\('trash'\),'Usuń z ulubionych'/);
 assert.match(favoriteJs,/installArticleActionGesture/);
 assert.match(favoriteJs,/,340\)\}/);
 assert.match(favoriteJs,/editable=M\.describe\(row\)\.length>1/);
@@ -116,4 +121,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:97,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:102,activeArticleLinks:links},null,2));

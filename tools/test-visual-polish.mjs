@@ -41,6 +41,9 @@ assert.match(menuCss,/body:not\(\.drawer-open\) \.legal-unit\{padding:7px!import
 assert.match(menuCss,/\.unit-star\.on\{[^}]*transform:translateY\(5px\)/);
 assert.match(menuCss,/body:not\(\.drawer-open\) \.section-label\{overflow:visible!important\}/);
 assert.match(menuCss,/body:not\(\.drawer-open\) \.section-title\{padding-bottom:2px!important;margin-bottom:-2px!important\}/);
+assert.match(menuCss,/body\.drawer-open \.future\{padding:0!important;margin:3px 0!important;border-radius:7px!important\}/);
+assert.match(menuCss,/body\.drawer-open \.future summary\{padding:4px 5px!important;font-size:9px!important;line-height:1\.2!important\}/);
+assert.match(menuCss,/body\.drawer-open \.future \.fc\{padding:0 5px 5px!important;font-size:8\.8px!important;line-height:1\.24!important\}/);
 assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:none!important\}/);
 assert.match(ux,/compactMarkers\(document\.body\.classList\.contains\('drawer-open'\)\);install\(\)/);
 assert.match(ux,/CustomEvent\('police-law-stars-ready'\)/);
@@ -147,4 +150,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:128,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:131,activeArticleLinks:links},null,2));

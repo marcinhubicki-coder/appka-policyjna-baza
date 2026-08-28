@@ -101,3 +101,9 @@ body.drawer-open.favorites-filter-on .unit-star.on{pointer-events:auto!important
 body.drawer-open .unit-head{grid-template-columns:max-content 7px minmax(0,1fr)!important;column-gap:0!important}
 body.drawer-open .unit-star{width:7px!important;height:10px!important}
 body.drawer-open .unit-star.on{width:7px!important;height:10px!important;font-size:7px!important;transform:translateY(1px)}
+
+/* Future-law cards use the same compact scale as neighboring split-view
+   subunits instead of retaining their full-view child typography. */
+body.drawer-open .future{padding:0!important;margin:3px 0!important;border-radius:7px!important}
+body.drawer-open .future summary{padding:4px 5px!important;font-size:9px!important;line-height:1.2!important}
+body.drawer-open .future .fc{padding:0 5px 5px!important;font-size:8.8px!important;line-height:1.24!important}

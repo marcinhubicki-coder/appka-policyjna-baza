@@ -24,22 +24,23 @@
   /* Left TOC: compact A. label, 90% horizontal glyph scale and tight tracking. */
   body.drawer-open .drawer-article{display:grid!important;grid-template-columns:var(--tocNumW,31px) minmax(0,1fr)!important;column-gap:1px!important;align-items:start!important}
   body.drawer-open .drawer-article .da-num{width:var(--tocNumW,31px)!important;min-width:0!important;font-size:8px!important;line-height:1.16!important;font-weight:850!important;white-space:nowrap!important;color:var(--accent)!important;letter-spacing:-.18px!important;word-spacing:-1px!important;transform:scaleX(.9)!important;transform-origin:left center!important}
-  body.drawer-open .drawer-article .da-topic{min-width:0!important;margin:0!important}
+  body.drawer-open .drawer-article .da-topic{min-width:0!important;margin:0!important;font-style:normal!important}
 
   /* Chapter number and title: no dash, title on its own aligned line. */
   body.drawer-open .drawer-chapter summary{display:grid!important;grid-template-columns:12px minmax(0,1fr)!important;column-gap:0!important;align-items:start!important;padding:6px 5px!important;line-height:1.08!important}
   body.drawer-open .chapter-ico{grid-column:1!important;grid-row:1!important;width:12px!important;margin-top:1px!important}
   body.drawer-open .chapter-heading{grid-column:2!important;display:block!important;min-width:0!important}
   body.drawer-open .chapter-no{display:block!important;font-size:9.5px!important;font-weight:850!important}
-  body.drawer-open .chapter-title{display:block!important;margin-top:1px!important;font-size:8.2px!important;line-height:1.08!important;font-weight:700!important}
-  body.drawer-open .chapter-title.generated{font-style:italic!important;font-weight:550!important;color:#52697f!important}
+  body.drawer-open .chapter-title{display:block!important;margin-top:1px!important;font-size:8.2px!important;line-height:1.08!important;font-style:normal!important;font-weight:700!important;color:#274d70!important}
+  body.drawer-open .chapter-title.generated{font-style:normal!important;font-weight:700!important;color:#274d70!important}
   body.drawer-open .drawer-chapter summary,body.drawer-open .chapter-heading{text-align:left!important}
   body.drawer-open:not(.favorites-filter-on) .drawer-chapter summary{grid-template-columns:minmax(0,1fr)!important}
   body.drawer-open:not(.favorites-filter-on) .drawer-chapter summary .chapter-ico{display:none!important}
   body.drawer-open:not(.favorites-filter-on) .chapter-heading{grid-column:1!important}
   body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-no,
   body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-title{display:inline!important}
-  body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-no::after{content:' — '!important}
+  body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-no::after{content:none!important}
+  body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-title::before{content:' — '!important;font-size:1em!important;font-style:normal!important}
   body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-title{margin-top:0!important}
 
   .unit-head{--unit-heading-size:19px;display:grid!important;grid-template-columns:max-content 30px minmax(0,1fr)!important;column-gap:4px!important;align-items:start!important;padding-right:0!important}
@@ -65,7 +66,7 @@
 
   .editorial-title[data-ai-summary="1"]{grid-column:1/4!important;grid-row:2!important;margin:4px 0 0!important;padding:0 2px 1px!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important;hyphens:auto!important;line-height:1.25!important;max-height:2.5em!important;font-style:italic!important}
   body.drawer-open .editorial-title[data-ai-summary="1"]{font-size:7.5px!important;margin-top:2px!important;padding-left:1px!important;padding-right:1px!important}
-  body.drawer-open .drawer-article .editorial-topic{font-style:italic!important;color:#52697f!important}
+  body.drawer-open .drawer-article .editorial-topic{font-style:normal!important;color:#52697f!important}
   .article-pager{left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;transform:none!important;width:auto!important;height:48px!important;border-radius:14px!important}
   .article-pager button{min-height:48px!important;padding:5px 14px!important}
   .article-pager b{font-size:25px!important}.article-pager span{font-size:14px!important}

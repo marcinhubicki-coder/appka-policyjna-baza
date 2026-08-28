@@ -50,7 +50,10 @@ assert.match(tocLayout,/function measureChapterTitle\(summary\)/);
 assert.match(tocLayout,/classList\.toggle\('chapter-title-long'/);
 assert.match(tocLayout,/new ResizeObserver\(\(\)=>requestAnimationFrame\(apply\)\)\.observe\(list\)/);
 assert.match(menuCss,/body\.drawer-open:not\(\.favorites-filter-on\) \.drawer-chapter summary \.chapter-ico\{display:none!important\}/);
-assert.match(menuCss,/summary\.chapter-title-long \.chapter-no::after\{content:' — '!important\}/);
+assert.match(menuCss,/body\.drawer-open \.drawer-article \.da-topic\{[^}]*font-style:normal!important/);
+assert.match(menuCss,/body\.drawer-open \.chapter-title\{[^}]*font-style:normal!important;[^}]*color:#274d70!important/);
+assert.match(menuCss,/summary\.chapter-title-long \.chapter-no::after\{content:none!important\}/);
+assert.match(menuCss,/summary\.chapter-title-long \.chapter-title::before\{content:' — '!important;font-size:1em!important;font-style:normal!important\}/);
 assert.match(menuCss,/body\.drawer-open #actview \.txt,[\s\S]*hyphens:auto!important;[\s\S]*text-align:left!important|body\.drawer-open #actview \.txt,[\s\S]*text-align:left!important[\s\S]*hyphens:auto!important/);
 assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:none!important\}/);
 assert.match(ux,/compactMarkers\(document\.body\.classList\.contains\('drawer-open'\)\);install\(\)/);
@@ -158,4 +161,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:138,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:141,activeArticleLinks:links},null,2));

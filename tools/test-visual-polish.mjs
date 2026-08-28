@@ -78,6 +78,7 @@ assert.match(favoriteJs,/favorites-all-law-name/);
 assert.match(favoriteJs,/dataset\.short=shortTitle/);
 assert.match(favoriteJs,/fitAllLawTitles/);
 assert.match(favoriteJs,/favorite-article-popover/);
+assert.match(favoriteJs,/function showScopePopover\(anchor\)\{\s*closeScopePopover\(\);closeArticlePopover\(\)/);
 assert.match(favoriteJs,/window\.addEventListener\('police-law-stars-ready',refresh\)/);
 assert.match(favoriteJs,/icon\('edit'\),'Edytuj'/);
 assert.match(favoriteJs,/icon\('trash'\),'Usuń z ulubionych'/);
@@ -106,6 +107,9 @@ assert.match(favoriteCss,/favorites-all-law-name\{[^}]*white-space:nowrap/);
 assert.match(favoriteCss,/favorites-all-law-arrow\{display:grid;place-items:center;width:15px;font-size:13px/);
 assert.match(favoriteCss,/favorite-article-menu-actions\{[^}]*border-radius:999px/);
 assert.match(favoriteCss,/favorite-article-popover::before/);
+assert.match(favoriteCss,/favorite-article-popover::before\{[^}]*z-index:2/);
+assert.match(favoriteCss,/favorites-scope-popover::before\{[^}]*z-index:2/);
+assert.match(favoriteCss,/favorite-article-menu-button\{[^}]*border:0!important;[^}]*border-radius:0!important/);
 assert.match(favoriteCss,/favorites-all-act:not\(\.favorite-edit-act\)/);
 assert.match(favoriteJs,/\.toc-link\[href\^="#"\]/);
 assert.match(favoriteJs,/classList\.toggle\('is-favorite',set\.has\(id\)\)/);
@@ -139,4 +143,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:120,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:124,activeArticleLinks:links},null,2));

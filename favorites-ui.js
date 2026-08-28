@@ -44,7 +44,7 @@
   }
   globalThis.__FAVORITES_OPEN_SINGLE=(code,id)=>setAllActs(false,code,id);
   function showScopePopover(anchor){
-    closeScopePopover();
+    closeScopePopover();closeArticlePopover();
     const pop=document.createElement('div');pop.className='favorites-scope-popover';pop.setAttribute('role','menu');
     const toggle=document.createElement('button');toggle.type='button';toggle.className='favorites-scope-toggle';toggle.setAttribute('role','menuitemcheckbox');toggle.setAttribute('aria-checked',String(allActs));toggle.innerHTML='<span class="favorites-scope-info">Wszystkie ustawy</span><span class="favorites-scope-switch" aria-hidden="true"></span>';toggle.onclick=()=>setAllActs(!allActs);
     pop.appendChild(toggle);document.body.appendChild(pop);

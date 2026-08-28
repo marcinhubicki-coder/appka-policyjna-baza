@@ -20,6 +20,16 @@
     root.style.setProperty('--tocNumW',Math.ceil(max*.9+1)+'px');
   }
 
+  function measureChapterTitle(summary){
+    const heading=summary.querySelector('.chapter-heading'),title=summary.querySelector('.chapter-title');
+    if(!heading||!title){summary.classList.remove('chapter-title-long');return;}
+    const canvas=measureChapterTitle.canvas||(measureChapterTitle.canvas=document.createElement('canvas'));
+    const ctx=canvas.getContext('2d'),cs=getComputedStyle(title);
+    ctx.font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const available=heading.clientWidth||summary.clientWidth;
+    summary.classList.toggle('chapter-title-long',ctx.measureText(title.textContent.trim()).width>available+.5);
+  }
+
   function fixChapter(summary){
     const details=summary.closest('.drawer-chapter');
     const id=details?.querySelector('.drawer-article')?.dataset.id;
@@ -28,7 +38,7 @@
     let info=null;try{if(row)info=window.__EDITORIAL?.sectionInfo(row,ACT[0])}catch(_){}
     const fallback=displayed.match(/^((?:DZIAŁ|ROZDZIAŁ|ODDZIAŁ)\s+[IVXLCDM0-9]+(?:[A-Z])?\)?)(?:\s*[.—–:-]\s*(.*))?$/i);
     const prefix=info?.prefix||fallback?.[1]||'Przepisy',title=info?.title||(fallback?.[2]||'').trim().replace(/[.]$/,''),generated=info?.generated||false;
-    const key=[prefix,title,generated].join('|');if(summary.dataset.chapterKey===key)return;
+    const key=[prefix,title,generated].join('|');if(summary.dataset.chapterKey===key){measureChapterTitle(summary);return;}
     const ico=summary.querySelector('.chapter-ico');
     summary.textContent='';
     if(ico) summary.appendChild(ico);
@@ -41,6 +51,7 @@
     summary.appendChild(text);
     summary.dataset.chapterKey=key;
     summary.dataset.twoLineChapter='1';
+    measureChapterTitle(summary);
   }
 
   function apply(){
@@ -63,6 +74,8 @@
     if(!list){setTimeout(start,80);return;}
     apply();
     new MutationObserver(()=>requestAnimationFrame(apply)).observe(list,{childList:true,subtree:true});
+    new ResizeObserver(()=>requestAnimationFrame(apply)).observe(list);
+    new MutationObserver(()=>requestAnimationFrame(apply)).observe(document.body,{attributes:true,attributeFilter:['class']});
   }
   start();
 })();

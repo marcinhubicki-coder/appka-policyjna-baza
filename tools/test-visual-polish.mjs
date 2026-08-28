@@ -7,6 +7,7 @@ const appCss=fs.readFileSync('app.css','utf8');
 const favoriteJs=fs.readFileSync('favorites-ui.js','utf8');
 const favoriteCss=fs.readFileSync('favorites-ui.css','utf8');
 const menuCss=fs.readFileSync('menu-hotfix.css','utf8');
+const tocLayout=fs.readFileSync('toc-layout-fix.js','utf8');
 const nav=fs.readFileSync('nav.js','utf8');
 const ux=fs.readFileSync('ux-fixes.js','utf8');
 
@@ -44,6 +45,13 @@ assert.match(menuCss,/body:not\(\.drawer-open\) \.section-title\{padding-bottom:
 assert.match(menuCss,/body\.drawer-open \.future\{padding:0!important;margin:3px 0!important;border-radius:7px!important\}/);
 assert.match(menuCss,/body\.drawer-open \.future summary\{padding:4px 5px!important;font-size:9px!important;line-height:1\.2!important\}/);
 assert.match(menuCss,/body\.drawer-open \.future \.fc\{padding:0 5px 5px!important;font-size:8\.8px!important;line-height:1\.24!important\}/);
+assert.match(ux,/!s\.querySelector\('\.chapter-heading'\)/);
+assert.match(tocLayout,/function measureChapterTitle\(summary\)/);
+assert.match(tocLayout,/classList\.toggle\('chapter-title-long'/);
+assert.match(tocLayout,/new ResizeObserver\(\(\)=>requestAnimationFrame\(apply\)\)\.observe\(list\)/);
+assert.match(menuCss,/body\.drawer-open:not\(\.favorites-filter-on\) \.drawer-chapter summary \.chapter-ico\{display:none!important\}/);
+assert.match(menuCss,/summary\.chapter-title-long \.chapter-no::after\{content:' — '!important\}/);
+assert.match(menuCss,/body\.drawer-open #actview \.txt,[\s\S]*hyphens:auto!important;[\s\S]*text-align:left!important|body\.drawer-open #actview \.txt,[\s\S]*text-align:left!important[\s\S]*hyphens:auto!important/);
 assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:none!important\}/);
 assert.match(ux,/compactMarkers\(document\.body\.classList\.contains\('drawer-open'\)\);install\(\)/);
 assert.match(ux,/CustomEvent\('police-law-stars-ready'\)/);
@@ -150,4 +158,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:131,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:138,activeArticleLinks:links},null,2));

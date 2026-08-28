@@ -33,6 +33,14 @@
   body.drawer-open .chapter-no{display:block!important;font-size:9.5px!important;font-weight:850!important}
   body.drawer-open .chapter-title{display:block!important;margin-top:1px!important;font-size:8.2px!important;line-height:1.08!important;font-weight:700!important}
   body.drawer-open .chapter-title.generated{font-style:italic!important;font-weight:550!important;color:#52697f!important}
+  body.drawer-open .drawer-chapter summary,body.drawer-open .chapter-heading{text-align:left!important}
+  body.drawer-open:not(.favorites-filter-on) .drawer-chapter summary{grid-template-columns:minmax(0,1fr)!important}
+  body.drawer-open:not(.favorites-filter-on) .drawer-chapter summary .chapter-ico{display:none!important}
+  body.drawer-open:not(.favorites-filter-on) .chapter-heading{grid-column:1!important}
+  body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-no,
+  body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-title{display:inline!important}
+  body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-no::after{content:' — '!important}
+  body.drawer-open .drawer-chapter summary.chapter-title-long .chapter-title{margin-top:0!important}
 
   .unit-head{--unit-heading-size:19px;display:grid!important;grid-template-columns:max-content 30px minmax(0,1fr)!important;column-gap:4px!important;align-items:start!important;padding-right:0!important}
   .unit-title{grid-column:1!important;grid-row:1!important;min-width:max-content!important;white-space:nowrap!important}
@@ -107,3 +115,9 @@ body.drawer-open .unit-star.on{width:7px!important;height:10px!important;font-si
 body.drawer-open .future{padding:0!important;margin:3px 0!important;border-radius:7px!important}
 body.drawer-open .future summary{padding:4px 5px!important;font-size:9px!important;line-height:1.2!important}
 body.drawer-open .future .fc{padding:0 5px 5px!important;font-size:8.8px!important;line-height:1.24!important}
+
+/* The document language is Polish (html[lang=pl]); keep split-view text
+   ragged-right while allowing the browser to use Polish hyphenation. */
+body.drawer-open #actview .txt,
+body.drawer-open #actview .editorial-title,
+body.drawer-open #actview .future .fc{text-align:left!important;text-align-last:auto!important;letter-spacing:normal!important;word-spacing:normal!important;hyphens:auto!important;-webkit-hyphens:auto!important;overflow-wrap:break-word!important;word-break:normal!important}

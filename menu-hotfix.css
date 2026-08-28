@@ -81,6 +81,11 @@
 body.drawer-open .unit-title .art-prefix{font-size:inherit!important}
 body.drawer-open .unit-title .art-prefix::after{content:none!important}
 
+/* Keep full-view section titles on the same baseline while leaving room for
+   descenders. The negative margin preserves the header's measured height. */
+body:not(.drawer-open) .section-label{overflow:visible!important}
+body:not(.drawer-open) .section-title{padding-bottom:2px!important;margin-bottom:-2px!important}
+
 /* Compact saved marker from the split view, with a full-size invisible
    long-press target. Empty markers stay hidden: adding uses article swipe. */
 .unit-head{grid-template-columns:max-content 10px minmax(0,1fr)!important;column-gap:0!important}

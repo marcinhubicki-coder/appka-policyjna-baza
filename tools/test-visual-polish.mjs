@@ -37,6 +37,8 @@ assert.match(ux,/const ACT_LANDING_ENABLED=false/);
 assert.match(ux,/if\(ACT_LANDING_ENABLED\)actLanding\(\);else document\.body\.classList\.add\('act-selected'\)/);
 assert.match(menuCss,/grid-template-columns:max-content 30px minmax\(0,1fr\)/);
 assert.match(menuCss,/\.unit-star\.on\{[^}]*width:10px!important;height:19px!important/);
+assert.match(menuCss,/body:not\(\.drawer-open\) \.legal-unit\{padding:7px!important\}/);
+assert.match(menuCss,/\.unit-star\.on\{[^}]*transform:translateY\(5px\)/);
 assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:none!important\}/);
 assert.match(ux,/compactMarkers\(document\.body\.classList\.contains\('drawer-open'\)\);install\(\)/);
 assert.match(ux,/CustomEvent\('police-law-stars-ready'\)/);
@@ -143,4 +145,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:124,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:126,activeArticleLinks:links},null,2));

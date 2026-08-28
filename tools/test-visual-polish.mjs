@@ -36,7 +36,7 @@ assert.match(ux,/observer\.disconnect\(\).*observer\.observe\(view/);
 assert.match(ux,/const ACT_LANDING_ENABLED=false/);
 assert.match(ux,/if\(ACT_LANDING_ENABLED\)actLanding\(\);else document\.body\.classList\.add\('act-selected'\)/);
 assert.match(menuCss,/grid-template-columns:max-content 30px minmax\(0,1fr\)/);
-assert.match(menuCss,/\.unit-star\.on\{[^}]*width:14px!important;height:18px!important/);
+assert.match(menuCss,/\.unit-star\.on\{[^}]*width:10px!important;height:19px!important/);
 assert.match(menuCss,/body\.drawer-open \.unit-title \.art-prefix::after\{content:none!important\}/);
 assert.match(ux,/compactMarkers\(document\.body\.classList\.contains\('drawer-open'\)\);install\(\)/);
 assert.match(ux,/CustomEvent\('police-law-stars-ready'\)/);
@@ -82,6 +82,7 @@ assert.match(favoriteJs,/window\.addEventListener\('police-law-stars-ready',refr
 assert.match(favoriteJs,/icon\('edit'\),'Edytuj'/);
 assert.match(favoriteJs,/icon\('trash'\),'Usuń z ulubionych'/);
 assert.match(favoriteJs,/installArticleActionGesture/);
+assert.match(favoriteJs,/pointerdown',event=>\{[^}]*event\.preventDefault\(\)/);
 assert.match(favoriteJs,/const enabled=\(\)=>filter&&document\.body\.classList\.contains\('drawer-open'\)&&!!itemFor\(article\.id\)/);
 assert.match(favoriteJs,/editable=on&&M\.describe\(rowFor\(article\.id\)\|\|\[\]\)\.length>1/);
 assert.match(favoriteJs,/,340\)\}/);
@@ -92,10 +93,11 @@ assert.doesNotMatch(favoriteJs,/police-law-article-star-click|favoriteClickSync/
 assert.match(favoriteJs,/addEventListener\('click',event=>\{event\.preventDefault\(\);event\.stopImmediatePropagation\(\)\},true\)/);
 assert.match(menuCss,/\.unit-star:not\(\.on\)\{visibility:hidden!important;pointer-events:none!important\}/);
 assert.match(menuCss,/body:not\(\.drawer-open\) \.unit-star\.on\{pointer-events:none!important\}/);
-assert.match(menuCss,/body\.drawer-open \.unit-star\.on\{[^}]*align-self:center!important/);
+assert.match(menuCss,/body\.drawer-open \.unit-star\.on\{[^}]*align-self:start!important/);
 assert.match(menuCss,/body\.drawer-open:not\(\.favorites-filter-on\) \.unit-star\.on\{pointer-events:none!important\}/);
 assert.match(menuCss,/body\.drawer-open\.favorites-filter-on \.unit-star\.on\{pointer-events:auto!important\}/);
-assert.match(menuCss,/body\.drawer-open \.unit-star\{width:11px!important;height:12px!important\}/);
+assert.match(menuCss,/body\.drawer-open \.unit-star\{width:7px!important;height:10px!important\}/);
+assert.match(menuCss,/-webkit-tap-highlight-color:transparent!important/);
 assert.match(menuCss,/\.unit-star\.on::before\{[^}]*inset:-13px -15px/);
 assert.match(favoriteJs,/favorite-edit-act/);
 assert.match(favoriteCss,/favorites-scope-popover\{position:fixed;z-index:220/);
@@ -137,4 +139,4 @@ for(const act of data)for(const row of act[3]){
   links++;
 }
 
-console.log(JSON.stringify({status:'ok',checks:118,activeArticleLinks:links},null,2));
+console.log(JSON.stringify({status:'ok',checks:120,activeArticleLinks:links},null,2));

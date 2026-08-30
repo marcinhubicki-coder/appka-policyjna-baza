@@ -60,8 +60,7 @@
 
   const target=document.getElementById("actview");
   if(target){
-    const mo=new MutationObserver(()=>cleanup(target));
-    mo.observe(target,{childList:true,subtree:true});
+    window.addEventListener("police-law-rendered",()=>cleanup(target));
     setTimeout(()=>cleanup(target),0);
   }
 })();

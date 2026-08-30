@@ -2,6 +2,7 @@
 (function(){
   const root=document.documentElement;
   let busy=false;
+  let queued=false;
 
   function compactLabel(s){
     return String(s||'').replace(/^Art\.\s*/i,'A. ');
@@ -69,13 +70,18 @@
     } finally { busy=false; }
   }
 
+  function schedule(){
+    if(queued)return;queued=true;
+    requestAnimationFrame(()=>{queued=false;apply()});
+  }
+
   function start(){
     const list=document.getElementById('drawerArticles');
     if(!list){setTimeout(start,80);return;}
     apply();
-    new MutationObserver(()=>requestAnimationFrame(apply)).observe(list,{childList:true,subtree:true});
-    new ResizeObserver(()=>requestAnimationFrame(apply)).observe(list);
-    new MutationObserver(()=>requestAnimationFrame(apply)).observe(document.body,{attributes:true,attributeFilter:['class']});
+    new MutationObserver(schedule).observe(list,{childList:true,subtree:true});
+    new ResizeObserver(schedule).observe(list);
+    new MutationObserver(schedule).observe(document.body,{attributes:true,attributeFilter:['class']});
   }
   start();
 })();

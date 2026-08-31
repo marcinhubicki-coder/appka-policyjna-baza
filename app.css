@@ -21,15 +21,18 @@ body.settings-open .settings-panel{opacity:1;visibility:visible;pointer-events:a
 .settings-head h2{margin:0;color:var(--accent);font-size:17px;line-height:1.2}
 .settings-close{width:34px;height:34px;display:grid;place-items:center;padding:0;border:0;border-radius:10px;background:#f2f6f9;color:var(--accent);font-size:24px;line-height:1}
 .settings-section{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px;border:1px solid #dce5ec;border-radius:13px;background:#f8fafc}
+.settings-section+.settings-section{margin-top:8px}
 .settings-copy{min-width:0}
 .settings-copy b,.settings-copy small{display:block}
 .settings-copy b{margin-bottom:3px;color:#294e70;font-size:13px}
 .settings-copy small{color:var(--muted);font-size:10.5px;line-height:1.25}
-.offline-download{min-width:116px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 10px;border:1px solid #85add0;border-radius:11px;background:#fff;color:#225f8d;font:inherit;font-size:10px;line-height:1.15;font-weight:800;text-align:center}
+.offline-download,.pwa-install{min-width:116px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 10px;border:1px solid #85add0;border-radius:11px;background:#fff;color:#225f8d;font:inherit;font-size:10px;line-height:1.15;font-weight:800;text-align:center}
 .offline-download.ready{border-color:#9dbdae;background:#f2faf5;color:#2d6b4d}
 .offline-download.error{border-color:#d6a7a2;background:#fff7f6;color:#a0443b}
 .offline-download:disabled{opacity:.72}
-.offline-icon{font-size:17px;line-height:1}
+.pwa-install.ready{border-color:#9dbdae;background:#f2faf5;color:#2d6b4d}
+.pwa-install:disabled{opacity:.72}
+.offline-icon,.pwa-icon{font-size:17px;line-height:1}
 .search-results{display:none;position:absolute;left:0;right:0;top:49px;max-height:52vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 12px 32px rgba(15,23,42,.18)}
 .search-results.show{display:block}
 .search-item{display:block;padding:10px 12px;border-top:1px solid #edf1f4;color:var(--text);text-decoration:none}
@@ -64,4 +67,4 @@ main{max-width:1100px;margin:auto;padding:14px 10px 80px;min-width:0}
 .return{position:fixed;display:none;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:90;justify-content:center}.return.show{display:flex}
 .return button{width:min(520px,100%);min-height:48px;border:1px solid #cbd5e1;border-radius:14px;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);box-shadow:0 8px 28px rgba(15,23,42,.18);color:#174a7e;font:inherit;font-weight:750}
 .return-origin{animation:flash 2.5s cubic-bezier(.16,1,.3,1) both}@keyframes flash{0%{background:#e5efff;box-shadow:0 0 0 2px rgba(23,92,211,.16)}12%{background:#eaf2ff}100%{background:transparent;box-shadow:0 0 0 transparent}}
-@media(max-width:650px){.home{font-size:16px}.hero{display:none}.menu-card{padding:12px}.act-grid{grid-template-columns:1fr 1fr}.act-jump{padding:9px}.toc{padding:8px 12px}.toc-grid{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:4px;max-height:min(210px,31vh)}.toc-link{min-height:29px;padding:4px 2px;font-size:10.5px}.legal-unit{padding:13px 7px}.subunit{grid-template-columns:minmax(48px,max-content) minmax(0,1fr);padding:7px 5px}.level-p{margin-left:7px}.level-i{margin-left:14px}.editorial-title{font-size:12px}.settings-panel{right:8px;width:calc(100vw - 16px)}.settings-section{grid-template-columns:1fr;gap:9px}.offline-download{width:100%}}
+@media(max-width:650px){.home{font-size:16px}.hero{display:none}.menu-card{padding:12px}.act-grid{grid-template-columns:1fr 1fr}.act-jump{padding:9px}.toc{padding:8px 12px}.toc-grid{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:4px;max-height:min(210px,31vh)}.toc-link{min-height:29px;padding:4px 2px;font-size:10.5px}.legal-unit{padding:13px 7px}.subunit{grid-template-columns:minmax(48px,max-content) minmax(0,1fr);padding:7px 5px}.level-p{margin-left:7px}.level-i{margin-left:14px}.editorial-title{font-size:12px}.settings-panel{right:8px;width:calc(100vw - 16px)}.settings-section{grid-template-columns:1fr;gap:9px}.offline-download,.pwa-install{width:100%}}

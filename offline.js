@@ -54,3 +54,28 @@
     try{await navigator.serviceWorker.ready;await cacheAll();reg.update().catch(()=>{})}catch(error){markError(error?.message||'Nie udało się uruchomić trybu offline')}
   }).catch(error=>markError(error?.message||'Nie udało się zarejestrować trybu offline'));
 })();
+
+(function(){
+  const button=document.getElementById('pwaInstall'),title=document.getElementById('pwaTitle'),detail=document.getElementById('pwaDetail'),icon=button?.querySelector('.pwa-icon');
+  if(!button||!title||!detail||!icon)return;
+  let installPrompt=null;
+  const standalone=()=>window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true;
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  function installed(){button.disabled=true;button.classList.add('ready');title.textContent='Aplikacja zainstalowana';detail.textContent='Baza uruchamia się w osobnym oknie';icon.textContent='✓'}
+  function instructions(){
+    if(ios){title.textContent='Dodaj do ekranu';detail.textContent='W Safari: Udostępnij → Dodaj do ekranu początkowego → Dodaj';icon.textContent='↗'}
+    else{title.textContent='Zainstaluj z menu';detail.textContent='Otwórz menu przeglądarki i wybierz „Zainstaluj aplikację” lub „Dodaj do ekranu”';icon.textContent='⋮'}
+  }
+  if(standalone())installed();else if(ios)instructions();
+  window.addEventListener('beforeinstallprompt',event=>{
+    event.preventDefault();installPrompt=event;button.disabled=false;title.textContent='Zainstaluj aplikację';detail.textContent='Dodaj bazę do urządzenia i uruchamiaj ją w osobnym oknie';icon.textContent='↓';
+  });
+  window.addEventListener('appinstalled',()=>{installPrompt=null;installed()});
+  button.addEventListener('click',async()=>{
+    if(standalone()){installed();return}
+    if(!installPrompt){instructions();return}
+    const prompt=installPrompt;installPrompt=null;await prompt.prompt();
+    const choice=await prompt.userChoice;
+    if(choice?.outcome==='accepted')installed();else instructions();
+  });
+})();

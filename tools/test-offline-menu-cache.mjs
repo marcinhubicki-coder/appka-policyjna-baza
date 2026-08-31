@@ -10,6 +10,7 @@ const offline = read("offline.js");
 const serviceWorker = read("sw.js");
 const appCss = read("app.css");
 const menuHotfix = read("menu-hotfix.css");
+const ux = read("ux-fixes.js");
 const manifest = JSON.parse(read("manifest.webmanifest"));
 
 let checks = 0;
@@ -28,6 +29,8 @@ match(nav, /drawerLinks\.set\(R\[0\],a\)/);
 match(nav, /drawerLinks\.get\(r\[0\]\)/);
 noMatch(nav, /function openDrawer\(\)\{populateDrawer\(\)/);
 noMatch(nav, /document\.querySelectorAll\('\.drawer-article'\)\.forEach/);
+match(ux, /d\.classList\.contains\('open'\)&&hamburger\)\{hamburger\.click\(\);return\}/);
+match(ux, /hamburger\?\.setAttribute\('aria-expanded','false'\)/);
 
 // Settings have a stable, accessible home in the header and enough room in
 // the split view for hamburger, search and gear controls.

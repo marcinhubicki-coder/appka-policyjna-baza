@@ -31,6 +31,7 @@ noMatch(nav, /function openDrawer\(\)\{populateDrawer\(\)/);
 noMatch(nav, /document\.querySelectorAll\('\.drawer-article'\)\.forEach/);
 match(ux, /d\.classList\.contains\('open'\)&&hamburger\)\{hamburger\.click\(\);return\}/);
 match(ux, /hamburger\?\.setAttribute\('aria-expanded','false'\)/);
+match(ux, /document\.getElementById\('actview'\)&&document\.querySelector\('\.drawer'\)/);
 
 // Settings have a stable, accessible home in the header and enough room in
 // the split view for hamburger, search and gear controls.

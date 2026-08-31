@@ -1,5 +1,5 @@
 (function(){
-const wait=()=>{if(!(Array.isArray(DATA)&&DATA.length&&ACT&&document.getElementById('actview')))return setTimeout(wait,100);init()};
+const wait=()=>{if(!(Array.isArray(DATA)&&DATA.length&&ACT&&document.getElementById('actview')&&document.querySelector('.drawer')))return setTimeout(wait,100);init()};
 const ACT_LANDING_ENABLED=false;
 const CHAPTER_HINTS={uop:['Postanowienia ogólne','Zakres działania Policji','Organizacja Policji','Uprawnienia policjantów','Służba w Policji','Prawa i obowiązki','Świadczenia i mieszkania','Odpowiedzialność dyscyplinarna'],kw:['Zasady odpowiedzialności','Kary i środki','Wykroczenia'],kk:['Zasady odpowiedzialności karnej','Kary i środki karne','Przestępstwa'],kpk:['Przepisy ogólne','Uczestnicy postępowania','Dowody','Środki przymusu','Postępowanie przygotowawcze','Postępowanie sądowe'],kpow:['Zasady postępowania','Uczestnicy i czynności','Postępowanie przed sądem'],spb:['Zasady stosowania środków','Środki przymusu bezpośredniego','Broń palna'],prd:['Zasady ruchu drogowego','Pojazdy i kierujący','Kontrola ruchu drogowego'],cudz:['Zasady pobytu','Kontrola i powrót'],nieletni:['Zasady i środki','Postępowanie wobec nieletnich']};
 const ACT_ICONS={uop:'🛡️',kw:'⚠️',kk:'⚖️',kpk:'🔎',kpow:'📋',spb:'✋',prd:'🚓',cudz:'🪪',nieletni:'👥',z768:'👮',z360:'🚐',z805:'⭐'};

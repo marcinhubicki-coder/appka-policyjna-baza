@@ -6,14 +6,14 @@ function ready(){try{return Array.isArray(DATA)&&DATA.length&&ACT&&ACT[3]&&typeo
 function meta(code){try{return META[code]||[code,actBy(code)?.[1]||code,'']}catch(_){return[code,code,'']}}
 function articles(){return ACT?.[3]||[]}
 function topOffset(){return (document.querySelector('.top')?.getBoundingClientRect().height||0)+8}
-function currentIndex(){const rows=document.querySelectorAll('#actview .legal-unit');if(!rows.length)return 0;const y=topOffset()+8;let low=0,high=rows.length-1,firstBelow=rows.length;while(low<=high){const mid=(low+high)>>1,rect=rows[mid].getBoundingClientRect();if(rect.bottom>y){firstBelow=mid;high=mid-1}else low=mid+1}if(firstBelow<rows.length){const rect=rows[firstBelow].getBoundingClientRect();if(rect.top<=y||firstBelow===0)return Math.min(firstBelow,articles().length-1)}return Math.min(Math.max(0,firstBelow-1),articles().length-1)}
+function currentIndex(){const rows=articles();if(!rows.length)return 0;const view=document.getElementById('actview'),rect=view?.getBoundingClientRect(),x=Math.max(1,Math.min(window.innerWidth-1,(rect?.left||0)+Math.min(24,Math.max(1,(rect?.width||window.innerWidth)/2)))),y=Math.max(1,Math.min(window.innerHeight-1,topOffset()+8)),hit=document.elementFromPoint(x,y)?.closest?.('#actview .legal-unit[id]'),index=hit?rows.findIndex(row=>row[0]===hit.id):-1;if(index>=0)return index;const current=location.hash.slice(1),hashIndex=rows.findIndex(row=>row[0]===current);return hashIndex>=0?hashIndex:0}
 function currentRow(){return articles()[currentIndex()]||articles()[0]}
 function showToast(s){if(!toast)return;toast.textContent=s;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),900)}
-function scrollArticleTop(id){const el=document.getElementById(id);if(!el)return;const y=window.scrollY+el.getBoundingClientRect().top-topOffset();window.scrollTo({top:Math.max(0,y),behavior:'smooth'});setTimeout(()=>window.scrollTo({top:Math.max(0,window.scrollY+el.getBoundingClientRect().top-topOffset()),behavior:'auto'}),380)}
-function gotoId(id){history.replaceState(null,'','#'+id);jump(id,false);requestAnimationFrame(()=>scrollArticleTop(id));setTimeout(updateUI,430)}
+function scrollArticleTop(id){if(typeof globalThis.__POLICE_SCROLL_ARTICLE==='function'){globalThis.__POLICE_SCROLL_ARTICLE(id,true);return}const el=document.getElementById(id);if(!el)return;el.scrollIntoView({block:'start',behavior:'smooth'})}
+function gotoId(id){history.replaceState(null,'','#'+id);scrollArticleTop(id);setTimeout(updateUI,430)}
 function goArticle(step){const a=articles(),i=currentIndex(),n=i+step;if(n<0){showToast('To pierwszy artykuł');return}if(n>=a.length){showToast('To ostatni artykuł');return}closeDrawer();results?.classList.remove('show');gotoId(a[n][0]);showToast((step>0?'→ ':'← ')+(a[n][2]||''))}
 function getBM(){try{return JSON.parse(localStorage.getItem(BMKEY)||'[]')}catch(_){return[]}}
-function setBM(x){localStorage.setItem(BMKEY,JSON.stringify(x))}
+function setBM(x){localStorage.setItem(BMKEY,JSON.stringify(x));window.dispatchEvent(new CustomEvent('police-law-favorites-change'))}
 function isBM(id){return getBM().some(x=>x.id===id)}
 function toggleBM(){const r=currentRow();if(!r)return;let b=getBM(),i=b.findIndex(x=>x.id===r[0]);if(i>=0){b.splice(i,1);showToast('Usunięto z zapisanych')}else{b.unshift({id:r[0],act:ACT[0],num:r[2],topic:r[3]||''});showToast('Zapisano '+r[2])}setBM(b);populateDrawer();updateUI()}
 function openBookmark(x){if(!actBy(x.act))return;renderAct(x.act,null,false);setTimeout(()=>{gotoId(x.id);populateDrawer()},70);closeDrawer()}

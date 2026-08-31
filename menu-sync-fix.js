@@ -7,18 +7,13 @@
   }
   function topOffset(){return (document.querySelector('.top')?.getBoundingClientRect().height || 0) + 8}
   function visibleArticleId(){
-    const rows=document.querySelectorAll('#actview .legal-unit[id]');
-    if(!rows.length)return null;
-    const y=topOffset()+8;let low=0,high=rows.length-1,firstBelow=rows.length;
-    while(low<=high){const mid=(low+high)>>1,rect=rows[mid].getBoundingClientRect();if(rect.bottom>y){firstBelow=mid;high=mid-1}else low=mid+1}
-    if(firstBelow<rows.length)return rows[firstBelow].id;
-    return rows[rows.length-1]?.id||null;
+    const view=document.getElementById('actview'),rect=view?.getBoundingClientRect();if(!view||!rect)return null;
+    const x=Math.max(1,Math.min(window.innerWidth-1,rect.left+Math.min(24,Math.max(1,rect.width/2)))),y=Math.max(1,Math.min(window.innerHeight-1,topOffset()+8));
+    return document.elementFromPoint(x,y)?.closest?.('#actview .legal-unit[id]')?.id||location.hash.slice(1)||null;
   }
-  function pinArticleToTop(id){if(!id)return;const el=document.getElementById(id);if(!el)return;const y=window.scrollY+el.getBoundingClientRect().top-topOffset();window.scrollTo({top:Math.max(0,y),behavior:'auto'})}
+  function pinArticleToTop(id){if(!id)return;if(typeof globalThis.__POLICE_SCROLL_ARTICLE==='function'){globalThis.__POLICE_SCROLL_ARTICLE(id,false);return}document.getElementById(id)?.scrollIntoView({block:'start',behavior:'auto'})}
   function settleHeaderAndArticle(id){
-    syncHeaderHeight();requestAnimationFrame(()=>{syncHeaderHeight();requestAnimationFrame(()=>{syncHeaderHeight();pinArticleToTop(id)})});
-    setTimeout(()=>{syncHeaderHeight();pinArticleToTop(id)},90);
-    setTimeout(()=>{syncHeaderHeight();pinArticleToTop(id);const active=document.querySelector('.drawer-article[data-id="'+CSS.escape(id||'')+'"]');if(active)active.scrollIntoView({block:'nearest',behavior:'auto'})},240);
+    syncHeaderHeight();requestAnimationFrame(()=>requestAnimationFrame(()=>{syncHeaderHeight();pinArticleToTop(id);const active=document.querySelector('.drawer-article[data-id="'+CSS.escape(id||'')+'"]');if(active)active.scrollIntoView({block:'nearest',behavior:'auto'})}));
   }
   const header=document.querySelector('.top');
   if(header){syncHeaderHeight();try{new ResizeObserver(syncHeaderHeight).observe(header)}catch(_){}}

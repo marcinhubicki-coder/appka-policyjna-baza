@@ -24,8 +24,8 @@ assert.match(app, /class="unit-star" type="button" data-article=/);
 assert.match(app, /CustomEvent\('police-law-rendered'/);
 assert.match(app, /renderAct\(target\?idMap\.get\(target\):'uop',target,false\)/);
 
-assert.match(appCss, /content-visibility:auto/);
-assert.match(appCss, /contain-intrinsic-size:auto 420px/);
+assert.doesNotMatch(appCss, /content-visibility/);
+assert.doesNotMatch(appCss, /contain-intrinsic-size/);
 assert.match(appCss, /\.editorial-title\.is-editorial\{font-style:italic\}/);
 assert.match(appCss, /\.editorial-title\.is-source\{font-style:normal\}/);
 assert.match(menuCss, /body\.drawer-open \.drawer-article \.da-topic\{[^}]*font-style:normal!important/);
@@ -39,8 +39,8 @@ assert.doesNotMatch(ux, /observer\.observe\(view,\{childList:true,subtree:true\}
 assert.match(tocLayout, /function schedule\(\)/);
 assert.match(tocLayout, /if\(queued\)return;queued=true/);
 
-assert.match(nav, /while\(low<=high\)/);
-assert.doesNotMatch(nav, /rows\.forEach\(\(el,i\)=>\{const r=el\.getBoundingClientRect/);
+assert.match(nav, /document\.elementFromPoint\(x,y\)/);
+assert.doesNotMatch(nav, /while\(low<=high\)/);
 assert.match(nav, /window\.addEventListener\('police-law-rendered',\(\)=>\{if\(ready\(\)&&ACT\[0\]!==lastActCode\)populateDrawer\(\);installArticleBookmark\(\)\}\)/);
 assert.doesNotMatch(nav, /new MutationObserver/);
 
@@ -48,10 +48,13 @@ assert.match(favoriteJs, /function ensureDataIndex\(\)/);
 assert.match(favoriteJs, /actById\.set\(row\[0\],act\)/);
 assert.match(favoriteJs, /if\(article\.querySelector\(':scope > \.favorite-swipe-action'\)\)updateSwipePanel/);
 assert.match(favoriteJs, /function openSwipe\(article\).*updateSwipePanel\(article,on\)/);
+assert.match(favoriteJs, /button\.classList\.toggle\('on',on\);button\.textContent=on\?'★':'☆'/);
 assert.match(favoriteJs, /window\.addEventListener\('police-law-rendered',scheduleRefresh\)/);
+assert.match(favoriteJs, /window\.addEventListener\('police-law-stars-ready',scheduleRefresh\)/);
 assert.doesNotMatch(favoriteJs, /new MutationObserver\(mutations=>/);
 assert.match(favoriteJs, /favorite-swipe-active/);
 assert.match(favoriteCss, /body\.favorite-swipe-active\{overscroll-behavior:none/);
+assert.match(app, /globalThis\.__POLICE_SCROLL_ARTICLE=scrollArticleStart/);
 
 const data = loadLegalData("data.js");
 let links = 0;

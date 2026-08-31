@@ -38,6 +38,8 @@ match(ux, /document\.getElementById\('actview'\)&&document\.querySelector\('\.dr
 match(index, /id="settingsButton"[^>]*aria-controls="settingsPanel"|aria-controls="settingsPanel"[^>]*id="settingsButton"/);
 match(index, /id="settingsPanel"/);
 match(index, /id="offlineDownload"/);
+match(index, /id="offlineDownload"[^>]*disabled|disabled[^>]*id="offlineDownload"/);
+match(index, /id="offlineTitle">Przygotowuję…<\/span>/);
 match(index, /src="settings\.js"/);
 match(index, /src="offline\.js"/);
 match(settings, /aria-hidden','false'/);

@@ -82,6 +82,8 @@ match(appCss, /\.search-return\{bottom:calc\(66px \+ env\(safe-area-inset-bottom
 // behind the search overlay.
 match(app, /globalThis\.__POLICE_SEARCH_CLEAR=\(\)=>clearSearchInput\(false\)/);
 match(nav, /if\(document\.body\.classList\.contains\('search-active'\)\)globalThis\.__POLICE_SEARCH_CLEAR\?\.\(\);drawer\?\.classList\.contains\('open'\)\?closeDrawer\(\):openDrawer\(\)/);
+match(nav, /globalThis\.__POLICE_DRAWER_CLOSE=closeDrawer/);
+match(settings, /if\(typeof globalThis\.__POLICE_DRAWER_CLOSE==='function'\)globalThis\.__POLICE_DRAWER_CLOSE\(\)/);
 
 // Each act can progressively reveal more matches without rendering every hit
 // up front. Batches contain 10 items, except that a 1–4 item tail is folded
@@ -105,7 +107,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-01\.3'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-01\.4'/);
 
 console.log(JSON.stringify({
   status: "ok",

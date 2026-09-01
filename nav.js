@@ -38,5 +38,6 @@ window.addEventListener('police-law-rendered',()=>{if(ready()&&ACT[0]!==lastActC
 function installArticleBookmark(){const head=view.querySelector('.act-head');if(!head||head.querySelector('.article-bookmark'))return;bmBtn=document.createElement('button');bmBtn.className='article-bookmark';bmBtn.type='button';bmBtn.innerHTML='<span>☆</span><small>Zapisz artykuł</small>';bmBtn.onclick=toggleBM;head.appendChild(bmBtn);updateUI()}
 }
 globalThis.__POLICE_DRAWER_REFRESH=()=>populateDrawer();
+globalThis.__POLICE_DRAWER_CLOSE=closeDrawer;
 function wait(){ready()?build():setTimeout(wait,80)}wait();
 })();

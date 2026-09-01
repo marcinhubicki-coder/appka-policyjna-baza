@@ -47,7 +47,10 @@
     previousFocus=null;
   }
   function open(){
-    if(document.body.classList.contains('drawer-open'))document.getElementById('hamburger')?.click();
+    if(document.body.classList.contains('drawer-open')){
+      if(typeof globalThis.__POLICE_DRAWER_CLOSE==='function')globalThis.__POLICE_DRAWER_CLOSE();
+      else document.getElementById('hamburger')?.click();
+    }
     previousFocus=document.activeElement;
     syncMode();
     document.body.classList.add('settings-open');

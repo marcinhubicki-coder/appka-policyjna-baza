@@ -1,6 +1,6 @@
 (function(){
   const button=document.getElementById('settingsButton'),panel=document.getElementById('settingsPanel'),backdrop=document.getElementById('settingsBackdrop'),closeButton=document.getElementById('settingsClose');
-  const title=document.getElementById('settingsTitle'),searchSettings=document.getElementById('searchSettings'),filterList=document.getElementById('searchActFilters'),enableAll=document.getElementById('searchEnableAll'),favoritesNotice=document.getElementById('searchFavoritesNotice'),disableFavorites=document.getElementById('searchDisableFavorites');
+  const title=document.getElementById('settingsTitle'),searchSettings=document.getElementById('searchSettings'),filterList=document.getElementById('searchActFilters'),enableAll=document.getElementById('searchEnableAll'),favoritesNotice=document.getElementById('searchFavoritesNotice'),favoritesToggle=document.getElementById('searchFavoritesToggle');
   const generalSections=[...document.querySelectorAll('.settings-general')];
   if(!button||!panel||!backdrop||!closeButton)return;
   let previousFocus=null;
@@ -27,7 +27,7 @@
     filterList.replaceChildren(fragment);
     if(enableAll)enableAll.disabled=items.every(item=>item.enabled);
     if(favoritesNotice)favoritesNotice.hidden=!favoritesOnly;
-    if(disableFavorites)disableFavorites.hidden=!favoritesOnly;
+    if(favoritesToggle){favoritesToggle.textContent=favoritesOnly?'Wyłącz ulubione':'Tylko ulubione';favoritesToggle.setAttribute('aria-pressed',String(favoritesOnly))}
   }
   function syncMode(){
     const searching=isSearchMode();
@@ -57,7 +57,7 @@
     requestAnimationFrame(()=>closeButton.focus({preventScroll:true}));
   }
   enableAll?.addEventListener('click',()=>globalThis.__POLICE_SEARCH_FILTERS?.enableAll?.());
-  disableFavorites?.addEventListener('click',()=>globalThis.__POLICE_SEARCH_FILTERS?.disableFavorites?.());
+  favoritesToggle?.addEventListener('click',()=>{const api=globalThis.__POLICE_SEARCH_FILTERS;if(api?.favoritesOnly?.())api.disableFavorites?.();else api?.enableFavorites?.()});
   button.addEventListener('click',()=>document.body.classList.contains('settings-open')?close():open());
   closeButton.addEventListener('click',()=>close());
   backdrop.addEventListener('click',()=>close());

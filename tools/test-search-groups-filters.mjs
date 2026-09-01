@@ -6,6 +6,7 @@ const app = read("app.js");
 const appCss = read("app.css");
 const index = read("index.html");
 const settings = read("settings.js");
+const nav = read("nav.js");
 const slider = read("slider-preview-fix.js");
 const serviceWorker = read("sw.js");
 
@@ -56,12 +57,31 @@ match(app, /document\.body\.classList\.contains\("drawer-open"\)&&api\?\.isActiv
 match(app, /favorites&&!favorites\.has\(item\.row\[0\]\)/);
 match(app, /favoritesOnly:searchState\.favoritesOnly/);
 match(app, /disableFavorites: disableFavoritesSearch|disableFavorites:disableFavoritesSearch/);
+match(app, /enableFavorites: enableFavoritesSearch|enableFavorites:enableFavoritesSearch/);
 match(index, /id="searchFavoritesNotice"[^>]*hidden>Wyszukiwanie wyłącznie w ulubionych\./);
-match(index, /id="searchDisableFavorites"[^>]*hidden>Wyłącz ulubione/);
+match(index, /id="searchFavoritesToggle"[^>]*>Tylko ulubione/);
 match(settings, /api\.favoritesOnly\?\.\(\)/);
-match(settings, /__POLICE_SEARCH_FILTERS\?\.disableFavorites/);
+match(settings, /api\.disableFavorites\?\.\(\).*api\?\.enableFavorites\?\.\(\)/);
 match(read("favorites-ui.js"), /__POLICE_FAVORITES_SEARCH=\{isActive:\(\)=>filter\|\|allActs,ids:/);
 match(appCss, /\.search-filter-copy\{[^}]*display:flex[^}]*white-space:nowrap/);
+match(appCss, /\.search-filter-actions\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+
+// A result jump preserves the exact search view: query, scroll position,
+// loaded batches and the favorites scope. The dedicated bar restores it above
+// the less important previous/next article pager.
+match(index, /class="search-return" id="searchReturn"/);
+match(index, /← Wróć do wyszukiwania/);
+match(app, /function captureSearchReturn\(\).*scrollTop:results\.scrollTop.*html:results\.innerHTML.*groups:\[\.\.\.searchResultGroups\]/);
+match(app, /captureSearchReturn\(\);closeSearch\(true\)/);
+match(app, /results\.scrollTop=saved\.scrollTop/);
+match(app, /emitSearchState\(true,new Map\(saved\.counts\)\)/);
+match(appCss, /\.search-return\{bottom:calc\(66px \+ env\(safe-area-inset-bottom\)\);z-index:91\}/);
+
+// During an active search the hamburger first clears the query/results, then
+// performs its normal menu toggle. It cannot silently change the split view
+// behind the search overlay.
+match(app, /globalThis\.__POLICE_SEARCH_CLEAR=\(\)=>clearSearchInput\(false\)/);
+match(nav, /if\(document\.body\.classList\.contains\('search-active'\)\)globalThis\.__POLICE_SEARCH_CLEAR\?\.\(\);drawer\?\.classList\.contains\('open'\)\?closeDrawer\(\):openDrawer\(\)/);
 
 // Each act can progressively reveal more matches without rendering every hit
 // up front. Batches contain 10 items, except that a 1–4 item tail is folded
@@ -85,7 +105,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-01\.2'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-01\.3'/);
 
 console.log(JSON.stringify({
   status: "ok",

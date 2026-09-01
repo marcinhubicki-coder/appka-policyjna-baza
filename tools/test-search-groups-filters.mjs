@@ -115,7 +115,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-01\.6'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-01\.7'/);
 
 console.log(JSON.stringify({
   status: "ok",

@@ -25,6 +25,25 @@ noMatch(appCss, /content-visibility/);
 noMatch(appCss, /contain-intrinsic-size/);
 match(appCss, /scroll-margin-top:calc\(var\(--topH,72px\) \+ 8px\)/);
 match(favoritesCss, /favorite-swipe-open>\.favorite-swipe-action[^}]*position:fixed/);
+match(favoritesCss, /favorite-swipe-open\.favorite-swiping>:not\(\.favorite-swipe-action\)[^}]*var\(--favorite-swipe-x\)/);
+match(favoritesCss, /favorite-swipe-open\.favorite-swiping>\.favorite-swipe-action[^}]*var\(--favorite-panel-x/);
+
+// The favorite action can be dismissed with the inverse gesture from the
+// article text. Its drag starts at the open -112 px position and reaches zero
+// only while moving right; a short gesture snaps back to the open state.
+match(favorites, /function swipeTarget\(target,x\).*article===activeArticle.*closing:true/);
+match(favorites, /\.navrefs,\.favorite-swipe-action/);
+match(favorites, /state\.closing\)\{if\(axis==='x'&&dx>52\)closeSwipe\(\)/);
+match(favorites, /state\.closing\)\{if\(state\.axis==='x'&&dx>52\)closeSwipe\(\)/);
+match(favorites, /if\(axis==='x'\)suppressSwipeClickUntil=Date\.now\(\)\+450/);
+match(favorites, /if\(state\.axis==='x'\)suppressSwipeClickUntil=Date\.now\(\)\+450/);
+match(favorites, /Date\.now\(\)>=suppressSwipeClickUntil/);
+const swipeOffsetSource = favorites.match(/function swipeOffset\(dx,closing\)\{[^}]+\}/)?.[0];
+assert.ok(swipeOffsetSource, "Brak funkcji położenia gestu ulubionych");
+const swipeOffset = Function(`${swipeOffsetSource};return swipeOffset`)();
+assert.deepEqual([-180, -60, 0, 60].map(dx => swipeOffset(dx, false)), [-112, -60, 0, 0]);
+assert.deepEqual([-60, 0, 60, 180].map(dx => swipeOffset(dx, true)), [-112, -112, -52, 0]);
+checks += 3;
 
 // A favorite save must update storage, the article state and the visible star.
 match(favorites, /CustomEvent\('police-law-favorites-change'\)/);

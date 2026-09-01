@@ -63,7 +63,7 @@ match(index, /id="searchFavoritesToggle"[^>]*>Szukaj tylko w ulubionych/);
 match(index, /id="searchEnableAll"[^>]*>Resetuj filtry/);
 match(settings, /api\.favoritesOnly\?\.\(\)/);
 match(settings, /api\.disableFavorites\?\.\(\).*api\?\.enableFavorites\?\.\(\)/);
-match(settings, /favoritesOnly\?'Wyszukiwanie wyłącznie w artykułach dodanych do ulubionych\.':'Wyszukiwanie we wszystkich ustawach i artykułach\.'/);
+match(settings, /favoritesOnly\?'Wyszukiwanie wyłącznie w ulubionych artykułach\.':'Wyszukiwanie we wszystkich ustawach i artykułach\.'/);
 match(settings, /favoritesOnly\?'Wyłącz ulubione':'Szukaj tylko w ulubionych'/);
 match(settings, /enableAll\.disabled=items\.every\(item=>item\.enabled\)&&!favoritesOnly/);
 match(settings, /__POLICE_SEARCH_FILTERS\?\.resetAll\?\.\(\)/);
@@ -72,7 +72,7 @@ match(app, /resetAll:resetSearchFilters/);
 match(read("favorites-ui.js"), /__POLICE_FAVORITES_SEARCH=\{isActive:\(\)=>filter\|\|allActs,ids:/);
 match(appCss, /\.search-filter-copy\{[^}]*display:flex[^}]*white-space:nowrap/);
 match(appCss, /\.search-filter-actions\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-match(appCss, /\.search-filter-head strong\{[^}]*font-weight:800/);
+match(appCss, /\.search-filter-head strong\{[^}]*font-size:clamp\(8\.5px,2\.65vw,10\.5px\)[^}]*font-weight:800[^}]*white-space:nowrap/);
 
 // A result jump preserves the exact search view: query, scroll position,
 // loaded batches and the favorites scope. The dedicated bar restores it above
@@ -115,7 +115,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-01\.5'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-01\.6'/);
 
 console.log(JSON.stringify({
   status: "ok",

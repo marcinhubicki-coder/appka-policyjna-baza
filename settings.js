@@ -26,7 +26,7 @@
     }
     filterList.replaceChildren(fragment);
     if(enableAll)enableAll.disabled=items.every(item=>item.enabled)&&!favoritesOnly;
-    if(favoritesNotice)favoritesNotice.textContent=favoritesOnly?'Wyszukiwanie wyłącznie w artykułach dodanych do ulubionych.':'Wyszukiwanie we wszystkich ustawach i artykułach.';
+    if(favoritesNotice)favoritesNotice.textContent=favoritesOnly?'Wyszukiwanie wyłącznie w ulubionych artykułach.':'Wyszukiwanie we wszystkich ustawach i artykułach.';
     if(favoritesToggle){favoritesToggle.textContent=favoritesOnly?'Wyłącz ulubione':'Szukaj tylko w ulubionych';favoritesToggle.setAttribute('aria-pressed',String(favoritesOnly))}
   }
   function syncMode(){

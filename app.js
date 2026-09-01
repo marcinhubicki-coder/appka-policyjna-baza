@@ -14,14 +14,33 @@ z805:["Z. 805","Zarządzenie KGP nr 805 — zasady etyki zawodowej","publikacja 
 };
 let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null;
 const searchIndex=[],searchResultGroups=new Map(),SEARCH_FILTER_KEY="police-law-search-excluded-v1";
-let searchWarmCursor=0,timer=null;
+let searchWarmCursor=0,timer=null,searchWarmWork=0;
 let searchExcluded=readSearchExcluded(),searchFavoritesOnly=false,searchState={active:false,counts:new Map(),favoritesOnly:false};
 const idMap=new Map(),articleMap=new Map(),unitMap=new Map();
 const q=document.getElementById("q"),results=document.getElementById("results"),quickbar=document.getElementById("quickbar"),actgrid=document.getElementById("actgrid"),actview=document.getElementById("actview"),ret=document.getElementById("return"),searchRet=document.getElementById("searchReturn");
+const PERF=(()=>{
+  const now=()=>globalThis.performance?.now?.()??Date.now();
+  const bootAt=Number(globalThis.__POLICE_BOOT_AT);
+  const state={version:1,startedAt:Number.isFinite(bootAt)?bootAt:now(),metrics:{},updatedAt:Date.now()};
+  function update(metrics={},details={}){
+    for(const[name,value]of Object.entries(metrics))if(Number.isFinite(value))state.metrics[name]=Math.round(value*10)/10;
+    Object.assign(state,details,{updatedAt:Date.now()});
+    window.dispatchEvent(new CustomEvent("police-law-performance",{detail:snapshot()}));
+  }
+  function snapshot(){return{...state,metrics:{...state.metrics}}}
+  return{state,now,update,snapshot};
+})();
+globalThis.__POLICE_PERF=PERF;
+function captureDataResource(){
+  const entries=globalThis.performance?.getEntriesByType?.("resource")||[];
+  const entry=[...entries].reverse().find(item=>{try{return new URL(item.name,location.href).pathname.endsWith("/data.js")}catch(_){return false}});
+  if(!entry)return;
+  PERF.update({dataResourceMs:entry.duration},{dataResourceBytes:entry.decodedBodySize||0,dataTransferBytes:entry.transferSize||0,dataFromCache:entry.transferSize===0&&entry.decodedBodySize>0});
+}
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function norm(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
 function searchText(item){if(item.text!==null)return item.text;const R=item.row;return item.text=norm(R[2]+" "+R[3]+" "+R[4].map(U=>U[3]).join(" "))}
-function warmSearchIndex(deadline){let processed=0;while(searchWarmCursor<searchIndex.length&&processed<80&&(!deadline||deadline.timeRemaining()>2||processed<8)){searchText(searchIndex[searchWarmCursor++]);processed++}if(searchWarmCursor<searchIndex.length)scheduleSearchWarmup()}
+function warmSearchIndex(deadline){const started=PERF.now();let processed=0;while(searchWarmCursor<searchIndex.length&&processed<80&&(!deadline||deadline.timeRemaining()>2||processed<8)){searchText(searchIndex[searchWarmCursor++]);processed++}searchWarmWork+=PERF.now()-started;if(searchWarmCursor<searchIndex.length)scheduleSearchWarmup();else PERF.update({searchReadyMs:PERF.now()-PERF.state.startedAt,searchWorkMs:searchWarmWork},{searchItems:searchIndex.length})}
 function scheduleSearchWarmup(){if("requestIdleCallback"in window)requestIdleCallback(warmSearchIndex,{timeout:900});else setTimeout(()=>warmSearchIndex(null),24)}
 function readSearchExcluded(){try{const saved=JSON.parse(localStorage.getItem(SEARCH_FILTER_KEY)||"[]");return new Set(Array.isArray(saved)?saved.filter(code=>typeof code==="string"):[])}catch(_){return new Set()}}
 function saveSearchExcluded(){try{localStorage.setItem(SEARCH_FILTER_KEY,JSON.stringify([...searchExcluded]))}catch(_){}}
@@ -54,7 +73,17 @@ function articleHeading(s){const value=String(s??"");const m=value.match(/^(Art\
 function compactMarker(s){return String(s??"").trim().replace(/^ust\.\s*/i,"u. ").replace(/^pkt\s*/i,"p. ").replace(/^lit\.\s*/i,"l. ")}
 function sectionHeading(row,actCode){const info=globalThis.__EDITORIAL?.sectionInfo?.(row,actCode);if(!info)return esc(row[1]);return `<span class="section-no">${esc(info.prefix)}</span>${info.title?`<span class="section-title${info.generated?" generated":""}">${esc(info.title)}</span>`:""}`}
 async function gunzipB64(b64){const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));const ds=new DecompressionStream("gzip");return new Response(new Blob([b]).stream().pipeThrough(ds)).text()}
-async function load(){DATA=JSON.parse(await gunzipB64((window.__POLICE_B64||[]).join("")));if(window.__LEGAL_FIX_B64){FIX=JSON.parse(await gunzipB64(window.__LEGAL_FIX_B64))}searchExcluded=new Set([...searchExcluded].filter(code=>DATA.some(A=>A[0]===code)));DATA.forEach(A=>A[3].forEach(R=>{articleMap.set(R[0],{act:A[0],r:R});idMap.set(R[0],A[0]);R[4].forEach((U,i)=>{const key=U[0]||`${R[0]}@@${i}`;if(FIX[key])U[3]=FIX[key];U[3]=tidy(U[3]);if(U[0]){idMap.set(U[0],A[0]);unitMap.set(U[0],{act:A[0],article:R[0],u:U})}});searchIndex.push({act:A[0],row:R,text:null})}));saveSearchExcluded();syncSearchFilterIndicator()}
+async function load(){
+  const loadStarted=PERF.now(),decodeStarted=PERF.now(),raw=await gunzipB64((window.__POLICE_B64||[]).join(""));
+  DATA=JSON.parse(raw);
+  if(window.__LEGAL_FIX_B64)FIX=JSON.parse(await gunzipB64(window.__LEGAL_FIX_B64));
+  const decodedAt=PERF.now(),lookupStarted=PERF.now();
+  searchExcluded=new Set([...searchExcluded].filter(code=>DATA.some(A=>A[0]===code)));
+  DATA.forEach(A=>A[3].forEach(R=>{articleMap.set(R[0],{act:A[0],r:R});idMap.set(R[0],A[0]);R[4].forEach((U,i)=>{const key=U[0]||`${R[0]}@@${i}`;if(FIX[key])U[3]=FIX[key];U[3]=tidy(U[3]);if(U[0]){idMap.set(U[0],A[0]);unitMap.set(U[0],{act:A[0],article:R[0],u:U})}});searchIndex.push({act:A[0],row:R,text:null})}));
+  const completedAt=PERF.now();
+  saveSearchExcluded();syncSearchFilterIndicator();
+  PERF.update({dataDecodeMs:decodedAt-decodeStarted,lookupBuildMs:completedAt-lookupStarted,dataLoadMs:completedAt-loadStarted},{acts:DATA.length,articles:articleMap.size,units:unitMap.size,dataJsonChars:raw.length});
+}
 function actBy(code){return DATA.find(A=>A[0]===code)||DATA[0]}
 function contextPrefix(articleId,unitId,kind){if(kind==="u")return articleId+"-ust-";if(kind==="par")return articleId+"-par-";if(kind==="p"){if(unitId){let m=unitId.match(/^(.*-(?:ust|par)-[^-]+)-pkt-[^-]+/);if(m)return m[1]+"-pkt-";m=unitId.match(/^(.*-(?:ust|par)-[^-]+)$/);if(m)return m[1]+"-pkt-"}return articleId+"-pkt-"}if(kind==="i"){if(unitId){let m=unitId.match(/^(.*-pkt-[^-]+)-lit-[^-]+/);if(m)return m[1]+"-lit-";m=unitId.match(/^(.*-pkt-[^-]+)$/);if(m)return m[1]+"-lit-"}return articleId+"-lit-"}return articleId+"-"}
 function uniqueSuffix(articleId,suffix){const R=articleMap.get(articleId)?.r;if(!R)return null;const xs=R[4].filter(U=>U[0]&&U[0].endsWith(suffix));return xs.length===1?xs[0][0]:null}
@@ -85,7 +114,25 @@ function jump(id,smooth,alignTop=false){const el=document.getElementById(id);if(
 ret.querySelector("button").onclick=()=>{if(!origin)return;const o=origin;origin=null;ret.classList.remove("show");const changed=o.act!==ACT[0];if(changed)renderAct(o.act,o.id,false);setTimeout(()=>{const e=o.id&&document.getElementById(o.id);if(e){e.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>{e.classList.add("return-origin");setTimeout(()=>e.classList.remove("return-origin"),2600)},350)}else scrollTo({top:o.y,behavior:"smooth"})},changed?100:0)};
 function renderLegalArticle(R,actCode){const whole=R[5]==="1",editorial=R[8]!=="s",origin=editorial?"editorial":"source";let h=`<article class="legal-unit${whole?" wholefuture":""}" id="${R[0]}" data-source-act="${esc(actCode)}"><div class="unit-head"><div class="section-label">${sectionHeading(R,actCode)}</div><div class="unit-title">${articleHeading(R[2])}</div><button class="unit-star" type="button" data-article="${esc(R[0])}" title="Przytrzymaj, aby edytować ulubione">☆</button><div class="editorial-title is-${origin}" data-title-origin="${origin}"${editorial?' aria-label="Redakcyjne podsumowanie artykułu"':""}>${esc(R[3])}</div></div>`;if(whole)h+=`<details class="future"><summary>Zmiana przyszła — obowiązuje od ${esc(R[6]||"wskazanej daty")}</summary><div class="fc">Treść poniżej nie obowiązuje jeszcze.</div></details>`;h+='<div class="unit-body">';R[4].forEach(U=>{const uid=U[0]||"",marker=U[2]||"";h+=`<div class="subunit level-${U[1]}"${uid?` id="${uid}"`:""}>${marker?`<span class="marker" data-compact-marker="${esc(compactMarker(marker))}">${esc(marker)}</span>`:""}<div class="txt">${linkify(U[3],R[0],uid,actCode)}</div></div>`});h+="</div>";for(const f of R[7]||[]){const ft=tidy(String(f[1]||"").replace(/🔗/g,""));h+=`<details class="future"><summary>${esc(f[0])}</summary><div class="fc">${esc(ft)}</div></details>`}return h+="</article>"}
 window.__renderLegalArticle=renderLegalArticle;
-function renderAct(code,target=null,scroll=true){ACT=actBy(code);const meta=META[ACT[0]]||[ACT[0],ACT[1],""];document.querySelectorAll("[data-act]").forEach(b=>b.classList.toggle("on",b.dataset.act===ACT[0]));let h=`<div class="act-head"><h2>${esc(meta[1])}</h2><div class="act-meta">${esc(meta[2])}</div><a class="source" href="${esc(ACT[2])}" target="_blank" rel="noopener">oficjalne źródło ↗</a></div>`;h+=`<div class="toc is-collapsed"><div class="toc-title"><b>Spis Artykułów</b><button id="collapseToc" type="button" aria-expanded="false" aria-controls="tocgrid">rozwiń</button></div><div class="toc-grid" id="tocgrid" hidden>`;for(const R of ACT[3])h+=`<a class="toc-link" href="#${R[0]}" title="${esc(R[2]+(R[3]?' · '+R[3]:''))}"><b>${esc(tocNumber(R[2]))}</b></a>`;h+="</div></div>";for(const R of ACT[3])h+=renderLegalArticle(R,ACT[0]);actview.innerHTML=h;bindLinks();const collapse=document.getElementById("collapseToc"),grid=document.getElementById("tocgrid"),toc=grid?.closest('.toc');if(collapse&&grid)collapse.onclick=()=>{const show=grid.hidden;grid.hidden=!show;toc?.classList.toggle('is-collapsed',!show);collapse.textContent=show?'zwiń':'rozwiń';collapse.setAttribute('aria-expanded',String(show))};window.dispatchEvent(new CustomEvent('police-law-rendered',{detail:{act:ACT[0]}}));history.replaceState(null,"",target?"#"+target:"#act-"+ACT[0]);if(target)setTimeout(()=>jump(target,false),40);else if(scroll)document.getElementById("actcard").scrollIntoView({behavior:"smooth",block:"start"})}
+function renderAct(code,target=null,scroll=true){
+  const renderStarted=PERF.now();
+  ACT=actBy(code);const meta=META[ACT[0]]||[ACT[0],ACT[1],""];
+  document.querySelectorAll("[data-act]").forEach(b=>b.classList.toggle("on",b.dataset.act===ACT[0]));
+  let h=`<div class="act-head"><h2>${esc(meta[1])}</h2><div class="act-meta">${esc(meta[2])}</div><a class="source" href="${esc(ACT[2])}" target="_blank" rel="noopener">oficjalne źródło ↗</a></div>`;
+  h+=`<div class="toc is-collapsed"><div class="toc-title"><b>Spis Artykułów</b><button id="collapseToc" type="button" aria-expanded="false" aria-controls="tocgrid">rozwiń</button></div><div class="toc-grid" id="tocgrid" hidden>`;
+  for(const R of ACT[3])h+=`<a class="toc-link" href="#${R[0]}" title="${esc(R[2]+(R[3]?' · '+R[3]:''))}"><b>${esc(tocNumber(R[2]))}</b></a>`;
+  h+="</div></div>";
+  for(const R of ACT[3])h+=renderLegalArticle(R,ACT[0]);
+  actview.innerHTML=h;bindLinks();
+  const collapse=document.getElementById("collapseToc"),grid=document.getElementById("tocgrid"),toc=grid?.closest('.toc');
+  if(collapse&&grid)collapse.onclick=()=>{const show=grid.hidden;grid.hidden=!show;toc?.classList.toggle('is-collapsed',!show);collapse.textContent=show?'zwiń':'rozwiń';collapse.setAttribute('aria-expanded',String(show))};
+  const renderCompleted=PERF.now();
+  PERF.update({lastActRenderMs:renderCompleted-renderStarted},{lastAct:ACT[0],lastActArticles:ACT[3].length,lastActUnits:ACT[3].reduce((sum,row)=>sum+(row[4]?.length||0),0)});
+  window.dispatchEvent(new CustomEvent('police-law-rendered',{detail:{act:ACT[0]}}));
+  history.replaceState(null,"",target?"#"+target:"#act-"+ACT[0]);
+  if(target)setTimeout(()=>jump(target,false),40);else if(scroll)document.getElementById("actcard").scrollIntoView({behavior:"smooth",block:"start"});
+  requestAnimationFrame(()=>{const paintedAt=PERF.now(),metrics={lastActPaintMs:paintedAt-renderStarted};if(PERF.state.metrics.initialReadyMs==null)metrics.initialReadyMs=paintedAt-PERF.state.startedAt;PERF.update(metrics);captureDataResource()});
+}
 function buildMenu(){quickbar.innerHTML="";actgrid.innerHTML="";for(const A of DATA){const m=META[A[0]]||[A[0],A[1],""];const qb=document.createElement("button");qb.dataset.act=A[0];qb.textContent=m[0];qb.setAttribute("aria-label",`${m[0]} — ${m[1]}`);qb.onclick=()=>{if(searchState.active){gotoSearchAct(A[0]);return}renderAct(A[0])};quickbar.appendChild(qb);const b=document.createElement("button");b.className="act-jump";b.dataset.act=A[0];b.innerHTML=`<b>${esc(m[0])}</b>${esc(m[1])}<small>${A[3].length} artykułów/jednostek</small>`;b.onclick=()=>renderAct(A[0]);actgrid.appendChild(b)}}
 function searchItemMarkup(row,act){return `<a class="search-item" href="#${esc(row[0])}" data-a="${esc(act)}"><b>${esc(row[2])} · ${esc(row[3])}</b><small>${esc(row[4].map(unit=>unit[3]).join(" ").slice(0,190))}…</small></a>`}
 function remainingResultText(value){const tens=value%100,ones=value%10,words=value===1?"dalszy wynik":ones>=2&&ones<=4&&(tens<12||tens>14)?"dalsze wyniki":"dalszych wyników";return `+ ${value} ${words} w tej ustawie`}

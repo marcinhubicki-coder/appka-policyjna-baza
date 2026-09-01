@@ -1,13 +1,33 @@
 (function(){
   const button=document.getElementById('settingsButton'),panel=document.getElementById('settingsPanel'),backdrop=document.getElementById('settingsBackdrop'),closeButton=document.getElementById('settingsClose');
   const title=document.getElementById('settingsTitle'),searchSettings=document.getElementById('searchSettings'),filterList=document.getElementById('searchActFilters'),enableAll=document.getElementById('searchEnableAll'),favoritesNotice=document.getElementById('searchFavoritesNotice'),favoritesToggle=document.getElementById('searchFavoritesToggle');
+  const performanceSummary=document.getElementById('performanceSummary'),performanceToggle=document.getElementById('performanceToggle'),performanceDetails=document.getElementById('performanceDetails'),performanceMetrics=document.getElementById('performanceMetrics');
   const generalSections=[...document.querySelectorAll('.settings-general')];
   if(!button||!panel||!backdrop||!closeButton)return;
-  let previousFocus=null;
+  let previousFocus=null,openedFromDrawer=false;
 
   function isSearchMode(){return document.body.classList.contains('search-active')}
   function closedLabel(){return isSearchMode()?'Otwórz filtry wyszukiwania':'Otwórz ustawienia'}
   function pluralHits(value){const tens=value%100,ones=value%10,word=value===1?'wynik':ones>=2&&ones<=4&&(tens<12||tens>14)?'wyniki':'wyników';return `${value} ${word}`}
+  function duration(value){if(!Number.isFinite(value))return 'jeszcze niegotowe';if(value>=1000)return `${(value/1000).toLocaleString('pl-PL',{minimumFractionDigits:1,maximumFractionDigits:2})} s`;return `${Math.max(0,Math.round(value))} ms`}
+  function bytes(value){if(!Number.isFinite(value)||value<=0)return null;if(value>=1024*1024)return `${(value/1024/1024).toLocaleString('pl-PL',{maximumFractionDigits:2})} MB`;return `${Math.round(value/1024)} KB`}
+  function actLabel(code){try{return META?.[code]?.[0]||code||'—'}catch(_){return code||'—'}}
+  function renderPerformance(){
+    const state=globalThis.__POLICE_PERF?.snapshot?.();if(!state)return;
+    const m=state.metrics||{},act=actLabel(state.lastAct),summary=m.initialReadyMs==null?'Kończę pomiar bieżącego uruchomienia…':`Start ${duration(m.initialReadyMs)} · ${act} ${duration(m.lastActRenderMs)}`;
+    if(performanceSummary)performanceSummary.textContent=summary;
+    if(!performanceMetrics)return;
+    const dataSize=bytes(state.dataResourceBytes),dataSource=state.dataFromCache?'pamięć urządzenia':'sieć lub nowy cache';
+    const rows=[
+      ['Uruchomienie',duration(m.initialReadyMs)],
+      ['Przygotowanie danych',duration(m.dataLoadMs)],
+      ['Ostatnia ustawa',`${act} · ${state.lastActArticles||0} art. · ${duration(m.lastActRenderMs)}`],
+      ['Menu artykułów',m.lastDrawerBuildMs==null?'przy pierwszym otwarciu':`${actLabel(state.lastDrawerAct)} · ${state.lastDrawerArticles||0} art. · ${duration(m.lastDrawerBuildMs)}`],
+      ['Wyszukiwarka',m.searchReadyMs==null?'indeksowanie w tle':`gotowa · ${duration(m.searchWorkMs)} pracy`]
+    ];
+    if(dataSize)rows.push(['Plik danych',`${dataSize} · ${dataSource}`]);
+    const fragment=document.createDocumentFragment();for(const[label,value]of rows){const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;row.append(dt,dd);fragment.append(row)}performanceMetrics.replaceChildren(fragment);
+  }
   function renderSearchFilters(){
     const api=globalThis.__POLICE_SEARCH_FILTERS;
     if(!filterList||!api?.list)return;
@@ -31,10 +51,11 @@
   }
   function syncMode(){
     const searching=isSearchMode();
-    if(title)title.textContent=searching?'Filtry wyszukiwania':'Ustawienia';
-    for(const section of generalSections)section.hidden=searching;
+    if(title)title.textContent=searching?'Filtry wyszukiwania':openedFromDrawer?'Ustawienia widoku':'Ustawienia';
+    for(const section of generalSections)section.hidden=searching||(section.dataset.splitOnly==='true'&&!openedFromDrawer);
     if(searchSettings)searchSettings.hidden=!searching;
     if(searching)renderSearchFilters();
+    else if(openedFromDrawer)renderPerformance();
     if(!document.body.classList.contains('settings-open'))button.setAttribute('aria-label',closedLabel());
   }
   function close(restoreFocus=true){
@@ -47,11 +68,12 @@
     previousFocus=null;
   }
   function open(){
-    if(document.body.classList.contains('drawer-open')){
+    openedFromDrawer=document.body.classList.contains('drawer-open');
+    previousFocus=document.activeElement;
+    if(openedFromDrawer){
       if(typeof globalThis.__POLICE_DRAWER_CLOSE==='function')globalThis.__POLICE_DRAWER_CLOSE();
       else document.getElementById('hamburger')?.click();
     }
-    previousFocus=document.activeElement;
     syncMode();
     document.body.classList.add('settings-open');
     panel.setAttribute('aria-hidden','false');
@@ -61,10 +83,12 @@
   }
   enableAll?.addEventListener('click',()=>globalThis.__POLICE_SEARCH_FILTERS?.resetAll?.());
   favoritesToggle?.addEventListener('click',()=>{const api=globalThis.__POLICE_SEARCH_FILTERS;if(api?.favoritesOnly?.())api.disableFavorites?.();else api?.enableFavorites?.()});
+  performanceToggle?.addEventListener('click',()=>{if(!performanceDetails)return;const show=performanceDetails.hidden;performanceDetails.hidden=!show;performanceToggle.setAttribute('aria-expanded',String(show));performanceToggle.textContent=show?'Ukryj pomiary':'Pokaż pomiary';if(show)renderPerformance()});
   button.addEventListener('click',()=>document.body.classList.contains('settings-open')?close():open());
   closeButton.addEventListener('click',()=>close());
   backdrop.addEventListener('click',()=>close());
   document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
   window.addEventListener('police-law-search-state',()=>{syncMode();if(document.body.classList.contains('settings-open'))button.setAttribute('aria-label',isSearchMode()?'Zamknij filtry wyszukiwania':'Zamknij ustawienia')});
+  window.addEventListener('police-law-performance',()=>{if(document.body.classList.contains('settings-open')&&openedFromDrawer)renderPerformance()});
   syncMode();
 })();

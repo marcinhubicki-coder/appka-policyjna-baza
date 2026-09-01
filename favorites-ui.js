@@ -45,6 +45,8 @@
     setTimeout(refresh,40);
   }
   globalThis.__FAVORITES_OPEN_SINGLE=(code,id)=>setAllActs(false,code,id);
+  function disableFavoritesSearch(){if(allActs){setAllActs(false);return}if(!filter)return;filter=false;expanded.clear();persistModes();refresh()}
+  globalThis.__POLICE_FAVORITES_SEARCH={isActive:()=>filter||allActs,ids:()=>read().map(item=>item.id).filter(Boolean),disable:disableFavoritesSearch};
   function showScopePopover(anchor){
     closeScopePopover();closeArticlePopover();
     const pop=document.createElement('div');pop.className='favorites-scope-popover';pop.setAttribute('role','menu');

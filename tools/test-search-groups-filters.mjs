@@ -45,18 +45,51 @@ match(index, /id="searchEnableAll"/);
 match(settings, /Filtry wyszukiwania/);
 match(settings, /toggle\.type='checkbox'/);
 match(settings, /api\.setEnabled\(item\.code,toggle\.checked\)/);
+match(settings, /detail\.textContent=pluralHits\(item\.hits\)/);
+noMatch(settings, /detail\.textContent=`\$\{item\.name\}/);
 match(appCss, /body\.search-filters-active \.settings-button/);
+
+// Starting a query from the open two-column favorites view narrows the
+// indexed search to favorite article IDs. The scope is explicit and can be
+// disabled without clearing the independently persisted act exclusions.
+match(app, /document\.body\.classList\.contains\("drawer-open"\)&&api\?\.isActive\?\.\(\)/);
+match(app, /favorites&&!favorites\.has\(item\.row\[0\]\)/);
+match(app, /favoritesOnly:searchState\.favoritesOnly/);
+match(app, /disableFavorites: disableFavoritesSearch|disableFavorites:disableFavoritesSearch/);
+match(index, /id="searchFavoritesNotice"[^>]*hidden>Wyszukiwanie wyłącznie w ulubionych\./);
+match(index, /id="searchDisableFavorites"[^>]*hidden>Wyłącz ulubione/);
+match(settings, /api\.favoritesOnly\?\.\(\)/);
+match(settings, /__POLICE_SEARCH_FILTERS\?\.disableFavorites/);
+match(read("favorites-ui.js"), /__POLICE_FAVORITES_SEARCH=\{isActive:\(\)=>filter\|\|allActs,ids:/);
+match(appCss, /\.search-filter-copy\{[^}]*display:flex[^}]*white-space:nowrap/);
+
+// Each act can progressively reveal more matches without rendering every hit
+// up front. Batches contain 10 items, except that a 1–4 item tail is folded
+// into the preceding batch.
+match(app, /class="search-group-more" type="button" data-search-more=/);
+match(app, /function nextSearchBatch\(remaining\)\{const normal=Math\.min\(10,remaining\);return remaining-normal>0&&remaining-normal<5\?remaining:normal\}/);
+match(app, /group\.shown\+=batch/);
+match(app, /button\.textContent=remainingResultText\(left\)/);
+match(appCss, /\.search-group-more\{display:block;width:100%/);
+const batchSource = app.match(/function nextSearchBatch\(remaining\)\{[^}]+\}/)?.[0];
+assert.ok(batchSource, "Brak funkcji porcjowania wyników");
+const nextSearchBatch = Function(`${batchSource};return nextSearchBatch`)();
+assert.deepEqual(
+  [0, 3, 7, 13, 14, 15, 17, 25].map(nextSearchBatch),
+  [0, 3, 7, 13, 14, 10, 10, 10]
+);
+checks += 1;
 
 // The split-view resize handle must never cover the fixed search overlay.
 match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;pointer-events:none!important\}/);
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-01\.1'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-01\.2'/);
 
 console.log(JSON.stringify({
   status: "ok",
   checks,
-  search: { indexedOnceDuringIdleTime: true, groupedByAct: true, persistentFilters: true },
+  search: { indexedOnceDuringIdleTime: true, groupedByAct: true, persistentFilters: true, favoritesScope: true },
   layering: { splitHandleHiddenDuringSearch: true }
 }, null, 2));

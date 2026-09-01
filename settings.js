@@ -1,6 +1,6 @@
 (function(){
   const button=document.getElementById('settingsButton'),panel=document.getElementById('settingsPanel'),backdrop=document.getElementById('settingsBackdrop'),closeButton=document.getElementById('settingsClose');
-  const title=document.getElementById('settingsTitle'),searchSettings=document.getElementById('searchSettings'),filterList=document.getElementById('searchActFilters'),enableAll=document.getElementById('searchEnableAll');
+  const title=document.getElementById('settingsTitle'),searchSettings=document.getElementById('searchSettings'),filterList=document.getElementById('searchActFilters'),enableAll=document.getElementById('searchEnableAll'),favoritesNotice=document.getElementById('searchFavoritesNotice'),disableFavorites=document.getElementById('searchDisableFavorites');
   const generalSections=[...document.querySelectorAll('.settings-general')];
   if(!button||!panel||!backdrop||!closeButton)return;
   let previousFocus=null;
@@ -12,18 +12,22 @@
     const api=globalThis.__POLICE_SEARCH_FILTERS;
     if(!filterList||!api?.list)return;
     const items=api.list();
+    const favoritesOnly=!!api.favoritesOnly?.();
     const fragment=document.createDocumentFragment();
     for(const item of items){
       const label=document.createElement('label');label.className='search-filter-row';
+      label.title=item.name;
       const copy=document.createElement('span');copy.className='search-filter-copy';
       const short=document.createElement('b');short.textContent=item.short;
-      const detail=document.createElement('small');detail.textContent=`${item.name} · ${pluralHits(item.hits)}`;
+      const detail=document.createElement('small');detail.textContent=pluralHits(item.hits);
       const toggle=document.createElement('input');toggle.type='checkbox';toggle.checked=item.enabled;toggle.setAttribute('aria-label',`${item.enabled?'Wyłącz':'Włącz'} ${item.name}`);
       toggle.addEventListener('change',()=>api.setEnabled(item.code,toggle.checked));
       copy.append(short,detail);label.append(copy,toggle);fragment.append(label);
     }
     filterList.replaceChildren(fragment);
     if(enableAll)enableAll.disabled=items.every(item=>item.enabled);
+    if(favoritesNotice)favoritesNotice.hidden=!favoritesOnly;
+    if(disableFavorites)disableFavorites.hidden=!favoritesOnly;
   }
   function syncMode(){
     const searching=isSearchMode();
@@ -53,6 +57,7 @@
     requestAnimationFrame(()=>closeButton.focus({preventScroll:true}));
   }
   enableAll?.addEventListener('click',()=>globalThis.__POLICE_SEARCH_FILTERS?.enableAll?.());
+  disableFavorites?.addEventListener('click',()=>globalThis.__POLICE_SEARCH_FILTERS?.disableFavorites?.());
   button.addEventListener('click',()=>document.body.classList.contains('settings-open')?close():open());
   closeButton.addEventListener('click',()=>close());
   backdrop.addEventListener('click',()=>close());

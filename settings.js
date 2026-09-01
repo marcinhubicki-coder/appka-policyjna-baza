@@ -25,9 +25,9 @@
       copy.append(short,detail);label.append(copy,toggle);fragment.append(label);
     }
     filterList.replaceChildren(fragment);
-    if(enableAll)enableAll.disabled=items.every(item=>item.enabled);
-    if(favoritesNotice)favoritesNotice.hidden=!favoritesOnly;
-    if(favoritesToggle){favoritesToggle.textContent=favoritesOnly?'Wyłącz ulubione':'Tylko ulubione';favoritesToggle.setAttribute('aria-pressed',String(favoritesOnly))}
+    if(enableAll)enableAll.disabled=items.every(item=>item.enabled)&&!favoritesOnly;
+    if(favoritesNotice)favoritesNotice.textContent=favoritesOnly?'Wyszukiwanie wyłącznie w artykułach dodanych do ulubionych.':'Wyszukiwanie we wszystkich ustawach i artykułach.';
+    if(favoritesToggle){favoritesToggle.textContent=favoritesOnly?'Wyłącz ulubione':'Szukaj tylko w ulubionych';favoritesToggle.setAttribute('aria-pressed',String(favoritesOnly))}
   }
   function syncMode(){
     const searching=isSearchMode();
@@ -59,7 +59,7 @@
     button.setAttribute('aria-label',isSearchMode()?'Zamknij filtry wyszukiwania':'Zamknij ustawienia');
     requestAnimationFrame(()=>closeButton.focus({preventScroll:true}));
   }
-  enableAll?.addEventListener('click',()=>globalThis.__POLICE_SEARCH_FILTERS?.enableAll?.());
+  enableAll?.addEventListener('click',()=>globalThis.__POLICE_SEARCH_FILTERS?.resetAll?.());
   favoritesToggle?.addEventListener('click',()=>{const api=globalThis.__POLICE_SEARCH_FILTERS;if(api?.favoritesOnly?.())api.disableFavorites?.();else api?.enableFavorites?.()});
   button.addEventListener('click',()=>document.body.classList.contains('settings-open')?close():open());
   closeButton.addEventListener('click',()=>close());

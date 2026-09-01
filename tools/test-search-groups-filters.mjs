@@ -58,13 +58,21 @@ match(app, /favorites&&!favorites\.has\(item\.row\[0\]\)/);
 match(app, /favoritesOnly:searchState\.favoritesOnly/);
 match(app, /disableFavorites: disableFavoritesSearch|disableFavorites:disableFavoritesSearch/);
 match(app, /enableFavorites: enableFavoritesSearch|enableFavorites:enableFavoritesSearch/);
-match(index, /id="searchFavoritesNotice"[^>]*hidden>Wyszukiwanie wyłącznie w ulubionych\./);
-match(index, /id="searchFavoritesToggle"[^>]*>Tylko ulubione/);
+match(index, /<strong[^>]*id="searchFavoritesNotice"[^>]*>Wyszukiwanie we wszystkich ustawach i artykułach\.<\/strong>/);
+match(index, /id="searchFavoritesToggle"[^>]*>Szukaj tylko w ulubionych/);
+match(index, /id="searchEnableAll"[^>]*>Resetuj filtry/);
 match(settings, /api\.favoritesOnly\?\.\(\)/);
 match(settings, /api\.disableFavorites\?\.\(\).*api\?\.enableFavorites\?\.\(\)/);
+match(settings, /favoritesOnly\?'Wyszukiwanie wyłącznie w artykułach dodanych do ulubionych\.':'Wyszukiwanie we wszystkich ustawach i artykułach\.'/);
+match(settings, /favoritesOnly\?'Wyłącz ulubione':'Szukaj tylko w ulubionych'/);
+match(settings, /enableAll\.disabled=items\.every\(item=>item\.enabled\)&&!favoritesOnly/);
+match(settings, /__POLICE_SEARCH_FILTERS\?\.resetAll\?\.\(\)/);
+match(app, /function resetSearchFilters\(\).*searchExcluded\.clear\(\).*searchFavoritesOnly=false.*favoritesSearchApi\(\)\?\.disable\?\.\(\)/);
+match(app, /resetAll:resetSearchFilters/);
 match(read("favorites-ui.js"), /__POLICE_FAVORITES_SEARCH=\{isActive:\(\)=>filter\|\|allActs,ids:/);
 match(appCss, /\.search-filter-copy\{[^}]*display:flex[^}]*white-space:nowrap/);
 match(appCss, /\.search-filter-actions\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+match(appCss, /\.search-filter-head strong\{[^}]*font-weight:800/);
 
 // A result jump preserves the exact search view: query, scroll position,
 // loaded batches and the favorites scope. The dedicated bar restores it above
@@ -107,7 +115,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-01\.4'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-01\.5'/);
 
 console.log(JSON.stringify({
   status: "ok",

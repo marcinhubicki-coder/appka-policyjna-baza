@@ -79,7 +79,7 @@ match(transfer, /fileInput\.click\(\)/);
 match(transfer, /mode==='replace'\?pendingItems:merge/);
 match(transfer, /function mergeParts\(current,incoming,row\)/);
 match(transfer, /valid:merge\(\[\],valid\)/);
-match(serviceWorker, /CACHE_VERSION='2026-09-02\.4'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-02\.5'/);
 match(serviceWorker, /'\.\/favorites-transfer\.js'/);
 
 // Exercise the same bounded-cost contract against every real act. This is a

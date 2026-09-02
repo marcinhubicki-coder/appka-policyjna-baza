@@ -11,6 +11,7 @@ const index = read("index.html");
 const menuHotfix = read("menu-hotfix.css");
 const menuSync = read("menu-sync-fix.js");
 const nav = read("nav.js");
+const settings = read("settings.js");
 const tocLayout = read("toc-layout-fix.js");
 const ux = read("ux-fixes.js");
 
@@ -27,6 +28,12 @@ match(appCss, /scroll-margin-top:calc\(var\(--topH,72px\) \+ 8px\)/);
 match(favoritesCss, /favorite-swipe-open>\.favorite-swipe-action[^}]*position:fixed/);
 match(favoritesCss, /favorite-swipe-open\.favorite-swiping>:not\(\.favorite-swipe-action\)[^}]*var\(--favorite-swipe-x\)/);
 match(favoritesCss, /favorite-swipe-open\.favorite-swiping>\.favorite-swipe-action[^}]*var\(--favorite-panel-x/);
+match(favoritesCss, /body\.favorite-swipe-nav-hidden \.article-pager\{display:none!important\}/);
+match(favoritesCss, /body\.favorite-editing #actview \.legal-unit:not\(\.favorite-edit-target\)/);
+match(favoritesCss, /body\.favorite-editing #actview \.law-stream-sentinel/);
+match(appCss, /body\.settings-open,body\.drawer-open\.settings-open\{overflow:hidden!important/);
+match(settings, /openedFromDrawer=document\.body\.classList\.contains\('drawer-open'\)/);
+noMatch(settings, /__POLICE_DRAWER_CLOSE|captureDrawerContext|restoreDrawerContext/);
 
 // The favorite action can be dismissed with the inverse gesture from the
 // article text. Its drag starts at the open -112 px position and reaches zero
@@ -44,6 +51,21 @@ const swipeOffset = Function(`${swipeOffsetSource};return swipeOffset`)();
 assert.deepEqual([-180, -60, 0, 60].map(dx => swipeOffset(dx, false)), [-112, -60, 0, 0]);
 assert.deepEqual([-60, 0, 60, 180].map(dx => swipeOffset(dx, true)), [-112, -112, -52, 0]);
 checks += 3;
+
+// The swipe panel only removes the pager when that avoids a scroll. Otherwise
+// it keeps the pager, balances short articles and uses the smallest shift that
+// can expose the complete action card.
+match(favorites, /function swipeScrollDelta\(rect,top,bottom,height\)/);
+match(favorites, /function balanceSwipeArticle\(article,height\)/);
+match(favorites, /Math\.abs\(deltaWith\)>.5&&Math\.abs\(deltaWithout\)<=.5/);
+match(favorites, /window\.scrollBy\(0,delta\)/);
+const swipeDeltaSource = favorites.match(/function swipeScrollDelta\(rect,top,bottom,height\)\{[^}]+\}/)?.[0];
+assert.ok(swipeDeltaSource, "Brak funkcji minimalnego przesunięcia kafla");
+const swipeScrollDelta = Function(`${swipeDeltaSource};return swipeScrollDelta`)();
+assert.equal(swipeScrollDelta({ top: 140, bottom: 400 }, 100, 700, 184), 0);
+assert.equal(swipeScrollDelta({ top: 580, bottom: 900 }, 100, 700, 184), 64);
+assert.equal(swipeScrollDelta({ top: -80, bottom: 230 }, 100, 700, 184), -54);
+checks += 4;
 
 // A favorite save must update storage, the article state and the visible star.
 match(favorites, /CustomEvent\('police-law-favorites-change'\)/);

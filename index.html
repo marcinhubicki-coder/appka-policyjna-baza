@@ -24,10 +24,15 @@
 <div class="settings-backdrop" id="settingsBackdrop"></div>
 <aside aria-hidden="true" aria-labelledby="settingsTitle" aria-modal="true" class="settings-panel" id="settingsPanel" role="dialog">
 <div class="settings-head"><h2 id="settingsTitle">Ustawienia</h2><button aria-label="Zamknij ustawienia" class="settings-close" id="settingsClose" type="button">×</button></div>
-<section class="settings-section settings-general"><div class="settings-copy"><b>Dostęp offline</b><small aria-live="polite" id="offlineDetail">Baza pobiera się automatycznie przy pierwszym uruchomieniu</small></div><button class="offline-download" disabled id="offlineDownload" type="button"><span class="offline-icon" aria-hidden="true">…</span><span id="offlineTitle">Przygotowuję…</span></button></section>
-<section class="settings-section settings-general"><div class="settings-copy"><b>Aplikacja PWA</b><small aria-live="polite" id="pwaDetail">Uruchamiaj bazę jak aplikację, bez paska przeglądarki</small></div><button class="pwa-install" id="pwaInstall" type="button"><span class="pwa-icon" aria-hidden="true">＋</span><span id="pwaTitle">Jak zainstalować</span></button></section>
+<section class="settings-section settings-general" data-full-only="true"><div class="settings-copy"><b>Dostęp offline</b><small aria-live="polite" id="offlineDetail">Baza pobiera się automatycznie przy pierwszym uruchomieniu</small></div><button class="offline-download" disabled id="offlineDownload" type="button"><span class="offline-icon" aria-hidden="true">…</span><span id="offlineTitle">Przygotowuję…</span></button></section>
+<section class="settings-section settings-general" data-full-only="true"><div class="settings-copy"><b>Aplikacja PWA</b><small aria-live="polite" id="pwaDetail">Uruchamiaj bazę jak aplikację, bez paska przeglądarki</small></div><button class="pwa-install" id="pwaInstall" type="button"><span class="pwa-icon" aria-hidden="true">＋</span><span id="pwaTitle">Jak zainstalować</span></button></section>
+<section class="settings-section settings-general settings-transfer" data-split-only="true" hidden id="favoritesTransfer"><div class="settings-copy"><b>Kopia ulubionych</b><small>Zapisz ulubione w pliku lub przenieś je między wersjami aplikacji.</small></div><div class="favorites-transfer-actions"><button id="favoritesExport" type="button">Eksportuj</button><button id="favoritesImport" type="button">Importuj</button></div><small aria-live="polite" class="favorites-transfer-status" id="favoritesTransferStatus">Podczas importu wybierzesz: dodaj lub zastąp.</small><input accept=".json,application/json" hidden id="favoritesImportFile" type="file"></section>
+<section class="settings-section settings-general settings-packages" data-split-only="true" hidden id="lawPackages"><div class="settings-copy"><b>Pakiety ustaw</b><small>Dodatkowe ustawy i zestawy tematyczne.</small></div><button disabled type="button">Funkcja dostępna później</button></section>
+<section class="settings-section settings-general settings-diagnostics" data-split-only="true" hidden id="performanceDiagnostics"><div class="settings-copy"><b>Diagnostyka wydajności</b><small aria-live="polite" id="performanceSummary">Kończę pomiar bieżącego uruchomienia…</small></div><button aria-controls="performanceDetails" aria-expanded="false" class="performance-toggle" id="performanceToggle" type="button">Pokaż pomiary</button><div class="performance-details" hidden id="performanceDetails"><dl id="performanceMetrics"></dl><small>Pomiary dotyczą tego urządzenia i bieżącego uruchomienia aplikacji.</small></div></section>
 <section class="settings-search" id="searchSettings" hidden><div class="search-filter-head"><b>Przeszukiwane ustawy</b><small>Wyłączenia zostają zapamiętane na tym urządzeniu.</small><strong aria-live="polite" id="searchFavoritesNotice">Wyszukiwanie we wszystkich ustawach i artykułach.</strong><div class="search-filter-actions"><button aria-pressed="false" id="searchFavoritesToggle" type="button">Szukaj tylko w ulubionych</button><button id="searchEnableAll" type="button">Resetuj filtry</button></div></div><div class="search-act-filters" id="searchActFilters"></div></section>
 </aside>
+<div class="favorites-import-backdrop" id="favoritesImportBackdrop"></div>
+<section aria-hidden="true" aria-labelledby="favoritesImportTitle" aria-modal="true" class="favorites-import-dialog" id="favoritesImportDialog" role="dialog"><h2 id="favoritesImportTitle">Importuj ulubione</h2><p class="favorites-import-file" id="favoritesImportName"></p><b>Jak zastosować dane z pliku?</b><div class="favorites-import-actions"><button data-import-mode="merge" type="button">Dodaj do obecnych</button><button data-import-mode="replace" type="button">Zastąp obecne</button></div><button class="favorites-import-cancel" id="favoritesImportCancel" type="button">Anuluj</button></section>
 <main id="start">
 <section class="hero"><h1>Policyjna baza prawna</h1><p>Wersja po audycie · bieżąca treść oddzielona od zmian przyszłych.</p></section>
 <div id="actgrid" hidden aria-hidden="true"></div>
@@ -35,6 +40,7 @@
 </main>
 <div class="return" id="return"><button>← Wróć do odwołania</button></div>
 <div class="search-return" id="searchReturn"><button type="button">← Wróć do wyszukiwania</button></div>
+<script>globalThis.__POLICE_BOOT_AT=performance.now()</script>
 <script src="data.js"></script>
 <script src="linking-rules.js"></script>
 <script src="app.js"></script>
@@ -48,6 +54,7 @@
 <script src="search-ux-v2.js"></script>
 <script src="favorites-model.js"></script>
 <script src="favorites-ui.js"></script>
+<script src="favorites-transfer.js"></script>
 <script src="settings.js"></script>
 <script src="offline.js"></script>
 </body>

@@ -41,7 +41,7 @@ assert.match(tocLayout, /if\(queued\)return;queued=true/);
 
 assert.match(nav, /document\.elementFromPoint\(x,y\)/);
 assert.doesNotMatch(nav, /while\(low<=high\)/);
-assert.match(nav, /window\.addEventListener\('police-law-rendered',\(\)=>\{if\(ready\(\)&&ACT\[0\]!==lastActCode\)populateDrawer\(\);installArticleBookmark\(\)\}\)/);
+assert.match(nav, /window\.addEventListener\('police-law-rendered',\(\)=>\{if\(drawer\?\.classList\.contains\('open'\)&&ready\(\)&&ACT\[0\]!==lastActCode\)populateDrawer\(\);installArticleBookmark\(\)\}\)/);
 assert.doesNotMatch(nav, /new MutationObserver/);
 
 assert.match(favoriteJs, /function ensureDataIndex\(\)/);
@@ -50,6 +50,7 @@ assert.match(favoriteJs, /if\(article\.querySelector\(':scope > \.favorite-swipe
 assert.match(favoriteJs, /function openSwipe\(article\).*updateSwipePanel\(article,on\)/);
 assert.match(favoriteJs, /button\.classList\.toggle\('on',on\);button\.textContent=on\?'★':'☆'/);
 assert.match(favoriteJs, /window\.addEventListener\('police-law-rendered',scheduleRefresh\)/);
+assert.match(favoriteJs, /window\.addEventListener\('police-law-drawer-rendered',scheduleRefresh\)/);
 assert.match(favoriteJs, /window\.addEventListener\('police-law-stars-ready',scheduleRefresh\)/);
 assert.doesNotMatch(favoriteJs, /new MutationObserver\(mutations=>/);
 assert.match(favoriteJs, /favorite-swipe-active/);

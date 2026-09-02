@@ -19,7 +19,7 @@ function articleStars(){
   const view=document.getElementById('actview');
   function refresh(){let xs=[];try{xs=JSON.parse(localStorage.getItem('police-law-bookmarks-v1')||'[]')}catch(_){}const set=new Set(xs.map(x=>x.id));view.querySelectorAll('.unit-star').forEach(b=>{const on=set.has(b.dataset.article),next=on?'★':'☆';b.classList.toggle('on',on);if(b.textContent!==next)b.textContent=next})}
   const install=()=>{refresh();window.dispatchEvent(new CustomEvent('police-law-stars-ready'))};
-  window.addEventListener('police-law-rendered',install);install();document.querySelector('.article-bookmark')?.remove()
+  window.addEventListener('police-law-rendered',install);window.addEventListener('police-law-articles-rendered',install);install();document.querySelector('.article-bookmark')?.remove()
 }
 function forceFixedHeader(){const h=document.querySelector('.top');if(!h)return;const sync=()=>document.documentElement.style.setProperty('--topH',h.offsetHeight+'px');sync();new ResizeObserver(()=>requestAnimationFrame(sync)).observe(h)}
 function watchDrawer(){const d=document.querySelector('.drawer');if(!d)return;new MutationObserver(()=>{const on=d.classList.contains('open');document.body.classList.toggle('drawer-visible',on);if(on)requestAnimationFrame(patchChapters)}).observe(d,{attributes:true,attributeFilter:['class']})}

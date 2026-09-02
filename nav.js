@@ -12,13 +12,13 @@ function currentIndex(){const rows=articles();if(!rows.length)return 0;const vie
 function currentRow(){return articles()[currentIndex()]||articles()[0]}
 function showToast(s){if(!toast)return;toast.textContent=s;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),900)}
 function scrollArticleTop(id){if(typeof globalThis.__POLICE_SCROLL_ARTICLE==='function'){globalThis.__POLICE_SCROLL_ARTICLE(id,true);return}const el=document.getElementById(id);if(!el)return;el.scrollIntoView({block:'start',behavior:'smooth'})}
-function gotoId(id){history.replaceState(null,'','#'+id);scrollArticleTop(id);setTimeout(updateUI,430)}
+function gotoId(id){if(typeof globalThis.__POLICE_GOTO_ID==='function'){globalThis.__POLICE_GOTO_ID(id,{smooth:true,alignTop:true});setTimeout(updateUI,430);return}history.replaceState(null,'','#'+id);scrollArticleTop(id);setTimeout(updateUI,430)}
 function goArticle(step){const a=articles(),i=currentIndex(),n=i+step;if(n<0){showToast('To pierwszy artykuł');return}if(n>=a.length){showToast('To ostatni artykuł');return}closeDrawer();results?.classList.remove('show');gotoId(a[n][0]);showToast((step>0?'→ ':'← ')+(a[n][2]||''))}
 function getBM(){try{return JSON.parse(localStorage.getItem(BMKEY)||'[]')}catch(_){return[]}}
 function setBM(x){localStorage.setItem(BMKEY,JSON.stringify(x));window.dispatchEvent(new CustomEvent('police-law-favorites-change'))}
 function isBM(id){return getBM().some(x=>x.id===id)}
 function toggleBM(){const r=currentRow();if(!r)return;let b=getBM(),i=b.findIndex(x=>x.id===r[0]);if(i>=0){b.splice(i,1);showToast('Usunięto z zapisanych')}else{b.unshift({id:r[0],act:ACT[0],num:r[2],topic:r[3]||''});showToast('Zapisano '+r[2])}setBM(b);if(drawer?.classList.contains('open'))populateDrawer();else updateUI()}
-function openBookmark(x){if(!actBy(x.act))return;renderAct(x.act,null,false);setTimeout(()=>gotoId(x.id),70);closeDrawer()}
+function openBookmark(x){if(!actBy(x.act))return;renderAct(x.act,x.id,false);closeDrawer()}
 function sectionName(r){return String(r?.[1]||'').trim()||'Pozostałe'}
 function sectionLabel(s){if(String(ACT?.[0]||'').toLowerCase()!=='uop')return s;const key=(String(s).match(/Rozdział\s+\d+[a-z]?/i)||[])[0];if(!key)return s;const canonical='Rozdział '+key.replace(/Rozdział\s+/i,'');const title=UOP_CHAPTER_TITLES[canonical];return title?canonical+' — '+title:s}
 function populateDrawer(){if(!ready()||!drawer)return;const renderStarted=perfNow();drawer.dataset.renderCount=String((Number(drawer.dataset.renderCount)||0)+1);headSub.textContent=meta(ACT[0])[1];actsBox.innerHTML='';for(const A of DATA){const m=meta(A[0]),b=document.createElement('button');b.className='drawer-act'+(A[0]===ACT[0]?' on':'');b.type='button';b.innerHTML='<span class="act-ico">§</span><span>'+esc(m[0])+'</span>';b.title=m[1];b.onclick=()=>{renderAct(A[0],null,false);setTimeout(()=>gotoId(ACT[3][0]?.[0]),70)};actsBox.appendChild(b)}
@@ -40,5 +40,6 @@ function installArticleBookmark(){const head=view.querySelector('.act-head');if(
 }
 globalThis.__POLICE_DRAWER_REFRESH=()=>{lastActCode=null;if(drawer?.classList.contains('open'))populateDrawer()};
 globalThis.__POLICE_DRAWER_CLOSE=closeDrawer;
+globalThis.__POLICE_DRAWER_OPEN=openDrawer;
 function wait(){ready()?build():setTimeout(wait,80)}wait();
 })();

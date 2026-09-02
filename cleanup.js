@@ -61,6 +61,7 @@
   const target=document.getElementById("actview");
   if(target){
     window.addEventListener("police-law-rendered",()=>cleanup(target));
+    window.addEventListener("police-law-articles-rendered",event=>{for(const id of event.detail?.ids||[]){const article=document.getElementById(id);if(article)cleanup(article)}});
     setTimeout(()=>cleanup(target),0);
   }
 })();

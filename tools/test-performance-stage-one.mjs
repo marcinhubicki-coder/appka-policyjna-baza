@@ -40,7 +40,7 @@ match(index, /id="performanceMetrics"/);
 match(settings, /openedFromDrawer=document\.body\.classList\.contains\('drawer-open'\)/);
 match(settings, /section\.dataset\.splitOnly==='true'&&!openedFromDrawer/);
 match(settings, /police-law-performance/);
-match(serviceWorker, /CACHE_VERSION='2026-09-02\.3'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-02\.4'/);
 
 console.log(JSON.stringify({
   status: "ok",

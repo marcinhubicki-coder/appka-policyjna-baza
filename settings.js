@@ -4,7 +4,20 @@
   const performanceSummary=document.getElementById('performanceSummary'),performanceToggle=document.getElementById('performanceToggle'),performanceDetails=document.getElementById('performanceDetails'),performanceMetrics=document.getElementById('performanceMetrics');
   const generalSections=[...document.querySelectorAll('.settings-general')];
   if(!button||!panel||!backdrop||!closeButton)return;
-  let previousFocus=null,openedFromDrawer=false;
+  let previousFocus=null,openedFromDrawer=false,lockedScrollY=0;
+
+  function lockBackground(){
+    lockedScrollY=Math.max(0,window.scrollY||0);
+    document.body.style.setProperty('--settings-lock-top',-lockedScrollY+'px');
+    document.documentElement.classList.add('settings-open-root');
+    document.body.classList.remove('split-preview-active','split-dragging');
+  }
+  function unlockBackground(){
+    const y=lockedScrollY;
+    document.documentElement.classList.remove('settings-open-root');
+    document.body.style.removeProperty('--settings-lock-top');
+    requestAnimationFrame(()=>window.scrollTo({top:y,left:0,behavior:'auto'}));
+  }
 
   function isSearchMode(){return document.body.classList.contains('search-active')}
   function closedLabel(){return isSearchMode()?'Otwórz filtry wyszukiwania':'Otwórz ustawienia'}
@@ -67,12 +80,13 @@
     button.setAttribute('aria-expanded','false');
     button.setAttribute('aria-label',closedLabel());
     if(restoreFocus)(previousFocus||button).focus?.({preventScroll:true});
-    previousFocus=null;openedFromDrawer=false;
+    unlockBackground();previousFocus=null;openedFromDrawer=false;
   }
   function open(){
     openedFromDrawer=document.body.classList.contains('drawer-open');
     previousFocus=document.activeElement;
     syncMode();
+    lockBackground();
     document.body.classList.add('settings-open');
     panel.setAttribute('aria-hidden','false');
     button.setAttribute('aria-expanded','true');

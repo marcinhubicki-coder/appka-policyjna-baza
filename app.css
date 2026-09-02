@@ -17,7 +17,9 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe 
 .settings-panel{position:fixed;z-index:155;top:calc(var(--topH,72px) + 8px);right:max(10px,env(safe-area-inset-right));width:min(360px,calc(100vw - 20px));max-height:calc(100dvh - var(--topH,72px) - 18px);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;box-sizing:border-box;padding:10px;border:1px solid #d4dee7;border-radius:16px;background:rgba(255,255,255,.98);box-shadow:0 16px 42px rgba(15,31,46,.2);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-7px) scale(.985);transform-origin:top right;transition:opacity .16s ease,transform .16s ease,visibility 0s linear .16s}
 body.settings-open .settings-backdrop{opacity:1;pointer-events:auto}
 body.settings-open .settings-panel{opacity:1;visibility:visible;pointer-events:auto;transform:none;transition-delay:0s}
-body.settings-open,body.drawer-open.settings-open{overflow:hidden!important;overscroll-behavior:none}
+html.settings-open-root{overflow:hidden!important;overscroll-behavior:none}
+body.settings-open,body.drawer-open.settings-open{position:fixed!important;inset:var(--settings-lock-top,0) 0 auto 0!important;width:100%!important;overflow:hidden!important;overscroll-behavior:none}
+body.settings-open .split-handle,body.settings-open .split-preview-pane{display:none!important;visibility:hidden!important;pointer-events:none!important}
 .settings-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:1px 2px 9px}
 .settings-head h2{margin:0;color:var(--accent);font-size:17px;line-height:1.2}
 .settings-close{width:34px;height:34px;display:grid;place-items:center;padding:0;border:0;border-radius:10px;background:#f2f6f9;color:var(--accent);font-size:24px;line-height:1}

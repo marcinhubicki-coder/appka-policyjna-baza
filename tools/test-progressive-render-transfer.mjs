@@ -59,7 +59,10 @@ match(index, /id="favoritesTransfer"[^>]*data-split-only="true"|data-split-only=
 match(index, /id="lawPackages"[^>]*data-split-only="true"|data-split-only="true"[^>]*id="lawPackages"/);
 match(settings, /openedFromDrawer=document\.body\.classList\.contains\('drawer-open'\)/);
 noMatch(settings, /__POLICE_DRAWER_CLOSE|captureDrawerContext|restoreDrawerContext/);
-match(appCss, /body\.settings-open,body\.drawer-open\.settings-open\{overflow:hidden!important/);
+match(appCss, /html\.settings-open-root\{overflow:hidden!important/);
+match(appCss, /body\.settings-open,body\.drawer-open\.settings-open\{position:fixed!important/);
+match(appCss, /body\.settings-open \.split-handle,body\.settings-open \.split-preview-pane\{display:none!important/);
+match(settings, /document\.documentElement\.classList\.add\('settings-open-root'\)/);
 match(settings, /section\.dataset\.fullOnly==='true'&&openedFromDrawer/);
 
 // Favorites use a portable JSON file, native picker/share paths and explicit
@@ -76,7 +79,7 @@ match(transfer, /fileInput\.click\(\)/);
 match(transfer, /mode==='replace'\?pendingItems:merge/);
 match(transfer, /function mergeParts\(current,incoming,row\)/);
 match(transfer, /valid:merge\(\[\],valid\)/);
-match(serviceWorker, /CACHE_VERSION='2026-09-02\.3'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-02\.4'/);
 match(serviceWorker, /'\.\/favorites-transfer\.js'/);
 
 // Exercise the same bounded-cost contract against every real act. This is a

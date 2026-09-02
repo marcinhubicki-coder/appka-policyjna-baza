@@ -31,9 +31,15 @@ match(favoritesCss, /favorite-swipe-open\.favorite-swiping>\.favorite-swipe-acti
 match(favoritesCss, /body\.favorite-swipe-nav-hidden \.article-pager\{display:none!important\}/);
 match(favoritesCss, /body\.favorite-editing #actview \.legal-unit:not\(\.favorite-edit-target\)/);
 match(favoritesCss, /body\.favorite-editing #actview \.law-stream-sentinel/);
-match(appCss, /body\.settings-open,body\.drawer-open\.settings-open\{overflow:hidden!important/);
+match(appCss, /html\.settings-open-root\{overflow:hidden!important/);
+match(appCss, /body\.settings-open,body\.drawer-open\.settings-open\{position:fixed!important/);
+match(appCss, /body\.settings-open \.split-handle,body\.settings-open \.split-preview-pane\{display:none!important/);
 match(settings, /openedFromDrawer=document\.body\.classList\.contains\('drawer-open'\)/);
+match(settings, /function lockBackground\(\)/);
+match(settings, /document\.documentElement\.classList\.add\('settings-open-root'\)/);
 noMatch(settings, /__POLICE_DRAWER_CLOSE|captureDrawerContext|restoreDrawerContext/);
+noMatch(favorites, /function syncLegacy\(\)\{[^}]*populateDrawer/);
+match(favorites, /exitEditor\(true,true,false\)/);
 
 // The favorite action can be dismissed with the inverse gesture from the
 // article text. Its drag starts at the open -112 px position and reaches zero

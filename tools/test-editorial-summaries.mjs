@@ -6,7 +6,8 @@ import { loadLegalData } from "./legal-content.mjs";
 
 const dataPath = process.argv.find((arg) => arg.startsWith("--data="))?.slice(7) || "data.js";
 const DATA = loadLegalData(dataPath);
-const context = vm.createContext({});
+const context = vm.createContext({ DATA });
+vm.runInContext(fs.readFileSync("chapter-titles.js", "utf8"), context);
 vm.runInContext(fs.readFileSync("uop-summaries.js", "utf8"), context);
 
 let articles = 0;
@@ -17,6 +18,7 @@ const fullyReviewedActs = new Set(["uop", "kw", "kk", "kpk", "kpow", "spb", "prd
 
 for (const act of DATA) {
   let previousSection = Symbol("initial");
+  let previousSectionTitle = "";
   for (const row of act[3]) {
     articles += 1;
     assert.ok(row[3].trim(), `${row[0]} ma pustą nazwę`);
@@ -40,6 +42,9 @@ for (const act of DATA) {
       const hasSourceTitle = /^(?:DZIAŁ|ROZDZIAŁ|ODDZIAŁ)\s+[IVXLCDM0-9]+(?:[A-Z])?\)?\s*[.:-]\s*\S/i.test(rawSection);
       if (!hasSourceTitle) generatedChapterTitles += 1;
       previousSection = rawSection;
+      previousSectionTitle = section.title;
+    } else {
+      assert.equal(section.title, previousSectionTitle, `${row[0]} zmienia tytuł w obrębie tego samego rozdziału`);
     }
   }
 }
@@ -58,6 +63,16 @@ assert.equal(row("z805", "z805-par-11")[3], "Zakaz korupcji");
 assert.equal(row("uop", "uop-art-15")[8], "s");
 assert.equal(row("kpow", "kpow-art-45")[8], "e");
 assert.equal(context.__EDITORIAL.toRoman(14), "XIV");
+assert.deepEqual(
+  { ...context.__EDITORIAL.sectionInfo(row("uop", "uop-art-3a"), "uop") },
+  { prefix: "Rozdział I", title: "Przepisy ogólne", generated: false }
+);
+assert.equal(context.__EDITORIAL.sectionInfo(row("kpk", "kpk-art-46"), "kpk").title, "Oskarżyciel publiczny");
+assert.equal(context.__EDITORIAL.sectionInfo(row("kpow", "kpow-art-46"), "kpow").title, "Zatrzymanie");
+assert.deepEqual(
+  { ...context.__EDITORIAL.sectionInfo(row("z360", "z360-par-1"), "z360") },
+  { prefix: "Rozdział I", title: "Przepisy ogólne", generated: false }
+);
 assert.doesNotMatch(fs.readFileSync("uop-summaries.js", "utf8"), /MutationObserver|for\s*\(const act of DATA\)|row\[3\]\s*=/);
 
 console.log(JSON.stringify({ status: "ok", acts: DATA.length, articles, source, editorial, generatedChapterTitles }, null, 2));

@@ -11,6 +11,7 @@ const tocLayout = fs.readFileSync("toc-layout-fix.js", "utf8");
 const nav = fs.readFileSync("nav.js", "utf8");
 const ux = fs.readFileSync("ux-fixes.js", "utf8");
 const index = fs.readFileSync("index.html", "utf8");
+const chapterTitles = fs.readFileSync("chapter-titles.js", "utf8");
 
 assert.match(app, /class="toc is-collapsed"/);
 assert.match(app, /id="tocgrid" hidden/);
@@ -55,6 +56,10 @@ assert.match(favoriteJs, /window\.addEventListener\('police-law-stars-ready',sch
 assert.doesNotMatch(favoriteJs, /new MutationObserver\(mutations=>/);
 assert.match(favoriteJs, /favorite-swipe-active/);
 assert.match(favoriteCss, /body\.favorite-swipe-active\{overscroll-behavior:none/);
+assert.match(favoriteCss, /body\.favorite-swipe-active \.search-return,body\.favorite-swipe-active \.article-pager\{display:none!important\}/);
+assert.match(index, /src="chapter-titles\.js"/);
+assert.match(chapterTitles, /"uop-art-1": "Przepisy ogólne"/);
+assert.match(chapterTitles, /"kpk-art-45": "Oskarżyciel publiczny"/);
 assert.match(app, /globalThis\.__POLICE_SCROLL_ARTICLE=scrollArticleStart/);
 
 const data = loadLegalData("data.js");
@@ -64,4 +69,4 @@ for (const act of data) for (const row of act[3]) {
   links += 1;
 }
 
-console.log(JSON.stringify({ status: "ok", checks: 38, activeArticleLinks: links }, null, 2));
+console.log(JSON.stringify({ status: "ok", checks: 42, activeArticleLinks: links }, null, 2));

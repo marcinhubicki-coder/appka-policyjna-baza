@@ -22,6 +22,7 @@
     [/^Czynności wyjaśniające/i,'Czynności wyjaśniające'],
     [/^Postępowanie mandatowe/i,'Postępowanie mandatowe']
   ];
+  const sectionCache=new WeakMap(),preparedActs=new Set();
 
   function clean(value){
     return String(value||'').replace(/\u00ad/g,'').replace(/\s+/g,' ')
@@ -40,6 +41,31 @@
     for(const [pattern,label] of CHAPTER_RULES)if(pattern.test(text))return label;
     return short(row?.[3]||'Przepisy szczególne');
   }
+  function sectionRecord(value,generated=false){
+    if(!value)return null;
+    if(typeof value==='string')return{title:value,prefix:'',generated};
+    return{title:clean(value.title),prefix:clean(value.prefix),generated:!!value.generated};
+  }
+  function prepareActSections(actCode){
+    if(preparedActs.has(actCode))return;
+    const act=typeof DATA!=='undefined'&&Array.isArray(DATA)?DATA.find(item=>item?.[0]===actCode):null;
+    if(!act)return;
+    const titles=globalThis.__CHAPTER_TITLES||{},unset=Symbol('unset');
+    let previous=unset,current=null;
+    for(const item of act[3]||[]){
+      const raw=clean(item?.[1]);
+      if(raw!==previous){
+        previous=raw;
+        current=sectionRecord(titles[item?.[0]])||sectionRecord(chapterSuggestion(actCode,item),true);
+      }
+      if(current)sectionCache.set(item,current);
+    }
+    preparedActs.add(actCode);
+  }
+  function mappedSection(row,actCode){
+    prepareActSections(actCode);
+    return sectionCache.get(row)||sectionRecord(globalThis.__CHAPTER_TITLES?.[row?.[0]]);
+  }
   function toRoman(value){
     let number=Number.parseInt(value,10);if(!Number.isFinite(number)||number<1)return String(value||'');
     const numerals=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
@@ -47,6 +73,7 @@
   }
   function sectionInfo(row,actCode){
     const raw=clean(row?.[1]);
+    const mapped=mappedSection(row,actCode);
     const match=raw.match(/^((?:Dział|Rozdział|Oddział))\s+([IVXLCDM]+|\d+)([a-z]?)\)?(?:\s*[.:-]\s*(.*))?$/i);
     let prefix='Przepisy',title='',generated=false;
     if(match){
@@ -56,6 +83,8 @@
       title=String(match[4]||'').trim().replace(/[.]$/,'');
     }else if(/^Oddział dodany\b/i.test(raw))prefix='Oddział';
     else if(raw)prefix=raw.replace(/[.]$/,'');
+    if(mapped?.prefix)prefix=mapped.prefix;
+    if(!title&&mapped?.title){title=mapped.title;generated=mapped.generated}
     if(!title&&row){title=chapterSuggestion(actCode,row)||'Przepisy szczególne';generated=true}
     return {prefix,title,generated};
   }

@@ -14,7 +14,7 @@
   `;
   document.head.appendChild(style);
 
-  function normChar(ch){return ch.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pl')}
+  function normChar(ch){return ch.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pl').replace(/ł/g,'l')}
   function normalizedWithMap(text){let n='',map=[];for(let i=0;i<text.length;i++){const x=normChar(text[i]);for(let j=0;j<x.length;j++){n+=x[j];map.push(i)}}return{n,map}}
   function locate(text,term){const a=normalizedWithMap(String(text||'')),b=normChar(String(term||'').trim());if(!b)return null;const p=a.n.indexOf(b);if(p<0)return null;const s=a.map[p],last=a.map[Math.min(a.map.length-1,p+b.length-1)];return{s,e:last+1}}
   function clearMarks(cls){document.querySelectorAll('mark.'+cls).forEach(m=>m.replaceWith(document.createTextNode(m.textContent||'')))}

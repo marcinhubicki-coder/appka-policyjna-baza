@@ -63,7 +63,7 @@ match(index, /id="searchFavoritesToggle"[^>]*>Szukaj tylko w ulubionych/);
 match(index, /id="searchEnableAll"[^>]*>Resetuj filtry/);
 match(settings, /api\.favoritesOnly\?\.\(\)/);
 match(settings, /api\.disableFavorites\?\.\(\).*api\?\.enableFavorites\?\.\(\)/);
-match(settings, /favoritesOnly\?'Wyszukiwanie wyłącznie w ulubionych artykułach\.':'Wyszukiwanie we wszystkich ustawach i artykułach\.'/);
+match(settings, /favoritesNotice\.textContent=searchScopeLabel\(items,favoritesOnly\)/);
 match(settings, /favoritesOnly\?'Wyłącz ulubione':'Szukaj tylko w ulubionych'/);
 match(settings, /enableAll\.disabled=items\.every\(item=>item\.enabled\)&&!favoritesOnly/);
 match(settings, /__POLICE_SEARCH_FILTERS\?\.resetAll\?\.\(\)/);
@@ -116,7 +116,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-02\.5'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-06\.1'/);
 
 console.log(JSON.stringify({
   status: "ok",

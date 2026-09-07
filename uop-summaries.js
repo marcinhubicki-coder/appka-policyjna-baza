@@ -72,6 +72,7 @@
     let result='';for(const [amount,symbol] of numerals)while(number>=amount){result+=symbol;number-=amount}return result;
   }
   function sectionInfo(row,actCode){
+    const explicit=row?.[9]?.at(-1);if(explicit)return {prefix:explicit.prefix,title:explicit.title,generated:false};
     const raw=clean(row?.[1]);
     const mapped=mappedSection(row,actCode);
     const match=raw.match(/^((?:Dział|Rozdział|Oddział))\s+([IVXLCDM]+|\d+)([a-z]?)\)?(?:\s*[.:-]\s*(.*))?$/i);

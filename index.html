@@ -15,6 +15,7 @@
 <link href="nav.css" rel="stylesheet">
 <link href="menu-hotfix.css" rel="stylesheet">
 <link href="favorites-ui.css" rel="stylesheet">
+<link href="reader-ui.css" rel="stylesheet">
 </head>
 <body>
 <header class="top"><div class="top-inner">
@@ -26,9 +27,10 @@
 <div class="settings-head"><h2 id="settingsTitle">Ustawienia</h2><button aria-label="Zamknij ustawienia" class="settings-close" id="settingsClose" type="button">×</button></div>
 <section class="settings-section settings-general" data-full-only="true"><div class="settings-copy"><b>Dostęp offline</b><small aria-live="polite" id="offlineDetail">Baza pobiera się automatycznie przy pierwszym uruchomieniu</small></div><button class="offline-download" disabled id="offlineDownload" type="button"><span class="offline-icon" aria-hidden="true">…</span><span id="offlineTitle">Przygotowuję…</span></button></section>
 <section class="settings-section settings-general" data-full-only="true"><div class="settings-copy"><b>Aplikacja PWA</b><small aria-live="polite" id="pwaDetail">Uruchamiaj bazę jak aplikację, bez paska przeglądarki</small></div><button class="pwa-install" id="pwaInstall" type="button"><span class="pwa-icon" aria-hidden="true">＋</span><span id="pwaTitle">Jak zainstalować</span></button></section>
-<section class="settings-section settings-general settings-transfer" data-split-only="true" hidden id="favoritesTransfer"><div class="settings-copy"><b>Kopia ulubionych</b><small>Zapisz ulubione w pliku lub przenieś je między wersjami aplikacji.</small></div><div class="favorites-transfer-actions"><button id="favoritesExport" type="button">Eksportuj</button><button id="favoritesImport" type="button">Importuj</button></div><small aria-live="polite" class="favorites-transfer-status" id="favoritesTransferStatus">Podczas importu wybierzesz: dodaj lub zastąp.</small><input accept=".json,application/json" hidden id="favoritesImportFile" type="file"></section>
-<section class="settings-section settings-general settings-packages" data-split-only="true" hidden data-unavailable="true" id="lawPackages"><div class="settings-copy"><b>Pakiety ustaw</b><small>Dodatkowe ustawy i zestawy tematyczne.</small></div><button disabled type="button">Funkcja dostępna później</button></section>
+<section class="settings-section settings-general settings-transfer" id="favoritesTransfer"><div class="settings-copy"><b>Kopia ulubionych</b><small>Zapisz ulubione w pliku lub przenieś je między wersjami aplikacji.</small></div><div class="favorites-transfer-actions"><button id="favoritesExport" type="button">Eksportuj</button><button id="favoritesImport" type="button">Importuj</button></div><small aria-live="polite" class="favorites-transfer-status" id="favoritesTransferStatus">Podczas importu wybierzesz: dodaj lub zastąp.</small><input accept=".json,application/json" hidden id="favoritesImportFile" type="file"></section>
+<section class="settings-section settings-general settings-packages" id="lawPackages"><div class="settings-copy"><b>Pakiety ustaw</b><small>Wybierz ustawy do wyszukiwania. Wyłączenie zwalnia ich indeks; tekst i odwołania nadal są dostępne.</small></div><p class="package-summary" id="packageSummary" aria-live="polite"></p><details class="package-details"><summary>Wybierz pakiety</summary><div class="package-list" id="packageList"></div></details></section>
 <section class="settings-section settings-general settings-diagnostics" data-split-only="true" hidden id="performanceDiagnostics"><div class="settings-copy"><b>Diagnostyka wydajności</b><small aria-live="polite" id="performanceSummary">Kończę pomiar bieżącego uruchomienia…</small></div><button aria-controls="performanceDetails" aria-expanded="false" class="performance-toggle" id="performanceToggle" type="button">Pokaż pomiary</button><div class="performance-details" hidden id="performanceDetails"><dl id="performanceMetrics"></dl><small>Pomiary dotyczą tego urządzenia i bieżącego uruchomienia aplikacji.</small></div></section>
+<section class="settings-section settings-general reader-help"><details><summary>Jak korzystać</summary><p>Przesuń od lewej krawędzi, aby otworzyć rozdziały. Od prawej — aby dodać artykuł do ulubionych lub edytować zapis.</p><p>W spisie treści gwiazdka włącza filtr ulubionych. „Zakres” pozwala wybrać wszystkie ustawy. Przytrzymaj gwiazdkę zapisanego artykułu w tym widoku, aby zmienić wybór fragmentów.</p><p>Wyszukiwanie w ulubionych obejmuje całe zapisane artykuły. Trafienie może pokazać także pominięte fragmenty.</p></details></section>
 <section class="settings-search" id="searchSettings" hidden><div class="search-filter-head"><b>Przeszukiwane ustawy</b><small>Wyłączenia zostają zapamiętane na tym urządzeniu.</small><strong aria-live="polite" id="searchFavoritesNotice">Wyszukiwanie we wszystkich ustawach i artykułach.</strong><div class="search-filter-actions"><button aria-pressed="false" id="searchFavoritesToggle" type="button">Szukaj tylko w ulubionych</button><button id="searchEnableAll" type="button">Resetuj filtry</button></div></div><div class="search-act-filters" id="searchActFilters"></div></section>
 </aside>
 <div class="favorites-import-backdrop" id="favoritesImportBackdrop"></div>
@@ -44,6 +46,8 @@
 <script src="data.js"></script>
 <script src="linking-rules.js"></script>
 <script src="chapter-titles.js"></script>
+<script src="reader-core.js"></script>
+<script src="article-comments.js"></script>
 <script src="app.js"></script>
 <script src="uop-summaries.js"></script>
 <script src="cleanup.js"></script>
@@ -57,6 +61,7 @@
 <script src="favorites-ui.js"></script>
 <script src="favorites-transfer.js"></script>
 <script src="settings.js"></script>
+<script src="reader-ui.js"></script>
 <script src="offline.js"></script>
 </body>
 </html>

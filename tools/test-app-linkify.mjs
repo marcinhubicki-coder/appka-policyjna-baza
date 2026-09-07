@@ -50,7 +50,8 @@ for (const point of [1, 2, 3]) {
 
 context.TEST_TEXT = "określonych w art. 134, art. 135 § 1 oraz art. 310 § 1, 2 i 4 Kodeksu karnego";
 const externalSeriesHtml = vm.runInContext("linkify(TEST_TEXT, 'uop-art-19', 'uop-art-19-ust-1-pkt-2', 'uop')", context);
-assert.ok(!externalSeriesHtml.includes("<a"), "Lista z obcego kodeksu została błędnie podlinkowana");
+assert.ok(!externalSeriesHtml.includes('href="#uop-'), 'Obce artykuły nie mogą prowadzić do UoP');
+for(const id of ['kk-art-134','kk-art-135-par-1','kk-art-310-par-1','kk-art-310-par-2','kk-art-310-par-4'])assert.ok(externalSeriesHtml.includes(`href="#${id}"`),`Brak poprawnego odwołania ${id}`);
 
 context.TEST_TEXT = "uprawnień, o których mowa w ust. 1 pkt 1, 2a, 3, pkt 3a lit. b–d, pkt 3b, 5a–7, 9 i 10";
 const inheritedPointHtml = vm.runInContext("linkify(TEST_TEXT, 'uop-art-15', 'uop-art-15-ust-8', 'uop')", context);
@@ -75,4 +76,10 @@ for (const point of [4, 5, 6, 7, 8]) {
   assert.ok(interruptedScopeHtml.includes(`href="#nieletni-art-44-pkt-${point}"`), `Brak linku do art. 44 pkt ${point}`);
 }
 
-console.log(JSON.stringify({ status: "ok", links }, null, 2));
+context.TEST_TEXT=loadLegalData(dataPath).find(a=>a[0]==='spb')[3].find(r=>r[0]==='spb-art-45')[4].find(u=>u[3].includes('Kodeks karny'))[3];
+const firearmsHtml=vm.runInContext("linkify(TEST_TEXT, 'spb-art-45', 'spb-art-45-pkt-3-lit-a', 'spb')",context);
+for(const id of ['115-par-20','148','156-par-1','163','164','165','197','252','280','281','282'])assert.ok(firearmsHtml.includes(`href="#kk-art-${id}"`),`ŚPB art. 45: brak KK ${id}`);
+assert.ok(!firearmsHtml.includes('href="#spb-'),'ŚPB: błędny wewnętrzny cel odwołania do KK');
+context.TEST_TEXT='przepis art. 60¹ § 1 Kodeksu wykroczeń';
+assert.ok(vm.runInContext("linkify(TEST_TEXT,'uop-art-1','','uop')",context).includes('href="#kw-art-60s1-par-1"'));
+console.log(JSON.stringify({ status: "ok", links, externalReferences: 'KK, KW, ŚPB art. 45' }, null, 2));

@@ -7,13 +7,13 @@ const dataPath = process.argv.find((arg) => arg.startsWith("--data="))?.slice(7)
 const data = loadLegalData(dataPath);
 const reviewed = JSON.parse(fs.readFileSync(new URL("./kpk-reviewed-titles.json", import.meta.url), "utf8"));
 const act = data.find((item) => item[0] === "kpk");
-const editorial = act[3].filter((article) => article[8] !== "s");
+const editorial = act[3].filter((article) => Object.hasOwn(reviewed,article[0]));
 const row = (id) => act[3].find((article) => article[0] === id);
 
 assert.equal(Object.keys(reviewed).length, 954);
 assert.equal(editorial.length, 954);
 for (const article of editorial) {
-  assert.equal(article[3], reviewed[article[0]], `Niepoprawny tytuł ${article[0]}`);
+  assert.equal(article[3], article[10]==="status"?(article[4][0][3].includes("pominięty")?"Przepis pominięty w tekście jednolitym":"Przepis uchylony"):reviewed[article[0]], `Niepoprawny tytuł ${article[0]}`);
   assert.ok(article[3].length <= 55, `Za długi tytuł ${article[0]}`);
   assert.doesNotMatch(article[3], /^(?:Kto|Jeżeli|W przypadku gdy|Minister właściwy|Przepisy? art\.)\b/u);
 }
@@ -40,7 +40,7 @@ assert.equal(row("kpk-art-219")[3], "Przeszukanie");
 assert.equal(row("kpk-art-244")[3], "Zatrzymanie osoby");
 assert.equal(row("kpk-art-308")[3], "Czynności w niezbędnym zakresie");
 for (const id of ["kpk-art-217", "kpk-art-219", "kpk-art-220", "kpk-art-244", "kpk-art-308"]) {
-  assert.equal(row(id)[8], "s", `${id} powinien zachować tytuł źródłowy`);
+  assert.equal(row(id)[8], "e", `${id} powinien oznaczać opis jako pomoc redakcyjną`);
 }
 
 console.log(JSON.stringify({ status: "ok", reviewed: editorial.length }, null, 2));

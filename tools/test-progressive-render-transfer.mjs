@@ -41,22 +41,22 @@ match(appCss, /\.law-stream\{[^}]*overflow-anchor:none/);
 match(app, /function articleIdForTarget\(id\)/);
 match(app, /renderAct\(code,id,false\)/);
 match(app, /globalThis\.__POLICE_GOTO_ID=gotoLegalId/);
-match(nav, /globalThis\.__POLICE_GOTO_ID\(id,\{smooth:true,alignTop:true\}\)/);
+match(nav, /globalThis\.__POLICE_GOTO_ID\(id,\{smooth:false,alignTop:true\}\)/);
 match(nav, /renderAct\(x\.act,x\.id,false\)/);
 match(app, /o\.act!==ACT\[0\]\|\|!!\(o\.id&&!document\.getElementById\(o\.id\)\)/);
 match(app, /function populateToc\(\)/);
 match(app, /if\(show\)populateToc\(\)/);
 match(app, /police-law-articles-rendered/);
-match(cleanup, /police-law-articles-rendered/);
+noMatch(cleanup, /nodeValue\s*=|replaceWith|stripLegacyTail/);
 match(favorites, /police-law-articles-rendered/);
-match(ux, /police-law-articles-rendered/);
+noMatch(ux, /patchChapters|MutationObserver/);
 
 // Split-view settings retain their context and intentionally differ from the
 // full-view installation settings.
 match(index, /data-full-only="true"[^>]*>.*Dostęp offline/s);
 match(index, /data-full-only="true"[^>]*>.*Aplikacja PWA/s);
-match(index, /id="favoritesTransfer"[^>]*data-split-only="true"|data-split-only="true"[^>]*id="favoritesTransfer"/);
-match(index, /id="lawPackages"[^>]*data-split-only="true"|data-split-only="true"[^>]*id="lawPackages"/);
+match(index, /class="settings-section settings-general settings-transfer" id="favoritesTransfer"/);
+match(index, /class="settings-section settings-general settings-packages" id="lawPackages"/);
 match(settings, /openedFromDrawer=document\.body\.classList\.contains\('drawer-open'\)/);
 noMatch(settings, /__POLICE_DRAWER_CLOSE|captureDrawerContext|restoreDrawerContext/);
 match(appCss, /html\.settings-open-root\{overflow:hidden!important/);
@@ -79,7 +79,7 @@ match(transfer, /fileInput\.click\(\)/);
 match(transfer, /mode==='replace'\?pendingItems:merge/);
 match(transfer, /function mergeParts\(current,incoming,row\)/);
 match(transfer, /valid:merge\(\[\],valid\)/);
-match(serviceWorker, /CACHE_VERSION='2026-09-06\.1'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-07\.1'/);
 match(serviceWorker, /'\.\/favorites-transfer\.js'/);
 
 // Exercise the same bounded-cost contract against every real act. This is a

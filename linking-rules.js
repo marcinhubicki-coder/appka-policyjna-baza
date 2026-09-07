@@ -1,7 +1,7 @@
 (function(root){
   "use strict";
 
-  const value=String.raw`\d+[a-z]*`;
+  const value=String.raw`\d+[⁰¹²³⁴⁵⁶⁷⁸⁹]*[a-z]*`;
   const separator=String.raw`(?:\s*,\s*|\s+(?:i|lub|oraz|albo)\s+)`;
   const numberExpression=String.raw`${value}(?:\s*[–-]\s*${value})?(?:${separator}${value}(?:\s*[–-]\s*${value})?)*`;
   const letterExpression=String.raw`[a-z](?:\s*[–-]\s*[a-z])?(?:${separator}[a-z](?:\s*[–-]\s*[a-z])?)*`;
@@ -64,5 +64,26 @@
     return ranges.some((range)=>start<range.end&&end>range.start);
   }
 
-  root.__LEGAL_LINK_RULES__={externalReferenceRanges,overlapsRange};
+  const actNames=[
+    ['kpow',/^(?:Kodeks(?:u|em)? postępowania w sprawach o wykroczenia)/i],
+    ['kpk',/^(?:Kodeks(?:u|em)? postępowania karnego)/i],
+    ['kk',/^(?:Kodeks(?:u|em)? karn(?:y|ego|ym))/i],
+    ['kw',/^(?:Kodeks(?:u|em)? wykroczeń)/i],
+    ['prd',/^(?:Praw(?:o|a|em) o ruchu drogowym)/i],
+    ['spb',/^o środkach przymusu bezpośredniego i broni palnej/i],
+    ['uop',/^o Policji\b/i],['cudz',/^o cudzoziemcach\b/i],
+    ['nieletni',/^o wspieraniu i resocjalizacji nieletnich/i],
+    ['bim',/^o bezpieczeństwie imprez masowych/i],
+    ['alk',/^o wychowaniu w trzeźwości i przeciwdziałaniu alkoholizmowi/i]
+  ];
+  function externalActReferences(text){
+    return externalReferenceRanges(text).flatMap(range=>{
+      const tail=text.slice(range.end),qualifier=tail.search(/\b(?:ustawy|Kodeksu|Kodeks|Prawa|Prawo|rozporządzenia|Konstytucji)\b/i);
+      if(qualifier<0||qualifier>500)return[];
+      const name=tail.slice(qualifier).replace(/^ustawy\s+(?:z dnia\s+\d+\s+[a-ząćęłńóśźż]+\s+\d{4}\s*r\.\s*)?(?:[–-]\s*)?/i,'');
+      const act=actNames.find(([,pattern])=>pattern.test(name))?.[0];
+      return act?[{...range,act}]:[];
+    });
+  }
+  root.__LEGAL_LINK_RULES__={externalReferenceRanges,overlapsRange,externalActReferences};
 })(typeof window!=="undefined"?window:globalThis);

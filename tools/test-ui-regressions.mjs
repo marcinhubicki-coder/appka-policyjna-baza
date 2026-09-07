@@ -46,10 +46,10 @@ match(favorites, /exitEditor\(true,true,false\)/);
 // only while moving right; a short gesture snaps back to the open state.
 match(favorites, /function swipeTarget\(target,x\).*article===activeArticle.*closing:true/);
 match(favorites, /\.navrefs,\.favorite-swipe-action/);
-match(favorites, /state\.closing\)\{if\(axis==='x'&&dx>52\)closeSwipe\(\)/);
-match(favorites, /state\.closing\)\{if\(state\.axis==='x'&&dx>52\)closeSwipe\(\)/);
-match(favorites, /if\(axis==='x'\)suppressSwipeClickUntil=Date\.now\(\)\+450/);
-match(favorites, /if\(state\.axis==='x'\)suppressSwipeClickUntil=Date\.now\(\)\+450/);
+match(favorites, /state\.closing\)\{if\(!cancelled&&state\.axis==='x'&&dx>52\)closeSwipe\(\)/);
+match(favorites, /if\(state\.prepared\)\{if\(cancelled\|\|dx>=-52\)closeSwipe\(\)/);
+match(favorites, /if\(!cancelled&&state\.axis==='x'\)suppressSwipeClickUntil=/);
+match(favorites, /settleSwipe\(pointer,0,true\)/);
 match(favorites, /Date\.now\(\)>=suppressSwipeClickUntil/);
 const swipeOffsetSource = favorites.match(/function swipeOffset\(dx,closing\)\{[^}]+\}/)?.[0];
 assert.ok(swipeOffsetSource, "Brak funkcji położenia gestu ulubionych");
@@ -75,7 +75,7 @@ checks += 4;
 
 // A favorite save must update storage, the article state and the visible star.
 match(favorites, /CustomEvent\('police-law-favorites-change'\)/);
-match(favorites, /button\.classList\.toggle\('on',on\);button\.textContent=on\?'★':'☆'/);
+assert.match(favorites, /if\(button\.textContent!==star\)button\.textContent=star/);
 match(favorites, /window\.addEventListener\('police-law-favorites-change',scheduleRefresh\)/);
 match(favorites, /window\.addEventListener\('police-law-stars-ready',scheduleRefresh\)/);
 match(nav, /function setBM\(x\).*CustomEvent\('police-law-favorites-change'\)/);
@@ -87,7 +87,7 @@ match(app, /globalThis\.__POLICE_SCROLL_ARTICLE=scrollArticleStart/);
 match(app, /alignTop\|\|el\.matches\('\.legal-unit'\)/);
 match(nav, /document\.elementFromPoint\(x,y\)/);
 match(menuSync, /document\.elementFromPoint\(x,y\)/);
-match(nav, /globalThis\.__POLICE_SCROLL_ARTICLE\(id,true\)/);
+match(nav, /globalThis\.__POLICE_SCROLL_ARTICLE\(id,false\)/);
 match(menuSync, /globalThis\.__POLICE_SCROLL_ARTICLE\(id,false\)/);
 noMatch(nav, /while\(low<=high\)/);
 noMatch(menuSync, /while\(low<=high\)/);
@@ -98,9 +98,9 @@ match(app, /function articleHeading\(/);
 match(app, /data-compact-marker=/);
 match(app, /data-title-origin="\$\{origin\}"/);
 match(app, /CustomEvent\('police-law-rendered'/);
-match(cleanup, /window\.addEventListener\("police-law-rendered"/);
+noMatch(cleanup, /nodeValue\s*=|replaceWith|stripLegacyTail/);
 match(nav, /window\.addEventListener\('police-law-rendered'/);
-match(ux, /window\.addEventListener\('police-law-rendered',install\)/);
+noMatch(ux, /patchChapters|MutationObserver/);
 match(favorites, /window\.addEventListener\('police-law-rendered',scheduleRefresh\)/);
 noMatch(index, /compact-markers\.js/);
 
@@ -109,7 +109,7 @@ noMatch(index, /compact-markers\.js/);
 match(favorites, /function ensureDataIndex\(\)/);
 match(favorites, /if\(article\.querySelector\(':scope > \.favorite-swipe-action'\)\)updateSwipePanel/);
 match(favorites, /if\(refreshQueued\)return;refreshQueued=true;requestAnimationFrame/);
-match(tocLayout, /if\(queued\)return;queued=true/);
+match(tocLayout, /police-law-favorites-drawer-rendered/);
 noMatch(favorites, /new MutationObserver/);
 
 const runtime = ["app.js", "cleanup.js", "favorites-ui.js", "menu-sync-fix.js", "nav.js", "search-ux-v2.js", "slider-preview-fix.js", "toc-layout-fix.js", "uop-summaries.js", "ux-fixes.js"];

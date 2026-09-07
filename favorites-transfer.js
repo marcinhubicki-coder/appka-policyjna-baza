@@ -6,11 +6,26 @@
   let pendingItems=null,lastFocus=null;
   function read(){try{const value=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(value)?value:[]}catch(_){return[]}}
   function rowIndex(){const rows=new Map();for(const act of Array.isArray(DATA)?DATA:[])for(const row of act[3]||[])rows.set(row[0],{act,row});return rows}
-  function normalize(item,index){if(!item||typeof item!=='object'||typeof item.id!=='string')return null;const hit=index.get(item.id);if(!hit)return null;const out={id:hit.row[0],act:hit.act[0],num:hit.row[2],topic:hit.row[3]||''};if(Array.isArray(item.parts)){const valid=(globalThis.__FAVORITES_MODEL?.describe?.(hit.row)||[]).map(part=>part.key),allowed=new Set(valid),parts=[...new Set(item.parts.filter(part=>typeof part==='string'&&allowed.has(part)))];if(!parts.length)return null;if(parts.length<valid.length){out.parts=parts;out.favoriteVersion=2}}return out}
+  function normalize(item,index){
+    if(!item||typeof item!=='object'||typeof item.id!=='string')return null;
+    let hit=index.get(item.id);
+    if(!hit)for(const act of DATA){const id=act[4]?.idAliases?.[item.id];if(id){hit=index.get(id);break}}
+    if(!hit)return null;const meta=hit.act[4],legacy=item.dataRevision!==meta?.revision;
+    const out={id:hit.row[0],act:hit.act[0],num:hit.row[2],topic:hit.row[3]||'',dataRevision:meta?.revision};
+    if(item.partsBeforeUpdate)out.partsBeforeUpdate=item.partsBeforeUpdate;
+    if(item.needsFragmentReview)out.needsFragmentReview=true;
+    if(Array.isArray(item.parts)){
+      const valid=(globalThis.__FAVORITES_MODEL?.describe?.(hit.row)||[]).map(part=>part.key),allowed=new Set(valid);
+      const parts=[...new Set(item.parts.map(key=>legacy&&Object.hasOwn(meta?.partAliases||{},key)?meta.partAliases[key]:key))];
+      if(parts.some(key=>typeof key!=='string'||!allowed.has(key))||!parts.length){out.partsBeforeUpdate=[...item.parts];out.needsFragmentReview=true}
+      else if(parts.length<valid.length){out.parts=parts;out.favoriteVersion=2}
+    }
+    return out;
+  }
   function normalizeAll(items){const index=rowIndex(),valid=[],skipped=[];for(const item of items){const next=normalize(item,index);if(next)valid.push(next);else skipped.push(item)}return{valid:merge([],valid),skipped}}
   function mergeParts(current,incoming,row){if(!Array.isArray(current.parts)||!Array.isArray(incoming.parts)){delete current.parts;delete current.favoriteVersion;return current}const valid=globalThis.__FAVORITES_MODEL?.describe?.(row)?.map(part=>part.key)||[],set=new Set([...current.parts,...incoming.parts].filter(part=>valid.includes(part)));if(set.size>=valid.length){delete current.parts;delete current.favoriteVersion}else{current.parts=[...set];current.favoriteVersion=2}return current}
   function merge(current,incoming){const index=rowIndex(),out=current.map(item=>({...item,parts:Array.isArray(item.parts)?[...item.parts]:undefined})),byId=new Map(out.map(item=>[item.id,item]));for(const item of incoming){const found=byId.get(item.id);if(found)mergeParts(found,item,index.get(item.id)?.row);else{const copy={...item,parts:Array.isArray(item.parts)?[...item.parts]:undefined};out.push(copy);byId.set(copy.id,copy)}}return out.map(item=>{if(item.parts===undefined){const copy={...item};delete copy.parts;return copy}return item})}
-  function save(items){localStorage.setItem(KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent('police-law-favorites-change'));globalThis.__POLICE_DRAWER_REFRESH?.()}
+  function save(items){const backup=KEY+'-before-import';localStorage.setItem(backup,localStorage.getItem(KEY)||'[]');localStorage.setItem(KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent('police-law-favorites-change'));globalThis.__POLICE_DRAWER_REFRESH?.()}
   function setStatus(text,type=''){status.textContent=text;status.classList.toggle('is-success',type==='success');status.classList.toggle('is-error',type==='error')}
   function filename(){return`policyjna-baza-ulubione-${new Date().toISOString().slice(0,10)}.json`}
   async function exportFavorites(){const payload={format:FORMAT,version:VERSION,exportedAt:new Date().toISOString(),favorites:read()},json=JSON.stringify(payload,null,2),downloadName=filename();try{const file=typeof File==='function'?new File([json],downloadName,{type:'application/json'}):null;if(file&&navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({title:'Kopia ulubionych',files:[file]});setStatus('Kopia ulubionych została przygotowana.','success');return}const blob=file||new Blob([json],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=downloadName;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);setStatus('Pobrano kopię ulubionych.','success')}catch(error){if(error?.name!=='AbortError')setStatus('Nie udało się wyeksportować ulubionych.','error')}}

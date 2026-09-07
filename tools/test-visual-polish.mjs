@@ -34,11 +34,11 @@ assert.match(menuCss, /\.section-title\.generated\{font-style:italic!important/)
 assert.match(menuCss, /body\.drawer-open \.chapter-title\.generated\{font-style:normal!important/);
 assert.doesNotMatch(index, /compact-markers\.js/);
 
-assert.match(ux, /const rows=new Map\(\(ACT\?\.\[3\]\|\|\[\]\)\.map/);
-assert.match(ux, /window\.addEventListener\('police-law-rendered',install\)/);
+assert.doesNotMatch(ux, /patchChapters|ACT\[3\]/);
+assert.match(ux, /new ResizeObserver\(sync\)/);
 assert.doesNotMatch(ux, /observer\.observe\(view,\{childList:true,subtree:true\}\)/);
-assert.match(tocLayout, /function schedule\(\)/);
-assert.match(tocLayout, /if\(queued\)return;queued=true/);
+assert.match(tocLayout, /function measure\(\)/);
+assert.doesNotMatch(tocLayout, /MutationObserver/);
 
 assert.match(nav, /document\.elementFromPoint\(x,y\)/);
 assert.doesNotMatch(nav, /while\(low<=high\)/);
@@ -49,7 +49,7 @@ assert.match(favoriteJs, /function ensureDataIndex\(\)/);
 assert.match(favoriteJs, /actById\.set\(row\[0\],act\)/);
 assert.match(favoriteJs, /if\(article\.querySelector\(':scope > \.favorite-swipe-action'\)\)updateSwipePanel/);
 assert.match(favoriteJs, /function openSwipe\(article\)[\s\S]*?updateSwipePanel\(article,on\)/);
-assert.match(favoriteJs, /button\.classList\.toggle\('on',on\);button\.textContent=on\?'★':'☆'/);
+assert.match(favoriteJs, /if\(button\.textContent!==star\)button\.textContent=star/);
 assert.match(favoriteJs, /window\.addEventListener\('police-law-rendered',scheduleRefresh\)/);
 assert.match(favoriteJs, /window\.addEventListener\('police-law-drawer-rendered',scheduleRefresh\)/);
 assert.match(favoriteJs, /window\.addEventListener\('police-law-stars-ready',scheduleRefresh\)/);

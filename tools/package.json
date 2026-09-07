@@ -1,0 +1,7 @@
+{
+  "name": "policyjna-reader-tests",
+  "private": true,
+  "type": "module",
+  "devDependencies": { "jsdom": "30.0.1" },
+  "scripts": { "test": "cd .. && node tools/test-reader-runtime.mjs" }
+}

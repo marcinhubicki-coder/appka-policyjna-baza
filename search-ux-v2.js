@@ -21,7 +21,7 @@
   function allowedTextNode(n,root){const p=n.parentElement;if(!p||!root.contains(p))return false;if(p.closest('mark,script,style,.search-match-info'))return false;return true}
   function markFirst(root,term,cls){if(!root||!term)return null;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){if(!allowedTextNode(n,root))continue;const hit=locate(n.nodeValue||'',term);if(!hit)continue;const tail=n.splitText(hit.s),after=tail.splitText(hit.e-hit.s),m=document.createElement('mark');m.className=cls;m.textContent=tail.nodeValue;tail.replaceWith(m);return m}return null}
   function headerH(){return document.querySelector('.top')?.getBoundingClientRect().height||0}
-  function centerOn(el,behavior='smooth'){if(!el)return;const r=el.getBoundingClientRect(),h=headerH(),avail=Math.max(100,innerHeight-h);const y=scrollY+r.top-h-(avail-r.height)/2;scrollTo({top:Math.max(0,y),behavior})}
+  function centerOn(el,behavior='auto'){if(!el)return;const r=el.getBoundingClientRect(),h=headerH(),avail=Math.max(100,innerHeight-h);const y=scrollY+r.top-h-(avail-r.height)/2;scrollTo({top:Math.max(0,y),behavior})}
 
   function currentRow(id){try{if(typeof articleMap!=='undefined'&&articleMap.get(id)?.r)return articleMap.get(id).r}catch(_){}
     try{for(const A of DATA||[]){const r=(A[3]||[]).find(x=>x[0]===id);if(r)return r}}catch(_){}return null}
@@ -67,6 +67,6 @@
   q.addEventListener('input',()=>{decorateResults();refreshVisibleHighlights()});
   q.addEventListener('focus',()=>{decorateResults();refreshVisibleHighlights()});
   window.addEventListener('scroll',()=>{if(q.value.trim().length>=2)refreshVisibleHighlights()},{passive:true});
-  box.addEventListener('click',e=>{const a=e.target.closest('.search-item');if(!a)return;const term=q.value.trim();if(term.length<2)return;setTimeout(()=>exactJump(a,term),180);setTimeout(()=>exactJump(a,term),480)},false);
+  box.addEventListener('click',e=>{const a=e.target.closest('.search-item');if(!a)return;const term=q.value.trim();if(term.length<2)return;requestAnimationFrame(()=>requestAnimationFrame(()=>exactJump(a,term)))},false);
   decorateResults();refreshVisibleHighlights();
 })();

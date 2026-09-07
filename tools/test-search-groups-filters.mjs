@@ -46,7 +46,7 @@ match(index, /id="searchEnableAll"/);
 match(settings, /Filtry wyszukiwania/);
 match(settings, /toggle\.type='checkbox'/);
 match(settings, /api\.setEnabled\(item\.code,toggle\.checked\)/);
-match(settings, /detail\.textContent=pluralHits\(item\.hits\)/);
+match(settings, /detail\.textContent=item\.packageEnabled===false\?'Pakiet wyłączony — włącz go poniżej':pluralHits\(item\.hits\)/);
 noMatch(settings, /detail\.textContent=`\$\{item\.name\}/);
 match(appCss, /body\.search-filters-active \.settings-button/);
 
@@ -65,9 +65,10 @@ match(settings, /api\.favoritesOnly\?\.\(\)/);
 match(settings, /api\.disableFavorites\?\.\(\).*api\?\.enableFavorites\?\.\(\)/);
 match(settings, /favoritesNotice\.textContent=searchScopeLabel\(items,favoritesOnly\)/);
 match(settings, /favoritesOnly\?'Wyłącz ulubione':'Szukaj tylko w ulubionych'/);
-match(settings, /enableAll\.disabled=items\.every\(item=>item\.enabled\)&&!favoritesOnly/);
+match(settings, /enableAll\.disabled=items\.every\(item=>item\.packageEnabled===false\|\|item\.enabled\)&&!favoritesOnly/);
 match(settings, /__POLICE_SEARCH_FILTERS\?\.resetAll\?\.\(\)/);
-match(app, /function resetSearchFilters\(\).*searchExcluded\.clear\(\).*searchFavoritesOnly=false.*favoritesSearchApi\(\)\?\.disable\?\.\(\)/);
+match(app, /function resetSearchFilters\(\).*searchExcluded\.clear\(\).*searchFavoritesOnly=false/);
+noMatch(app.split('\n').find(line=>line.startsWith('function resetSearchFilters')), /favoritesSearchApi|\.disable\?/);
 match(app, /resetAll:resetSearchFilters/);
 match(read("favorites-ui.js"), /__POLICE_FAVORITES_SEARCH=\{isActive:\(\)=>filter\|\|allActs,ids:/);
 match(appCss, /\.search-filter-copy\{[^}]*display:flex[^}]*white-space:nowrap/);
@@ -116,7 +117,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-06\.1'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-07\.1'/);
 
 console.log(JSON.stringify({
   status: "ok",

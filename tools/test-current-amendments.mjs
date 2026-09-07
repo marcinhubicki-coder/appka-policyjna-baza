@@ -23,7 +23,7 @@ assert.ok(unit("kpk", "kpk-art-607k", "kpk-art-607k-par-7"));
 assert.match(text("kpk", "kpk-art-607t", "kpk-art-607t-par-1"), /ma miejsce zamieszkania lub stale przebywa/u);
 assert.equal(article("kpk", "kpk-art-607ya")[3], "Zgoda państwa obcego na przekazanie w ramach ENA");
 assert.match(text("kpk", "kpk-art-607ya", "kpk-art-607ya-par-2"), /ulega on zawieszeniu do czasu uzyskania zgody\.$/u);
-assert.doesNotMatch(text("kpk", "kpk-art-607m", "kpk-art-607m-par-3"), /^W wypadku,/u);
+assert.match(text("kpk", "kpk-art-607m", "kpk-art-607m-par-3"), /W wypadku,? określonym w art\. 607k § 4/u);
 
 assert.ok(unit("prd", "prd-art-60", "prd-art-60-ust-5-pkt-2"));
 assert.equal(article("prd", "prd-art-65ja")[3], "Zawiadomienie o spotkaniu motoryzacyjnym");

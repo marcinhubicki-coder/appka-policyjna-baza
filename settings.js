@@ -54,13 +54,13 @@
       label.title=item.name;
       const copy=document.createElement('span');copy.className='search-filter-copy';
       const short=document.createElement('b');short.textContent=item.short;
-      const detail=document.createElement('small');detail.textContent=pluralHits(item.hits);
-      const toggle=document.createElement('input');toggle.type='checkbox';toggle.checked=item.enabled;toggle.setAttribute('aria-label',`${item.enabled?'Wyłącz':'Włącz'} ${item.name}`);
+      const detail=document.createElement('small');detail.textContent=item.packageEnabled===false?'Pakiet wyłączony — włącz go poniżej':pluralHits(item.hits);
+      const toggle=document.createElement('input');toggle.type='checkbox';toggle.checked=item.enabled;toggle.disabled=item.packageEnabled===false;toggle.setAttribute('aria-label',`${item.enabled?'Wyłącz':'Włącz'} ${item.name}`);
       toggle.addEventListener('change',()=>api.setEnabled(item.code,toggle.checked));
       copy.append(short,detail);label.append(copy,toggle);fragment.append(label);
     }
     filterList.replaceChildren(fragment);
-    if(enableAll)enableAll.disabled=items.every(item=>item.enabled)&&!favoritesOnly;
+    if(enableAll)enableAll.disabled=items.every(item=>item.packageEnabled===false||item.enabled)&&!favoritesOnly;
     if(favoritesNotice)favoritesNotice.textContent=searchScopeLabel(items,favoritesOnly);
     if(favoritesToggle){favoritesToggle.textContent=favoritesOnly?'Wyłącz ulubione':'Szukaj tylko w ulubionych';favoritesToggle.setAttribute('aria-pressed',String(favoritesOnly))}
   }
@@ -68,15 +68,15 @@
     const enabled=items.filter(item=>item.enabled).length;
     if(!enabled)return 'Wszystkie ustawy wyłączone — włącz ustawę lub zresetuj filtry.';
     const scope=enabled===items.length?'we wszystkich ustawach':`w ${enabled} z ${items.length} ustaw`;
-    return favoritesOnly?`Tylko ulubione artykuły · ${scope}.`:`Wyszukiwanie ${scope}.`;
+    return favoritesOnly?`Całe ulubione artykuły · ${scope}.`:`Wyszukiwanie ${scope}.`;
   }
   function syncMode(){
     const searching=isSearchMode();
     if(title)title.textContent=searching?'Filtry wyszukiwania':openedFromDrawer?'Ustawienia widoku':'Ustawienia';
-    for(const section of generalSections)section.hidden=section.dataset.unavailable==='true'||searching||(section.dataset.splitOnly==='true'&&!openedFromDrawer)||(section.dataset.fullOnly==='true'&&openedFromDrawer);
+    for(const section of generalSections)section.hidden=(searching&&section.id!=='lawPackages')||(section.dataset.splitOnly==='true'&&!openedFromDrawer)||(section.dataset.fullOnly==='true'&&openedFromDrawer);
     if(searchSettings)searchSettings.hidden=!searching;
     if(searching)renderSearchFilters();
-    else if(openedFromDrawer)renderPerformance();
+    else renderPerformance();
     if(!document.body.classList.contains('settings-open'))button.setAttribute('aria-label',closedLabel());
   }
   function close(restoreFocus=true){
@@ -115,6 +115,7 @@
     if(event.shiftKey&&(active===first||!panel.contains(active))){event.preventDefault();last.focus()}
     else if(!event.shiftKey&&(active===last||!panel.contains(active))){event.preventDefault();first.focus()}
   },{capture:true});
+  window.addEventListener('police-law-packages-change',()=>{if(isSearchMode())renderSearchFilters()});
   window.addEventListener('police-law-search-state',()=>{syncMode();if(document.body.classList.contains('settings-open'))button.setAttribute('aria-label',isSearchMode()?'Zamknij filtry wyszukiwania':'Zamknij ustawienia')});
   window.addEventListener('police-law-performance',()=>{if(document.body.classList.contains('settings-open')&&openedFromDrawer)renderPerformance()});
   syncMode();

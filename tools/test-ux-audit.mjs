@@ -19,7 +19,7 @@ const items=Array.from({length:12},()=>({enabled:true}));
 assert.equal(scope(items,false),'Wyszukiwanie we wszystkich ustawach.');
 items[0].enabled=false;
 assert.equal(scope(items,false),'Wyszukiwanie w 11 z 12 ustaw.');
-assert.equal(scope(items,true),'Tylko ulubione artykuły · w 11 z 12 ustaw.');
+assert.equal(scope(items,true),'Całe ulubione artykuły · w 11 z 12 ustaw.');
 assert.match(scope(items.map(()=>({enabled:false})),false),/Wszystkie ustawy wyłączone/);
 
 function classList(){const set=new Set();return {add:(...xs)=>xs.forEach(x=>set.add(x)),remove:(...xs)=>xs.forEach(x=>set.delete(x)),contains:x=>set.has(x),toggle(x,on){if(on===undefined)on=!set.has(x);on?set.add(x):set.delete(x)}}}
@@ -47,7 +47,7 @@ document.activeElement=last;const tab=event('Tab');keyListener.fn(tab);assert.eq
 document.activeElement=first;const back=event('Tab');back.shiftKey=true;keyListener.fn(back);assert.equal(last.focused,true);
 
 const pills=[node(),node(),node()];pills.forEach((p,i)=>p.dataset.act=['uop','kw','kk'][i]);
-const pillContext={quickbar:{querySelectorAll:()=>pills},META:{},searchExcluded:new Set(['kw']),searchResultWord:()=> 'wyniki'};
+const pillContext={packages:{isEnabled:()=>true},quickbar:{querySelectorAll:()=>pills},META:{},searchExcluded:new Set(['kw']),searchResultWord:()=> 'wyniki'};
 const paint=vm.runInNewContext(`${lineFunction(app,'paintSearchPills')};paintSearchPills`,pillContext);
 paint(true,new Map([['uop',3]]));assert.deepEqual(pills.map(x=>x.disabled),[false,true,true]);
 paint(false,new Map());assert.deepEqual(pills.map(x=>x.disabled),[false,false,false]);
@@ -59,11 +59,11 @@ assert.equal(save([]),false);assert.equal(errors,1);assert.equal(events,0);
 saveContext.localStorage.setItem=()=>writes++;
 assert.equal(save([]),true);assert.equal(writes,1);assert.equal(events,1);
 let exited=false;
-const editorContext={editor:{article:{id:'a'},parts:[{key:'p1'},{key:'p2'}],selected:new Set(['p1'])},read:()=>[{id:'a'}],save:()=>false,expanded:new Set(),exitEditor(){exited=true},syncLegacy(){}};
+const editorContext={actForId:()=>null,editor:{article:{id:'a'},parts:[{key:'p1'},{key:'p2'}],selected:new Set(['p1'])},read:()=>[{id:'a'}],save:()=>false,expanded:new Set(),exitEditor(){exited=true},syncLegacy(){}};
 const saveEditor=vm.runInNewContext(`${lineFunction(favorites,'saveEditor')};saveEditor`,editorContext);
 saveEditor();assert.equal(exited,false);
 editorContext.save=()=>true;saveEditor();assert.equal(exited,true);
 
-assert.match(fs.readFileSync('index.html','utf8'),/data-unavailable="true" id="lawPackages"/);
-assert.match(settings,/section\.hidden=section\.dataset\.unavailable==='true'/);
-console.log(JSON.stringify({status:'ok',scenarios:['Polish search and highlighting','all/partial/zero search scope','Escape keeps split view','nested import priority','Tab focus containment','disabled search pills and reset','storage failure preserves editor','unavailable package hidden']},null,2));
+assert.match(fs.readFileSync('index.html','utf8'),/id="packageList"/);
+assert.match(settings,/section\.id!=='lawPackages'/);
+console.log(JSON.stringify({status:'ok',scenarios:['Polish search and highlighting','all/partial/zero search scope','Escape keeps split view','nested import priority','Tab focus containment','disabled search pills and reset','storage failure preserves editor','package availability visible']},null,2));

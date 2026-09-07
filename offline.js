@@ -25,7 +25,7 @@
   }
   async function cacheAll(){
     if(pending)return;
-    if(reloadReady){location.reload();return}
+    if(reloadReady){if(globalThis.__FAVORITES_HAS_UNSAVED?.()){state('update','Zapisz edycję przed odświeżeniem','Wróć do artykułu i zapisz lub anuluj wybór fragmentów','↻');return}location.reload();return}
     if(!navigator.onLine&&!ready){markError('Połącz się raz z internetem, aby pobrać bazę');return}
     pending=true;state('working','Zapisuję całą bazę…','Możesz nadal korzystać z aplikacji','…');
     try{
@@ -35,7 +35,7 @@
     }catch(error){markError(error?.message||'Nie udało się włączyć trybu offline')}
   }
   button.addEventListener('click',async()=>{
-    if(reloadReady){location.reload();return}
+    if(reloadReady){if(globalThis.__FAVORITES_HAS_UNSAVED?.()){state('update','Zapisz edycję przed odświeżeniem','Wróć do artykułu i zapisz lub anuluj wybór fragmentów','↻');return}location.reload();return}
     if(ready&&registration){state('working','Sprawdzam aktualizację…','Zapisana baza pozostaje dostępna','…');try{await registration.update()}catch(_){}pending=false}
     cacheAll();
   });
@@ -63,12 +63,13 @@
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   function installed(){button.disabled=true;button.classList.add('ready');title.textContent='Aplikacja zainstalowana';detail.textContent='Baza uruchamia się w osobnym oknie';icon.textContent='✓'}
   function instructions(){
+    button.hidden=true;
     if(ios){title.textContent='Dodaj do ekranu';detail.textContent='W Safari: Udostępnij → Dodaj do ekranu początkowego → Dodaj';icon.textContent='↗'}
     else{title.textContent='Zainstaluj z menu';detail.textContent='Otwórz menu przeglądarki i wybierz „Zainstaluj aplikację” lub „Dodaj do ekranu”';icon.textContent='⋮'}
   }
   if(standalone())installed();else if(ios)instructions();
   window.addEventListener('beforeinstallprompt',event=>{
-    event.preventDefault();installPrompt=event;button.disabled=false;title.textContent='Zainstaluj aplikację';detail.textContent='Dodaj bazę do urządzenia i uruchamiaj ją w osobnym oknie';icon.textContent='↓';
+    event.preventDefault();installPrompt=event;button.hidden=false;button.disabled=false;title.textContent='Zainstaluj aplikację';detail.textContent='Dodaj bazę do urządzenia i uruchamiaj ją w osobnym oknie';icon.textContent='↓';
   });
   window.addEventListener('appinstalled',()=>{installPrompt=null;installed()});
   button.addEventListener('click',async()=>{

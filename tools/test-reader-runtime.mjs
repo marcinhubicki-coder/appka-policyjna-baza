@@ -67,6 +67,13 @@ assert.equal(w.__POLICE_SEARCH_STATE.favoritesOnly,true);click('.search-item');a
 assert.equal(w.document.body.classList.contains('favorites-all-acts'),true);
 assert.equal(w.document.body.classList.contains('favorites-filter-on'),true);
 assert.equal(query('#searchReturn').classList.contains('show'),true);
+// A reference to an unsaved article must be revealed, then restore favorite scope.
+click('#uop-art-315 a[href="#uop-art-1-ust-2"]');await settle();
+assert.ok(query('#uop-art-1-ust-2'));assert.equal(w.document.body.classList.contains('favorites-filter-on'),false);
+assert.equal(query('#return').classList.contains('show'),true);click('#return button');await settle();
+assert.equal(w.document.body.classList.contains('favorites-all-acts'),true);
+assert.equal(w.document.body.classList.contains('favorites-filter-on'),true);
+assert.ok(query('#uop-art-315'));
 // Search filters do not turn off the reader's favorite scope.
 click('#searchReturn button');w.__POLICE_SEARCH_FILTERS.disableFavorites();assert.equal(w.document.body.classList.contains('favorites-all-acts'),true);
 w.__POLICE_SEARCH_CLEAR();w.__FAVORITES_OPEN_SINGLE('uop','uop-art-1');await settle();

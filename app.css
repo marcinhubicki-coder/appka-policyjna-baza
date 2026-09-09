@@ -1,6 +1,6 @@
 :root{--bg:#f4f6f8;--card:#fff;--text:#17202b;--muted:#667085;--line:#dbe2e8;--accent:#235b8d;--soft:#eef4fb;--soft2:#f7f9fc;--vio:#f8f4ff;--vioLine:#806aa8;--gold:#fff8e6;--goldLine:#e8d7a7;--target:#fff3bf}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;overflow-x:clip}
+html{-webkit-text-size-adjust:100%;scroll-behavior:auto;overflow-x:clip}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.48;padding-bottom:calc(76px + env(safe-area-inset-bottom));overflow-x:clip}
 .top{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.96);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
 .top-inner{max-width:1100px;margin:auto;padding:9px 12px 8px}
@@ -18,7 +18,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe 
 body.settings-open .settings-backdrop{opacity:1;pointer-events:auto}
 body.settings-open .settings-panel{opacity:1;visibility:visible;pointer-events:auto;transform:none;transition-delay:0s}
 html.settings-open-root{overflow:hidden!important;overscroll-behavior:none}
-body.settings-open,body.drawer-open.settings-open{position:fixed!important;inset:var(--settings-lock-top,0) 0 auto 0!important;width:100%!important;overflow:hidden!important;overscroll-behavior:none}
+
 body.settings-open .split-handle,body.settings-open .split-preview-pane{display:none!important;visibility:hidden!important;pointer-events:none!important}
 .settings-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:1px 2px 9px}
 .settings-head h2{margin:0;color:var(--accent);font-size:17px;line-height:1.2}

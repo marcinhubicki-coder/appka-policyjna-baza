@@ -32,11 +32,11 @@ match(favoritesCss, /body\.favorite-swipe-nav-hidden \.article-pager\{display:no
 match(favoritesCss, /body\.favorite-editing #actview \.legal-unit:not\(\.favorite-edit-target\)/);
 match(favoritesCss, /body\.favorite-editing #actview \.law-stream-sentinel/);
 match(appCss, /html\.settings-open-root\{overflow:hidden!important/);
-match(appCss, /body\.settings-open,body\.drawer-open\.settings-open\{position:fixed!important/);
+match(read('reader-ui.css'), /body\.reader-frozen,body\.drawer-open\.reader-frozen\{position:fixed!important/);
 match(appCss, /body\.settings-open \.split-handle,body\.settings-open \.split-preview-pane\{display:none!important/);
 match(settings, /openedFromDrawer=document\.body\.classList\.contains\('drawer-open'\)/);
 match(settings, /function lockBackground\(\)/);
-match(settings, /document\.documentElement\.classList\.add\('settings-open-root'\)/);
+match(settings, /__READER_STATE\?\.lock\('settings',true\)/);
 noMatch(settings, /__POLICE_DRAWER_CLOSE|captureDrawerContext|restoreDrawerContext/);
 noMatch(favorites, /function syncLegacy\(\)\{[^}]*populateDrawer/);
 match(favorites, /exitEditor\(true,true,false\)/);
@@ -86,9 +86,9 @@ match(menuHotfix, /\.unit-star:not\(\.on\)\{visibility:hidden/);
 match(app, /globalThis\.__POLICE_SCROLL_ARTICLE=scrollArticleStart/);
 match(app, /alignTop\|\|el\.matches\('\.legal-unit'\)/);
 match(nav, /document\.elementFromPoint\(x,y\)/);
-match(menuSync, /document\.elementFromPoint\(x,y\)/);
+match(read('reader-state.js'), /document\.elementFromPoint\(x,y\)/);
 match(nav, /globalThis\.__POLICE_SCROLL_ARTICLE\(id,false\)/);
-match(menuSync, /globalThis\.__POLICE_SCROLL_ARTICLE\(id,false\)/);
+noMatch(menuSync, /pinArticleToTop|settleHeaderAndArticle/);
 noMatch(nav, /while\(low<=high\)/);
 noMatch(menuSync, /while\(low<=high\)/);
 

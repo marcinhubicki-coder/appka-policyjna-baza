@@ -10,7 +10,7 @@ const path=[{prefix:'Dział I',title:'Część pierwsza',level:1},{prefix:'Rozdz
 const row=n=>['uop-art-'+n,'Rozdział 1','Art. '+n,'Zadania Policji',[
   ['uop-art-'+n+'-ust-1','u','ust. 1','Służba Policji. Odwołanie do art. 1 ust. 2.'],
   ['uop-art-'+n+'-ust-2','u','ust. 2','Ochrona ludzi.']
-],'','',[],'e',path];
+],'','',[],'e',n<=2?path:[path[0],{prefix:'Rozdział 2',title:'Dalsze zadania',level:2}]];
 const fixture=[['uop','Ustawa o Policji','https://example.org/source.pdf',[1,2,3,4,5,315].map(row)],['alk','Ustawa alkoholowa','https://example.org/alk.pdf',[['alk-art-1','','Art. 1','Trzeźwość',[['','l','','unikalnehaslo alkoholowe']],'','',[],'e']]]];
 const html=fs.readFileSync('index.html','utf8'),errors=[],log=new VirtualConsole();
 log.on('jsdomError',e=>errors.push(e));
@@ -47,6 +47,7 @@ assert.equal(query('#quickbar [data-act="alk"]').hidden,true);
 
 // The same gear opens the production context, with favorites in system settings.
 click('#settingsButton');
+assert.equal(query('main').inert,true);assert.equal(query('.top').inert,true);assert.equal(w.__READER_STATE.frozen,true);
 assert.equal(query('#settingsTitle').textContent,'Ustawienia systemowe');
 assert.equal(query('#favoritesTransfer').hidden,false);
 assert.equal(query('#lawPackages').hidden,true);
@@ -144,8 +145,9 @@ click('#searchReturn button');w.__POLICE_SEARCH_FILTERS.disableFavorites();asser
 w.__POLICE_SEARCH_CLEAR();w.__FAVORITES_OPEN_SINGLE('uop','uop-art-1');await settle();
 if(w.document.body.classList.contains('drawer-open'))click('#hamburger');
 click('#collapseToc');assert.equal(query('.reader-toc').classList.contains('is-open'),true);
+assert.equal(query('.reader-toc .reader-dialog-head'),null);assert.equal(query('.reader-toc .reader-close'),null);assert.equal(query('main').inert,true);
 assert.equal(w.document.querySelectorAll('.reader-toc-article').length,0,'leaf articles are lazy');
-const details=[...w.document.querySelectorAll('.reader-toc-group')];details.forEach(d=>d.open=true);await settle();
+const details=[...w.document.querySelectorAll('.reader-toc-group')];details[0].open=true;await settle();details[1].open=true;await settle();details[2].open=true;await settle();assert.equal(details[0].open,true);assert.equal(details[1].open,false);assert.equal(details[2].open,true);
 assert.equal(w.document.querySelectorAll('.reader-toc-article').length,6);
 [...w.document.querySelectorAll('.reader-toc-article')].at(-1).click();await settle();
 assert.equal(w.location.hash,'#uop-art-315');assert.equal(w.document.body.classList.contains('drawer-open'),false);
@@ -184,6 +186,11 @@ assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),true,
 assert.equal(query('.quickbar-wrap').style.getPropertyValue('--tail-pull'),'0px','stretch and gutter return start together');
 pill.style.removeProperty('transform');pill.getBoundingClientRect=()=>({left:310,right:390,width:80});await settle();await settle();
 assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),true);
+// Fractional Safari end geometry must not resurrect a sliver of the plus.
+w.document.body.classList.add('drawer-open');pill.getBoundingClientRect=()=>({left:311.1,right:391.1,width:80});quickbar.scrollLeft=609.5;
+quickbar.dispatchEvent(new w.Event('scroll'));await new Promise(r=>setTimeout(r,450));
+assert.equal(query('.acts-more').getAttribute('aria-hidden'),'true');assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),true);
+w.document.body.classList.remove('drawer-open');
 quickbar.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,clientX:100,clientY:100}));
 quickbar.dispatchEvent(new w.MouseEvent('pointermove',{bubbles:true,clientX:120,clientY:100}));
 assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),false);
@@ -210,6 +217,18 @@ assert.equal(query('.reader-toc').classList.contains('is-dragging'),true);
 assert.equal(query('.reader-toc').style.getPropertyValue('--toc-x'),'-340px');
 pointerEvent(article,'pointercancel',60,720);assert.equal(query('.reader-toc').classList.contains('is-open'),false);
 pointerEvent(article,'pointerdown',10,720);pointerEvent(article,'pointermove',150,720);pointerEvent(article,'pointerup',150,720);
-assert.equal(query('.reader-toc').classList.contains('is-open'),true);click('.reader-toc .reader-close');
+assert.equal(query('.reader-toc').classList.contains('is-open'),true);click('.reader-toc-backdrop');
+// Search takes ownership from the ToC and nested settings keep the reader frozen.
+click('#collapseToc');q.value='sluzba';q.dispatchEvent(new w.Event('input'));
+assert.equal(query('.reader-toc').classList.contains('is-open'),false);assert.equal(w.__READER_STATE.frozen,true);
+w.__READER_TOC_OPEN();assert.equal(query('.reader-toc').classList.contains('is-open'),false);
+click('#settingsButton');assert.equal(query('#searchReturn').inert,true);click('#settingsClose');
+assert.equal(w.__READER_STATE.frozen,true);assert.equal(query('main').inert,true);assert.equal(query('.top').inert,false);
+w.__POLICE_SEARCH_CLEAR();assert.equal(w.__READER_STATE.frozen,false);assert.equal(query('main').inert,false);
+// Import reports the actual selected file and import time, including after reload.
+click('#settingsButton');const input=query('#favoritesImportFile'),file={name:'moje-ulubione.json',size:200,text:async()=>JSON.stringify([{id:'uop-art-1',act:'uop'}])};
+Object.defineProperty(input,'files',{value:[file],configurable:true});input.dispatchEvent(new w.Event('change'));await settle();click('[data-import-mode="merge"]');
+assert.match(query('.favorites-import-source').textContent,/moje-ulubione\.json · Wczytano /);
+const imported=JSON.parse(w.localStorage.getItem('police-law-bookmarks-v1-last-import'));assert.equal(imported.file,file.name);assert.ok(Number.isFinite(Date.parse(imported.at)));click('#settingsClose');
 assert.equal(errors.length,0,errors.map(e=>e.message).join('\n'));dom.window.close();
 console.log('Reader runtime: packages, distant favorites, cached menu, search scope, TOC, picker and comments passed.');

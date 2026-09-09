@@ -13,7 +13,7 @@ Pastylki: krótkie nazwy, maksymalnie długość „Cudzoziem”; wyłączone po
 
 W lewym panelu dwukolumnowym zachowuj produkcyjną typografię, rozdziały rzymskie i brak kursywy. Dane o imporcie mają być w rozwijance „Pokaż dane szczegółowe”, z fontami odpowiednimi do bieżącego widoku.
 
-Runda z 9 września nie obejmuje zmian mechaniki gestu ani wysuwanego spisu z lewej — użytkownik zapowiedział osobne uwagi.
+Wysuwany spis: bez nagłówka i X, odstępy 6 px jak w wyborze ustawy, zamknięcie poza panelem. Strzałka zawsze przy pierwszym wierszu. Otwieranie części/rozdziału zamyka rodzeństwo, zachowuje przodków i przewija sekcję ku górze z małym marginesem. Wyszukiwanie zamyka i blokuje spis. Wyszukiwanie, spis i ustawienia blokują tło; ustawienia wygaszają również powrót do wyszukiwania. Import ulubionych pokazuje plik i datę wczytania.
 
 Doprecyzowanie: w aktywnym wyszukiwaniu pastylki ustaw zawierają liczbę trafień. Odstęp wewnętrznego licznika od prawej i dolnej krawędzi jest równy; +N nadal liczy ukryte ustawy, a nie trafienia, i działa jak w dwóch kolumnach. Bez wizualnych oznaczeń fokusu na telefonie. Na pozostałych urządzeniach delikatny obrys tylko po rozpoczęciu nawigacji klawiszem Tab; domyślnie oraz po kliknięciu/dotyku niewidoczny. Zachowuj logiczny fokus i obsługę klawiatury.
 
@@ -22,3 +22,5 @@ Spójność paska: wspólna wysokość 27 px, font 10 px / 750, zewnętrzny padd
 Ruch i wyszukiwanie: debounce 300 ms od ostatniego znaku. Po obliczeniu wyników licznik czeka 150 ms, rozszerza pole przez 180 ms i przewija trzy wartości od wyniku +3 do dokładnego wyniku przez 360 ms. To wyłącznie animacja; dane i aria-label zawierają prawdziwe wyniki. Nowa fraza, zamknięcie i ograniczony ruch przerywają/pomijają dekorację. Kolor pastylek jak w dwóch kolumnach, wyróżniona tylko bieżąca ustawa; podczas wyszukiwania wynika ona z widocznej grupy. Skok do grupy wyhamowuje przez około 280 ms i można go przerwać dotykiem. Po puszczeniu poziomego paska przy prawym końcu miejsce po +N zwalnia się przez 340 ms; ruch powrotny odtwarza miejsce i licznik. Natywne pointercancel podczas dotyku nie oznacza puszczenia palca.
 
 Końcowy ruch paska ma łagodnie przyspieszać i wyhamowywać. Przeciągnięcie przy prawym końcu ma własny opór; nie nakładaj natywnego odbicia poziomego scrolla na osobne zwalnianie miejsca po +N. Po puszczeniu powrót rozciągnięcia i zwolnienie miejsca startują jednocześnie i biegną bezpośrednio do docelowego marginesu (340 ms, cubic-bezier(.42,0,.2,1)). Nie czekaj na powrót do starej krawędzi. Pomiar ukrytych pastylek pomija wizualne rozciągnięcie.
+
+Nawigacja: dalekie odnośniki materializują okno wokół celu, pomijają przewijanie pośredniej treści i animują tylko ostatnie około 100 px. Trzy ekrany buforu po każdej stronie, z usuwaniem odległych artykułów z DOM. Zmiana liczby kolumn zachowuje fragment ze środka ekranu, bez niezależnych opóźnionych poprawek pozycji.

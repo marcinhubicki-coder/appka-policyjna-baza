@@ -43,7 +43,7 @@ match(app, /renderAct\(code,id,false\)/);
 match(app, /globalThis\.__POLICE_GOTO_ID=gotoLegalId/);
 match(nav, /globalThis\.__POLICE_GOTO_ID\(id,\{smooth:false,alignTop:true\}\)/);
 match(nav, /renderAct\(x\.act,x\.id,false\)/);
-match(app, /o\.act!==ACT\[0\]\|\|!!\(o\.id&&!document\.getElementById\(o\.id\)\)/);
+match(app, /gotoLegalId\(o\.id,\{alignTop:false\}\)/);
 match(app, /function populateToc\(\)/);
 match(app, /if\(show\)populateToc\(\)/);
 match(app, /police-law-articles-rendered/);
@@ -60,9 +60,9 @@ match(index, /class="settings-section settings-general settings-packages" data-s
 match(settings, /openedFromDrawer=document\.body\.classList\.contains\('drawer-open'\)/);
 noMatch(settings, /__POLICE_DRAWER_CLOSE|captureDrawerContext|restoreDrawerContext/);
 match(appCss, /html\.settings-open-root\{overflow:hidden!important/);
-match(appCss, /body\.settings-open,body\.drawer-open\.settings-open\{position:fixed!important/);
+match(read('reader-ui.css'), /body\.reader-frozen,body\.drawer-open\.reader-frozen\{position:fixed!important/);
 match(appCss, /body\.settings-open \.split-handle,body\.settings-open \.split-preview-pane\{display:none!important/);
-match(settings, /document\.documentElement\.classList\.add\('settings-open-root'\)/);
+match(settings, /__READER_STATE\?\.lock\('settings',true\)/);
 match(settings, /section\.dataset\.fullOnly==='true'&&openedFromDrawer/);
 
 // Favorites use a portable JSON file, native picker/share paths and explicit
@@ -79,7 +79,7 @@ match(transfer, /fileInput\.click\(\)/);
 match(transfer, /mode==='replace'\?pendingItems:merge/);
 match(transfer, /function mergeParts\(current,incoming,row\)/);
 match(transfer, /valid:merge\(\[\],valid\)/);
-match(serviceWorker, /CACHE_VERSION='2026-09-09\.7'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-09\.8'/);
 match(serviceWorker, /'\.\/favorites-transfer\.js'/);
 
 // Exercise the same bounded-cost contract against every real act. This is a

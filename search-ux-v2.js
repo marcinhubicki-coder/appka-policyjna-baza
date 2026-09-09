@@ -21,7 +21,6 @@
   function allowedTextNode(n,root){const p=n.parentElement;if(!p||!root.contains(p))return false;if(p.closest('mark,script,style,.search-match-info'))return false;return true}
   function markFirst(root,term,cls){if(!root||!term)return null;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){if(!allowedTextNode(n,root))continue;const hit=locate(n.nodeValue||'',term);if(!hit)continue;const tail=n.splitText(hit.s),after=tail.splitText(hit.e-hit.s),m=document.createElement('mark');m.className=cls;m.textContent=tail.nodeValue;tail.replaceWith(m);return m}return null}
   function headerH(){return document.querySelector('.top')?.getBoundingClientRect().height||0}
-  function centerOn(el,behavior='auto'){if(!el)return;const r=el.getBoundingClientRect(),h=headerH(),avail=Math.max(100,innerHeight-h);const y=scrollY+r.top-h-(avail-r.height)/2;scrollTo({top:Math.max(0,y),behavior})}
 
   function currentRow(id){try{if(typeof articleMap!=='undefined'&&articleMap.get(id)?.r)return articleMap.get(id).r}catch(_){}
     try{for(const A of DATA||[]){const r=(A[3]||[]).find(x=>x[0]===id);if(r)return r}}catch(_){}return null}
@@ -53,20 +52,12 @@
       }
     })}
 
-  function exactJump(a,term,attempt=0){const id=resultId(a);if(!id)return;const el=document.getElementById(id);if(!el){if(attempt<5)setTimeout(()=>exactJump(a,term,attempt+1),120);return;}
-    clearMarks('search-exact-hit');
-    let mark=el.querySelector('mark.search-hit');
-    if(mark){mark.classList.add('search-exact-hit');centerOn(mark);return;}
-    mark=markFirst(el,term,'search-exact-hit');
-    if(mark){requestAnimationFrame(()=>centerOn(mark));setTimeout(()=>mark.classList.add('fade'),2200);setTimeout(()=>{if(mark.isConnected)mark.replaceWith(document.createTextNode(mark.textContent||''))},4200)}
-    else{centerOn(el);el.classList.add('search-hit-block');setTimeout(()=>el.classList.remove('search-hit-block'),2500)}
-  }
+  globalThis.__POLICE_SEARCH_HIT=(id,term)=>{const el=document.getElementById(id);if(!el)return null;clearMarks('search-exact-hit');const mark=markFirst(el,term,'search-exact-hit');if(mark){setTimeout(()=>mark.classList.add('fade'),2200);setTimeout(()=>{if(mark.isConnected)mark.replaceWith(document.createTextNode(mark.textContent||''))},4200)}return mark};
 
   let decoRaf=0;
   new MutationObserver(()=>{cancelAnimationFrame(decoRaf);decoRaf=requestAnimationFrame(decorateResults)}).observe(box,{childList:true,subtree:true});
   q.addEventListener('input',()=>{decorateResults();refreshVisibleHighlights()});
   q.addEventListener('focus',()=>{decorateResults();refreshVisibleHighlights()});
   window.addEventListener('scroll',()=>{if(q.value.trim().length>=2)refreshVisibleHighlights()},{passive:true});
-  box.addEventListener('click',e=>{const a=e.target.closest('.search-item');if(!a)return;const term=q.value.trim();if(term.length<2)return;requestAnimationFrame(()=>requestAnimationFrame(()=>exactJump(a,term)))},false);
   decorateResults();refreshVisibleHighlights();
 })();

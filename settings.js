@@ -4,20 +4,10 @@
   const performanceSummary=document.getElementById('performanceSummary'),performanceToggle=document.getElementById('performanceToggle'),performanceDetails=document.getElementById('performanceDetails'),performanceMetrics=document.getElementById('performanceMetrics');
   const generalSections=[...document.querySelectorAll('.settings-general')];
   if(!button||!panel||!backdrop||!closeButton)return;
-  let previousFocus=null,openedFromDrawer=false,lockedScrollY=0;
+  let previousFocus=null,openedFromDrawer=false;
 
-  function lockBackground(){
-    lockedScrollY=Math.max(0,window.scrollY||0);
-    document.body.style.setProperty('--settings-lock-top',-lockedScrollY+'px');
-    document.documentElement.classList.add('settings-open-root');
-    document.body.classList.remove('split-preview-active','split-dragging');
-  }
-  function unlockBackground(){
-    const y=lockedScrollY;
-    document.documentElement.classList.remove('settings-open-root');
-    document.body.style.removeProperty('--settings-lock-top');
-    requestAnimationFrame(()=>window.scrollTo({top:y,left:0,behavior:'auto'}));
-  }
+  function lockBackground(){globalThis.__READER_STATE?.lock('settings',true);globalThis.__READER_TOC_CLOSE?.(false);document.body.classList.remove('split-preview-active','split-dragging')}
+  function unlockBackground(){globalThis.__READER_STATE?.lock('settings',false)}
 
   function isSearchMode(){return document.body.classList.contains('search-active')}
   function settingsName(){return isSearchMode()?'Ustawienia wyszukiwania':document.body.classList.contains('drawer-open')?'Ustawienia wyświetlania':'Ustawienia systemowe'}
@@ -87,8 +77,9 @@
     panel.setAttribute('aria-hidden','true');
     button.setAttribute('aria-expanded','false');
     button.setAttribute('aria-label',closedLabel());
-    if(restoreFocus)(previousFocus||button).focus?.({preventScroll:true});
-    unlockBackground();previousFocus=null;openedFromDrawer=false;
+    unlockBackground();
+    if(restoreFocus)((previousFocus?.id==='q'&&!isSearchMode())?button:previousFocus||button).focus?.({preventScroll:true});
+    previousFocus=null;openedFromDrawer=false;
   }
   function open(){
     openedFromDrawer=document.body.classList.contains('drawer-open');

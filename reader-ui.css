@@ -69,3 +69,22 @@ body.drawer-open .search-return{left:8px!important;right:8px!important;bottom:ca
 @media(prefers-reduced-motion:reduce){.reader-toc,.reader-toc-backdrop,.acts-more,.acts-more-slot,.quickbar-wrap .quickbar button,.act-pill-count{transition:none}}
 /* Provenance and migration messages stay in normal document flow. */
 .source-details{font-size:12px;line-height:1.48;color:var(--muted);margin:6px 0 0}.source-details p{font:inherit;margin:6px 0}.source-details a{color:var(--accent)}body.drawer-open .source-details{font-size:7.5px;line-height:1.15}.source-warning{font-size:13px;line-height:1.5;padding:10px;border:1px solid #d8ab63;border-radius:8px;background:#fff5df;color:#694614}.source-details summary{cursor:pointer}.favorite-review-notice{margin:8px 12px}
+/* A single fixed reader, with results and dialogs owning their scroll area. */
+html.reader-frozen{overflow:hidden!important;overscroll-behavior:none!important}
+body.reader-frozen,body.drawer-open.reader-frozen{position:fixed!important;inset:var(--reader-lock-top,0px) 0 auto!important;width:100%!important;overflow:hidden!important;overscroll-behavior:none!important}
+.reader-search-shade{display:none;position:fixed;inset:var(--topH,72px) 0 0;z-index:129;background:rgba(60,75,88,.16);touch-action:none}
+body.search-active .reader-search-shade{display:block}
+body.search-active .search-results{overscroll-behavior:contain;touch-action:pan-y}
+body.settings-open .settings-backdrop{z-index:190}
+body.settings-open .settings-panel{z-index:191}
+.favorites-import-backdrop{z-index:200}.favorites-import-dialog{z-index:201}
+body.settings-open :is(.search-return,.return,.article-pager){pointer-events:none!important;filter:grayscale(1);opacity:.45}
+body.reader-frozen :is(main,.drawer){pointer-events:none!important}
+body.reader-layout-changing main{transition:none!important}
+#lawStream{overflow-anchor:none}
+.law-stream-sentinel{pointer-events:none;min-height:1px;contain:strict}
+.reader-toc-scroll{padding:6px;scroll-padding-top:8px}
+.reader-toc-name{padding:6px 4px 10px}
+.reader-toc-group>summary{line-height:1.35;padding:10px 28px 10px 10px}
+.reader-toc-group>summary::after{top:10px;right:10px;width:14px;height:15px;line-height:15px;text-align:center;transform-origin:center;transition:transform .18s ease}
+.favorites-import-source{display:block;margin-top:5px;overflow-wrap:anywhere;font-weight:400;color:var(--muted);font-size:10.5px;line-height:1.35}

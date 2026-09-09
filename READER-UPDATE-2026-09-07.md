@@ -12,6 +12,8 @@ Wyłączone ustawy są ukryte. Licznik liczy wyłącznie prawą stronę, przecho
 
 Dalsze doprecyzowanie: przywrócono liczbę trafień wewnątrz pastylek wyszukiwania z odstępem 4 px od prawej i dolnej krawędzi. +N nadal wskazuje ukryte ustawy. Wizualny fokus jest wyłączony na dotyku; na urządzeniu z precyzyjnym wskaźnikiem i hover delikatny obrys pojawia się dopiero po użyciu Tab, znika po kliknięciu. Logiczny fokus i powrót do przycisku pozostają sprawne.
 
+Ujednolicenie paska: wspólne wymiary i padding we wszystkich widokach, początek przy krawędzi przycisku menu. Wyszukiwanie zachowuje przyciski i ich liczniki, płynnie dodaje szerokość i kolor; pomiary gradientu i +N śledzą animację. Usunięto pusty etap paska przed zakończeniem debounce. Sprawdzono zachowanie tożsamości przycisków oraz wspólne parametry CSS w wyszukiwaniu z jednej i dwóch kolumn.
+
 ## Zmiany
 
 - Usunięto powtarzalne przepisywanie spisu treści i obserwatory, które wykonywały pracę po edycji ulubionych. Zachowano pamięć gotowego menu i DOM edytowanego artykułu.

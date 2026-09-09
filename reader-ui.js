@@ -42,13 +42,14 @@
     more.setAttribute('aria-label',cue.count?cue.count+' ustaw po prawej. Wybierz ustawę.':'Wybierz ustawę');
   }
   function queuePills(){if(pillsQueued)return;pillsQueued=true;requestAnimationFrame(()=>{pillsQueued=false;measurePills()})}
-  bar.addEventListener('scroll',queuePills,{passive:true});new ResizeObserver(queuePills).observe(bar);new MutationObserver(queuePills).observe(bar,{childList:true});
+  const pillSizes=new ResizeObserver(queuePills);
+  function observePills(){pillSizes.disconnect();pillSizes.observe(bar);bar.querySelectorAll('button[data-act]').forEach(pill=>pillSizes.observe(pill));queuePills()}
+  bar.addEventListener('scroll',queuePills,{passive:true});new MutationObserver(observePills).observe(bar,{childList:true});observePills();
   function openActPicker(){
-    const body=dialog('Wybierz akt prawny',true),searching=!!globalThis.__POLICE_SEARCH_STATE?.active;
-    const filters=new Map((globalThis.__POLICE_SEARCH_FILTERS?.list()||[]).map(item=>[item.code,item]));
+    const body=dialog('Wybierz akt prawny',true);
     for(const act of DATA){
-      const meta=META[act[0]]||[act[0],act[1]],state=filters.get(act[0]);
-      if(!globalThis.__LAW_PACKAGES.isEnabled(act[0])||(searching&&(!state?.enabled||!state?.hits)))continue;
+      const meta=META[act[0]]||[act[0],act[1]],pill=bar.querySelector('[data-act="'+CSS.escape(act[0])+'"]');
+      if(!pill||pill.hidden)continue;
       const item=button('','act-picker-item',()=>{
         const code=act[0];closeModal();const pill=bar.querySelector('[data-act="'+CSS.escape(code)+'"]');
         pill?.click();pill?.scrollIntoView({inline:'center',block:'nearest',behavior:'auto'});queuePills();

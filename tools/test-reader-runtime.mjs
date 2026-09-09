@@ -28,7 +28,8 @@ w.CSS={escape:x=>String(x).replace(/[^a-zA-Z0-9_-]/g,'\\$&')};
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};
 w.__POLICE_B64=[gzipSync(JSON.stringify(fixture)).toString('base64')];
 for(const match of html.matchAll(/<script src="([^"]+)"/g))if(!['data.js','offline.js'].includes(match[1]))vm.runInContext(fs.readFileSync(match[1],'utf8'),dom.getInternalVMContext(),{filename:match[1]});
-const settle=()=>new Promise(resolve=>setTimeout(resolve,130));await settle();
+const settle=()=>new Promise(resolve=>setTimeout(resolve,130));
+for(let n=0;n<20&&!w.document.querySelector("#hamburger");n++)await settle();
 const click=selector=>{const el=w.document.querySelector(selector);assert.ok(el,selector);el.click();return el};
 const query=selector=>w.document.querySelector(selector);
 assert.equal(errors.length,0,errors.map(e=>e.message).join('\n'));
@@ -66,7 +67,15 @@ for(const id of ['packageDetails','readerHelpDetails']){
 }
 assert.equal(w.document.querySelectorAll('#packageList input[type="checkbox"]').length,2);
 click('#settingsClose');click('#hamburger');
-query('#q').value='sluzba';query('#q').dispatchEvent(new w.Event('input'));await settle();await settle();
+const originalPills=[...w.document.querySelectorAll('#quickbar button')],originalBadge=originalPills[0].querySelector('.act-pill-count');
+query('#q').value='sluzba';query('#q').dispatchEvent(new w.Event('input'));
+assert.equal(w.__POLICE_SEARCH_STATE.pending,true);
+assert.equal(originalPills[0].hidden,false,'do not blank the quickbar before search results arrive');
+await settle();await settle();
+assert.equal(w.__POLICE_SEARCH_STATE.pending,false);
+assert.deepEqual([...w.document.querySelectorAll('#quickbar button')],originalPills,'search reuses the same act buttons');
+assert.equal(originalPills[0].querySelector('.act-pill-count'),originalBadge);
+assert.equal(originalBadge.textContent,'6');
 click('#settingsButton');assert.equal(query('#settingsTitle').textContent,'Ustawienia wyszukiwania');
 assert.equal(query('#searchSettings').hidden,false);
 assert.ok([...w.document.querySelectorAll('.settings-general')].every(n=>n.hidden));
@@ -89,6 +98,7 @@ query('#quickbar').dispatchEvent(new w.Event('scroll'));await settle();assert.eq
 searchPill.getBoundingClientRect=searchPillRect;
 w.__POLICE_SEARCH_CLEAR();await settle();
 assert.equal(searchPill.dataset.hitCount,undefined);assert.equal(searchPill.classList.contains('search-has-hit'),false);
+assert.equal(searchPill.querySelector('.act-pill-count'),originalBadge,'clearing search retains the badge for its closing transition');
 
 // A saved article outside the initial stream must appear immediately.
 w.localStorage.setItem('police-law-bookmarks-v1',JSON.stringify([{id:'uop-art-315',act:'uop',num:'Art. 315',parts:['uop-art-315-ust-1']}]))

@@ -16,6 +16,8 @@ Ujednolicenie paska: wspólne wymiary i padding we wszystkich widokach, począte
 
 Animacje: pauza wyszukiwania 300 ms od ostatniego znaku. Pole licznika czeka 150 ms, rozszerza się przez 180 ms, następnie dekoracyjnie przewija wynik +3, +2, +1 i wynik przez 360 ms. Dokładny wynik od razu jest dostępny w danych i etykiecie dostępności. Nowa fraza przerywa animację, a ograniczony ruch ją pomija. Zwykłe kolory pastylek, tylko aktywna ustawa wyróżniona; aktywność śledzi przewijanie wyników. Skok do grupy wyhamowuje przez 280 ms. Na końcu paska wolne miejsce po +N zwalnia się po puszczeniu palca i ustaniu ruchu, z przejściem 240 ms; cofnięcie przywraca układ. Dodano testy kolejności animacji, anulowania, scrollowania i natywnego pointercancel przy nadal przytrzymanym palcu.
 
+Dopracowanie końca paska: zastąpiono dwufazowy powrót (natywne odbicie plus zwalnianie miejsca) jednym ruchem. Przeciąganie ma własny opór; po puszczeniu rozciągnięcie i miejsce po +N wracają równocześnie do końcowego marginesu przez 340 ms, z rozpędzeniem i wyhamowaniem. Pomiar licznika pomija transformację przeciągnięcia. Test obejmuje dalekie przeciągnięcie, wspólny początek powrotu oraz cofnięcie gestu. Wygląd na urządzeniu nadal wymaga odbioru.
+
 ## Zmiany
 
 - Usunięto powtarzalne przepisywanie spisu treści i obserwatory, które wykonywały pracę po edycji ulubionych. Zachowano pamięć gotowego menu i DOM edytowanego artykułu.

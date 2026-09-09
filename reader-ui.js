@@ -31,19 +31,54 @@
 
   const wrap=document.createElement('div');wrap.className='quickbar-wrap';bar.before(wrap);wrap.append(bar);
   const more=button('','acts-more',openActPicker),moreLabel=document.createElement('span'),moreSlot=document.createElement('div');moreLabel.textContent='+';more.append(moreLabel);more.dataset.maxCount='+'+DATA.length;more.setAttribute('aria-label','Wybierz akt z pełnej listy');moreSlot.className='acts-more-slot';moreSlot.append(more);wrap.append(moreSlot);
-  let pillsQueued=false,tailResting=false,releaseTimer=0,settleTimer=0,settlingUntil=0,lastLeft=0,lastCue=1,pillPointer=null,pillTouch=null;
+  let pillsQueued=false,tailResting=false,releaseTimer=0,settleTimer=0,settlingUntil=0,lastLeft=0,lastCue=1,pillPointer=null,pillTouch=null,tailPull=0,tailAnchor=null,pillSuppressUntil=0;
+  function atRightEdge(){return bar.clientWidth>0&&bar.scrollWidth>bar.clientWidth&&bar.scrollLeft>=bar.scrollWidth-bar.clientWidth-.75}
+  function renderedPull(){
+    const pill=bar.querySelector('button[data-act]:not([hidden])');if(!pill)return 0;
+    const matrix=getComputedStyle(pill).transform.match(/^matrix(?:3d)?\((.+)\)$/)?.[1].split(',').map(Number);
+    return matrix?(matrix.length===16?matrix[12]:matrix[4])||0:0;
+  }
+  function setPull(value){tailPull=value;wrap.style.setProperty('--tail-pull',value+'px')}
+  function beginTail(point){
+    const current=renderedPull();clearTimeout(releaseTimer);
+    if(current<-.1){wrap.classList.add('is-tail-dragging');setPull(current);tailAnchor={x:point.x-120*Math.log(Math.max(.001,1+current/48)),y:point.y}}
+    else tailAnchor=atRightEdge()?{...point}:null;
+  }
+  function dragTail(event,point,origin){
+    if(!origin)return;
+    const dx=point.x-origin.x,dy=point.y-origin.y;
+    if(Math.abs(dx)<=Math.abs(dy))return;
+    if(!tailAnchor&&dx<0&&atRightEdge())tailAnchor={...point};
+    if(tailAnchor){
+      const distance=tailAnchor.x-point.x;
+      if(distance>0){
+        if(event.cancelable)event.preventDefault();
+        wrap.classList.add('is-tail-dragging');setPull(-48*(1-Math.exp(-distance/120)));pillSuppressUntil=Date.now()+350;return;
+      }
+      setPull(0);tailAnchor=null;
+    }
+    if(dx>3)restTail(false);
+  }
+  function finishTail(){
+    if(pillPointer||pillTouch)return;
+    const pulled=tailPull<-.1;tailAnchor=null;
+    if(pulled)pillSuppressUntil=Date.now()+350;
+    wrap.classList.remove('is-tail-dragging');setPull(0);
+    // Both the stretched content and the freed gutter settle in the same frame.
+    if(pulled||atRightEdge()){lastCue=0;restTail(true)}else releaseTail();
+  }
   function restTail(on){
     if(tailResting===on)return;tailResting=on;clearTimeout(releaseTimer);clearTimeout(settleTimer);
-    settlingUntil=performance.now()+260;wrap.classList.toggle('is-tail-resting',on);
-    settleTimer=setTimeout(()=>{lastLeft=bar.scrollLeft;queuePills()},270);queuePills();
+    settlingUntil=performance.now()+360;wrap.classList.toggle('is-tail-resting',on);
+    settleTimer=setTimeout(()=>{lastLeft=bar.scrollLeft;queuePills()},370);queuePills();
   }
   function releaseTail(){
     clearTimeout(releaseTimer);
     if(tailResting||pillPointer||pillTouch||lastCue!==0||bar.clientWidth<=0||bar.querySelector('[data-count-moving]'))return;
-    releaseTimer=setTimeout(()=>{if(!pillPointer&&!pillTouch&&lastCue===0)restTail(true)},120);
+    releaseTimer=setTimeout(()=>{if(!pillPointer&&!pillTouch&&lastCue===0)restTail(true)},0);
   }
   function measurePills(){
-    const pills=[...bar.querySelectorAll('button[data-act]')].filter(p=>!p.hidden),viewport=bar.getBoundingClientRect(),rects=pills.map(p=>p.getBoundingClientRect());
+    const pills=[...bar.querySelectorAll('button[data-act]')].filter(p=>!p.hidden),viewport=bar.getBoundingClientRect(),pull=renderedPull(),rects=pills.map(p=>{const rect=p.getBoundingClientRect();return{left:rect.left-pull,right:rect.right-pull,width:rect.width}});
     if(viewport.width===0)return;
     const width=more.offsetWidth;if(width>0)wrap.style.setProperty('--more-width',width+'px');
     const right=viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0),cue=core.overflowCue(rects,{right});
@@ -61,15 +96,16 @@
   function observePills(){pillSizes.disconnect();pillSizes.observe(bar);bar.querySelectorAll('button[data-act]').forEach(pill=>pillSizes.observe(pill));queuePills()}
   bar.addEventListener('scroll',()=>{if(tailResting&&performance.now()>settlingUntil&&bar.scrollLeft<lastLeft-.5)restTail(false);lastLeft=bar.scrollLeft;queuePills();releaseTail()},{passive:true});
   bar.addEventListener('scrollend',releaseTail,{passive:true});
-  bar.addEventListener('pointerdown',event=>{pillPointer={x:event.clientX,y:event.clientY};clearTimeout(releaseTimer)},{passive:true});
-  bar.addEventListener('pointermove',event=>{if(pillPointer){const dx=event.clientX-pillPointer.x,dy=event.clientY-pillPointer.y;if(dx>3&&dx>Math.abs(dy))restTail(false)}},{passive:true});
-  function releasePointer(){if(!pillPointer)return;pillPointer=null;releaseTail()}
+  bar.addEventListener('pointerdown',event=>{pillPointer={x:event.clientX,y:event.clientY};beginTail(pillPointer)},{passive:true});
+  bar.addEventListener('pointermove',event=>{if(!pillTouch)dragTail(event,{x:event.clientX,y:event.clientY},pillPointer)},{passive:false});
+  function releasePointer(){if(!pillPointer)return;pillPointer=null;finishTail()}
   window.addEventListener('pointerup',releasePointer,{passive:true});window.addEventListener('pointercancel',releasePointer,{passive:true});
   // Native touch scrolling cancels Pointer Events before the finger is lifted.
-  bar.addEventListener('touchstart',event=>{const touch=event.touches[0];if(touch)pillTouch={x:touch.clientX,y:touch.clientY};clearTimeout(releaseTimer)},{passive:true});
-  bar.addEventListener('touchmove',event=>{const touch=event.touches[0];if(touch&&pillTouch){const dx=touch.clientX-pillTouch.x;if(dx>3&&dx>Math.abs(touch.clientY-pillTouch.y))restTail(false)}},{passive:true});
-  window.addEventListener('touchend',event=>{if(!event.touches.length){pillTouch=null;releaseTail()}},{passive:true});
-  window.addEventListener('touchcancel',()=>{pillTouch=null;releaseTail()},{passive:true});
+  bar.addEventListener('touchstart',event=>{const touch=event.touches[0];if(touch){pillTouch={x:touch.clientX,y:touch.clientY};beginTail(pillTouch)}},{passive:true});
+  bar.addEventListener('touchmove',event=>{const touch=event.touches[0];if(touch)dragTail(event,{x:touch.clientX,y:touch.clientY},pillTouch)},{passive:false});
+  window.addEventListener('touchend',event=>{if(!event.touches.length&&pillTouch){pillTouch=null;finishTail()}},{passive:true});
+  window.addEventListener('touchcancel',()=>{if(pillTouch){pillTouch=null;finishTail()}},{passive:true});
+  bar.addEventListener('click',event=>{if(Date.now()<pillSuppressUntil){event.preventDefault();event.stopImmediatePropagation()}},true);
   bar.addEventListener('wheel',event=>{if(event.deltaX<0||(event.shiftKey&&event.deltaY<0))restTail(false)},{passive:true});
   bar.addEventListener('keydown',event=>{if(['ArrowLeft','Home'].includes(event.key))restTail(false)});
   window.addEventListener('police-law-quickbar-motion',queuePills);

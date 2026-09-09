@@ -166,18 +166,28 @@ for(const [left,text,amount] of [[366,'+',1],[338,'+',.5],[310,'+',0],[367,'+1',
 pill.getBoundingClientRect=originalRect;
 // Reclaim the counter gutter only after release; reverse movement restores it.
 const quickbar=query('#quickbar');Object.defineProperty(quickbar,'clientWidth',{value:390,configurable:true});
+Object.defineProperty(quickbar,'scrollWidth',{value:1000,configurable:true});quickbar.scrollLeft=610;
 pill.getBoundingClientRect=()=>({left:310,right:390,width:80});
 quickbar.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,clientX:100,clientY:100}));
 const touchStart=new w.Event('touchstart',{bubbles:true});Object.defineProperty(touchStart,'touches',{value:[{clientX:100,clientY:100}]});quickbar.dispatchEvent(touchStart);
 quickbar.dispatchEvent(new w.MouseEvent('pointercancel',{bubbles:true,clientX:100,clientY:100}));
 quickbar.dispatchEvent(new w.Event('scroll'));await settle();
 assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),false);
-const touchEnd=new w.Event('touchend',{bubbles:true});Object.defineProperty(touchEnd,'touches',{value:[]});Object.defineProperty(touchEnd,'changedTouches',{value:[{clientX:100,clientY:100}]});quickbar.dispatchEvent(touchEnd);await settle();await settle();
+const touchMove=new w.Event('touchmove',{bubbles:true,cancelable:true});Object.defineProperty(touchMove,'touches',{value:[{clientX:20,clientY:100}]});quickbar.dispatchEvent(touchMove);
+const pulled=Number.parseFloat(query('.quickbar-wrap').style.getPropertyValue('--tail-pull'));
+assert.ok(pulled<0&&pulled>-48,'the end stretch has gradual resistance');assert.equal(touchMove.defaultPrevented,true);
+// Geometry during the stretch must not change the logical hidden-pill count.
+pill.style.transform=`matrix(1,0,0,1,${pulled},0)`;pill.getBoundingClientRect=()=>({left:310+pulled,right:390+pulled,width:80});
+quickbar.dispatchEvent(new w.Event('scroll'));await settle();assert.equal(query('.acts-more').disabled,true);
+const touchEnd=new w.Event('touchend',{bubbles:true});Object.defineProperty(touchEnd,'touches',{value:[]});Object.defineProperty(touchEnd,'changedTouches',{value:[{clientX:20,clientY:100}]});quickbar.dispatchEvent(touchEnd);
+assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),true,'release goes directly to the final gutter position');
+assert.equal(query('.quickbar-wrap').style.getPropertyValue('--tail-pull'),'0px','stretch and gutter return start together');
+pill.style.removeProperty('transform');pill.getBoundingClientRect=()=>({left:310,right:390,width:80});await settle();await settle();
 assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),true);
 quickbar.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,clientX:100,clientY:100}));
 quickbar.dispatchEvent(new w.MouseEvent('pointermove',{bubbles:true,clientX:120,clientY:100}));
 assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),false);
-delete quickbar.clientWidth;pill.getBoundingClientRect=originalRect;
+delete quickbar.clientWidth;delete quickbar.scrollWidth;quickbar.scrollLeft=0;pill.getBoundingClientRect=originalRect;
 quickbar.dispatchEvent(new w.MouseEvent('pointerup',{bubbles:true,clientX:120,clientY:100}));
 assert.equal(w.document.querySelectorAll('.unit-comment').length,0);
 w.__ARTICLE_COMMENTS={'uop-art-315':{title:'Test administracyjny',body:'<b>Tekst bez HTML</b>',updated:'2026-09-07'}};

@@ -68,14 +68,17 @@ for(const id of ['packageDetails','readerHelpDetails']){
 assert.equal(w.document.querySelectorAll('#packageList input[type="checkbox"]').length,2);
 click('#settingsClose');click('#hamburger');
 const originalPills=[...w.document.querySelectorAll('#quickbar button')],originalBadge=originalPills[0].querySelector('.act-pill-count');
-query('#q').value='sluzba';query('#q').dispatchEvent(new w.Event('input'));
+query('#q').value='slu';query('#q').dispatchEvent(new w.Event('input'));
 assert.equal(w.__POLICE_SEARCH_STATE.pending,true);
 assert.equal(originalPills[0].hidden,false,'do not blank the quickbar before search results arrive');
-await settle();await settle();
+await new Promise(r=>setTimeout(r,180));
+query('#q').value='sluzba';query('#q').dispatchEvent(new w.Event('input'));
+await new Promise(r=>setTimeout(r,200));assert.equal(w.__POLICE_SEARCH_STATE.pending,true,'each keystroke restarts the 300 ms pause');
+await new Promise(r=>setTimeout(r,140));
 assert.equal(w.__POLICE_SEARCH_STATE.pending,false);
 assert.deepEqual([...w.document.querySelectorAll('#quickbar button')],originalPills,'search reuses the same act buttons');
 assert.equal(originalPills[0].querySelector('.act-pill-count'),originalBadge);
-assert.equal(originalBadge.textContent,'6');
+await new Promise(r=>setTimeout(r,350));assert.equal(originalBadge.textContent,'6');
 click('#settingsButton');assert.equal(query('#settingsTitle').textContent,'Ustawienia wyszukiwania');
 assert.equal(query('#searchSettings').hidden,false);
 assert.ok([...w.document.querySelectorAll('.settings-general')].every(n=>n.hidden));
@@ -124,7 +127,7 @@ assert.equal(query('#uop-art-315'),editedArticle,'saving fragments must retain t
 assert.equal(query('.drawer').dataset.renderCount,builds,'saving must not rebuild the menu');
 assert.equal(w.__FAVORITES_HAS_UNSAVED(),false);
 
-const q=query('#q');q.value='sluzba';q.dispatchEvent(new w.Event('input'));await new Promise(r=>setTimeout(r,220));
+const q=query('#q');q.value='sluzba';q.dispatchEvent(new w.Event('input'));await new Promise(r=>setTimeout(r,350));
 assert.equal(w.__POLICE_SEARCH_STATE.favoritesOnly,true);click('.search-item');await settle();
 assert.equal(w.document.body.classList.contains('favorites-all-acts'),true);
 assert.equal(w.document.body.classList.contains('favorites-filter-on'),true);
@@ -161,6 +164,21 @@ for(const [left,text,amount] of [[366,'+',1],[338,'+',.5],[310,'+',0],[367,'+1',
   assert.equal(query('.acts-more').disabled,amount===0);
 }
 pill.getBoundingClientRect=originalRect;
+// Reclaim the counter gutter only after release; reverse movement restores it.
+const quickbar=query('#quickbar');Object.defineProperty(quickbar,'clientWidth',{value:390,configurable:true});
+pill.getBoundingClientRect=()=>({left:310,right:390,width:80});
+quickbar.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,clientX:100,clientY:100}));
+const touchStart=new w.Event('touchstart',{bubbles:true});Object.defineProperty(touchStart,'touches',{value:[{clientX:100,clientY:100}]});quickbar.dispatchEvent(touchStart);
+quickbar.dispatchEvent(new w.MouseEvent('pointercancel',{bubbles:true,clientX:100,clientY:100}));
+quickbar.dispatchEvent(new w.Event('scroll'));await settle();
+assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),false);
+const touchEnd=new w.Event('touchend',{bubbles:true});Object.defineProperty(touchEnd,'touches',{value:[]});Object.defineProperty(touchEnd,'changedTouches',{value:[{clientX:100,clientY:100}]});quickbar.dispatchEvent(touchEnd);await settle();await settle();
+assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),true);
+quickbar.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,clientX:100,clientY:100}));
+quickbar.dispatchEvent(new w.MouseEvent('pointermove',{bubbles:true,clientX:120,clientY:100}));
+assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),false);
+delete quickbar.clientWidth;pill.getBoundingClientRect=originalRect;
+quickbar.dispatchEvent(new w.MouseEvent('pointerup',{bubbles:true,clientX:120,clientY:100}));
 assert.equal(w.document.querySelectorAll('.unit-comment').length,0);
 w.__ARTICLE_COMMENTS={'uop-art-315':{title:'Test administracyjny',body:'<b>Tekst bez HTML</b>',updated:'2026-09-07'}};
 w.dispatchEvent(new w.CustomEvent('police-law-articles-rendered'));click('.unit-comment');assert.equal(query('.comment-body').textContent,'<b>Tekst bez HTML</b>');assert.equal(query('.comment-body b'),null);click('.reader-dialog .reader-close');

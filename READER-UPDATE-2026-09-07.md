@@ -8,11 +8,13 @@ Przywrócono produkcyjny podział ustawień: systemowe w jednej kolumnie (z zarz
 
 Wyłączone ustawy są ukryte. Licznik liczy wyłącznie prawą stronę, przechodzi w sam plus przy około 30% widoczności ostatniej pastylki i zanika do pełnego odsłonięcia. Ma wspólne style z pastylkami oraz stałą przestrzeń pomiarową, żeby zmiana liczby nie przesuwała granicy widoczności. Licznik ma wyśrodkowaną treść, krawędzie listy wygasza gradient; w zwykłym widoku jednokolumnowym ukryty jest cały wiersz nawigacji, bez pustego odstępu. Wybór ustawy zawiera tylko skrót i nazwę, zamykany wyborem lub kliknięciem poza oknem. Gesty z lewej czekają na osobną rundę uwag.
 
-20 zestawów testów przechodzi po korekcie, w tym rzeczywiste moduły trzech stanów ustawień, wyłączenia, uproszczony wybór i progi licznika. Geometria jest symulowana; wygląd i animacja na telefonie pozostają do odbioru na podglądzie Vercela wymagającym logowania.
+21 zestawów testów przechodzi po korekcie, w tym rzeczywiste moduły trzech stanów ustawień, wyłączenia, uproszczony wybór i progi licznika. Geometria jest symulowana; wygląd i animacja na telefonie pozostają do odbioru na podglądzie Vercela wymagającym logowania.
 
 Dalsze doprecyzowanie: przywrócono liczbę trafień wewnątrz pastylek wyszukiwania z odstępem 4 px od prawej i dolnej krawędzi. +N nadal wskazuje ukryte ustawy. Wizualny fokus jest wyłączony na dotyku; na urządzeniu z precyzyjnym wskaźnikiem i hover delikatny obrys pojawia się dopiero po użyciu Tab, znika po kliknięciu. Logiczny fokus i powrót do przycisku pozostają sprawne.
 
 Ujednolicenie paska: wspólne wymiary i padding we wszystkich widokach, początek przy krawędzi przycisku menu. Wyszukiwanie zachowuje przyciski i ich liczniki, płynnie dodaje szerokość i kolor; pomiary gradientu i +N śledzą animację. Usunięto pusty etap paska przed zakończeniem debounce. Sprawdzono zachowanie tożsamości przycisków oraz wspólne parametry CSS w wyszukiwaniu z jednej i dwóch kolumn.
+
+Animacje: pauza wyszukiwania 300 ms od ostatniego znaku. Pole licznika czeka 150 ms, rozszerza się przez 180 ms, następnie dekoracyjnie przewija wynik +3, +2, +1 i wynik przez 360 ms. Dokładny wynik od razu jest dostępny w danych i etykiecie dostępności. Nowa fraza przerywa animację, a ograniczony ruch ją pomija. Zwykłe kolory pastylek, tylko aktywna ustawa wyróżniona; aktywność śledzi przewijanie wyników. Skok do grupy wyhamowuje przez 280 ms. Na końcu paska wolne miejsce po +N zwalnia się po puszczeniu palca i ustaniu ruchu, z przejściem 240 ms; cofnięcie przywraca układ. Dodano testy kolejności animacji, anulowania, scrollowania i natywnego pointercancel przy nadal przytrzymanym palcu.
 
 ## Zmiany
 
@@ -63,6 +65,6 @@ Przed migracją powstaje lokalna kopia `police-law-bookmarks-v1-before-2026-09-0
 
 Testy można uruchomić po `npm ci --prefix tools`, z katalogu repozytorium: `node tools/test-reader-runtime.mjs`, `node tools/test-full-data-runtime.mjs` oraz pozostałe `tools/test-*.mjs`.
 
-Wszystkie 20 zestawów testów zakończyło się powodzeniem. Obejmują rzeczywiste moduły aplikacji, pełny plik danych, odwołania, daty i strukturę importu, migrację z błędem zapisu, filtry pakietów, dalekie ulubione, edycję bez przebudowy menu, powrót z odwołania do ulubionych, gesty przed puszczeniem i ich anulowanie, leniwy spis, licznik, komentarze i pracę cache offline.
+Wszystkie 21 zestawów testów zakończyło się powodzeniem. Obejmują rzeczywiste moduły aplikacji, pełny plik danych, odwołania, daty i strukturę importu, migrację z błędem zapisu, filtry pakietów, dalekie ulubione, edycję bez przebudowy menu, powrót z odwołania do ulubionych, gesty przed puszczeniem i ich anulowanie, leniwy spis, licznik, komentarze i pracę cache offline.
 
 DOM i geometria testów są symulowane. Nie jest to potwierdzenie płynności, wyglądu ani szybkości na iPhonie. Podgląd Vercela wymaga logowania, a połączone konto nie udostępnia projektu; nie obchodzono ochrony i nie zmieniano produkcji w celu jej ominięcia. Przed scaleniem potrzebny jest odbiór na dostępnym podglądzie, szczególnie obu gestów, warstw paneli i szerokości kontrolek.

@@ -30,21 +30,50 @@
   document.addEventListener('keydown',event=>{if(modal&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closeModal()}},true);
 
   const wrap=document.createElement('div');wrap.className='quickbar-wrap';bar.before(wrap);wrap.append(bar);
-  const more=button('','acts-more',openActPicker),moreLabel=document.createElement('span');moreLabel.textContent='+';more.append(moreLabel);more.dataset.maxCount='+'+DATA.length;more.setAttribute('aria-label','Wybierz akt z pełnej listy');wrap.append(more);
-  let pillsQueued=false;
+  const more=button('','acts-more',openActPicker),moreLabel=document.createElement('span'),moreSlot=document.createElement('div');moreLabel.textContent='+';more.append(moreLabel);more.dataset.maxCount='+'+DATA.length;more.setAttribute('aria-label','Wybierz akt z pełnej listy');moreSlot.className='acts-more-slot';moreSlot.append(more);wrap.append(moreSlot);
+  let pillsQueued=false,tailResting=false,releaseTimer=0,settleTimer=0,settlingUntil=0,lastLeft=0,lastCue=1,pillPointer=null,pillTouch=null;
+  function restTail(on){
+    if(tailResting===on)return;tailResting=on;clearTimeout(releaseTimer);clearTimeout(settleTimer);
+    settlingUntil=performance.now()+260;wrap.classList.toggle('is-tail-resting',on);
+    settleTimer=setTimeout(()=>{lastLeft=bar.scrollLeft;queuePills()},270);queuePills();
+  }
+  function releaseTail(){
+    clearTimeout(releaseTimer);
+    if(tailResting||pillPointer||pillTouch||lastCue!==0||bar.clientWidth<=0||bar.querySelector('[data-count-moving]'))return;
+    releaseTimer=setTimeout(()=>{if(!pillPointer&&!pillTouch&&lastCue===0)restTail(true)},120);
+  }
   function measurePills(){
     const pills=[...bar.querySelectorAll('button[data-act]')].filter(p=>!p.hidden),viewport=bar.getBoundingClientRect(),rects=pills.map(p=>p.getBoundingClientRect());
+    if(viewport.width===0)return;
+    const width=more.offsetWidth;if(width>0)wrap.style.setProperty('--more-width',width+'px');
     const right=viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0),cue=core.overflowCue(rects,{right});
+    if(tailResting&&(rects.at(-1)?.right||0)>right+.5)restTail(false);
+    lastCue=cue.amount;
     bar.style.setProperty('--pills-fade-left',Math.min(20,Math.max(0,bar.scrollLeft))+'px');
     bar.style.setProperty('--pills-fade-right',Math.min(20,Math.max(0,(rects.at(-1)?.right||0)-right))+'px');
     if(moreLabel.textContent!==cue.text)moreLabel.textContent=cue.text;
     more.style.setProperty('--cue-amount',String(cue.amount));more.disabled=cue.amount===0;more.tabIndex=cue.amount===0?-1:0;more.setAttribute('aria-hidden',String(cue.amount===0));
     more.setAttribute('aria-label',cue.count?cue.count+' ustaw po prawej. Wybierz ustawę.':'Wybierz ustawę');
+    releaseTail();
   }
   function queuePills(){if(pillsQueued)return;pillsQueued=true;requestAnimationFrame(()=>{pillsQueued=false;measurePills()})}
   const pillSizes=new ResizeObserver(queuePills);
   function observePills(){pillSizes.disconnect();pillSizes.observe(bar);bar.querySelectorAll('button[data-act]').forEach(pill=>pillSizes.observe(pill));queuePills()}
-  bar.addEventListener('scroll',queuePills,{passive:true});new MutationObserver(observePills).observe(bar,{childList:true});observePills();
+  bar.addEventListener('scroll',()=>{if(tailResting&&performance.now()>settlingUntil&&bar.scrollLeft<lastLeft-.5)restTail(false);lastLeft=bar.scrollLeft;queuePills();releaseTail()},{passive:true});
+  bar.addEventListener('scrollend',releaseTail,{passive:true});
+  bar.addEventListener('pointerdown',event=>{pillPointer={x:event.clientX,y:event.clientY};clearTimeout(releaseTimer)},{passive:true});
+  bar.addEventListener('pointermove',event=>{if(pillPointer){const dx=event.clientX-pillPointer.x,dy=event.clientY-pillPointer.y;if(dx>3&&dx>Math.abs(dy))restTail(false)}},{passive:true});
+  function releasePointer(){if(!pillPointer)return;pillPointer=null;releaseTail()}
+  window.addEventListener('pointerup',releasePointer,{passive:true});window.addEventListener('pointercancel',releasePointer,{passive:true});
+  // Native touch scrolling cancels Pointer Events before the finger is lifted.
+  bar.addEventListener('touchstart',event=>{const touch=event.touches[0];if(touch)pillTouch={x:touch.clientX,y:touch.clientY};clearTimeout(releaseTimer)},{passive:true});
+  bar.addEventListener('touchmove',event=>{const touch=event.touches[0];if(touch&&pillTouch){const dx=touch.clientX-pillTouch.x;if(dx>3&&dx>Math.abs(touch.clientY-pillTouch.y))restTail(false)}},{passive:true});
+  window.addEventListener('touchend',event=>{if(!event.touches.length){pillTouch=null;releaseTail()}},{passive:true});
+  window.addEventListener('touchcancel',()=>{pillTouch=null;releaseTail()},{passive:true});
+  bar.addEventListener('wheel',event=>{if(event.deltaX<0||(event.shiftKey&&event.deltaY<0))restTail(false)},{passive:true});
+  bar.addEventListener('keydown',event=>{if(['ArrowLeft','Home'].includes(event.key))restTail(false)});
+  window.addEventListener('police-law-quickbar-motion',queuePills);
+  new MutationObserver(observePills).observe(bar,{childList:true});observePills();
   function openActPicker(){
     const body=dialog('Wybierz akt prawny',true);
     for(const act of DATA){

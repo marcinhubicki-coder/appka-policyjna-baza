@@ -23,7 +23,7 @@ match(app, /requestIdleCallback\(warmSearchIndex/);
 match(app, /for\(const item of searchIndex\)/);
 const searchBody = app.slice(app.indexOf("function search(){"), app.indexOf("globalThis.__POLICE_SEARCH_REFRESH"));
 noMatch(searchBody, /R\[4\]\.map\([^)]*=>[^)]*\[3\][^)]*\)\.join/);
-match(app, /setTimeout\(search,140\)/);
+match(app, /setTimeout\(search,300\)/);
 
 // Results are grouped by act, and the quickbar temporarily becomes a hit map
 // whose buttons jump to the corresponding group.
@@ -117,7 +117,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-09\.5'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-09\.6'/);
 
 console.log(JSON.stringify({
   status: "ok",

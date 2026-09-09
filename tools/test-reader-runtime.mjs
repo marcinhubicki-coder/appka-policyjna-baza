@@ -126,9 +126,9 @@ click('.acts-more');assert.equal(w.document.querySelectorAll('.act-picker-item')
 assert.equal(query('.act-picker .reader-dialog-head'),null);assert.equal(query('.act-picker .reader-close'),null);assert.equal(query('.act-picker small'),null);
 query('.act-picker').dispatchEvent(new w.MouseEvent('click',{clientX:500,clientY:200}));assert.equal(query('.act-picker'),null);
 click('.acts-more');click('.act-picker-item');assert.equal(query('.act-picker'),null);
-for(const [left,text,amount] of [[350,'+',1],[330,'+',.5],[310,'+',0],[370,'+1',1]]){
+for(const [left,text,amount] of [[366,'+',1],[338,'+',.5],[310,'+',0],[367,'+1',1]]){
   pill.getBoundingClientRect=()=>({left,right:left+80,width:80});query('#quickbar').dispatchEvent(new w.Event('scroll'));await settle();
-  assert.equal(query('.acts-more').textContent,text);assert.equal(Number(query('.acts-more').style.getPropertyValue('--cue-amount')),amount);
+  assert.equal(query('.acts-more').textContent,text);assert.ok(Math.abs(Number(query('.acts-more').style.getPropertyValue('--cue-amount'))-amount)<1e-9);
   assert.equal(query('.acts-more').disabled,amount===0);
 }
 pill.getBoundingClientRect=originalRect;

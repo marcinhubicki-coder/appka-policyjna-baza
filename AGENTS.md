@@ -9,7 +9,7 @@ Uzgodnione nazwy od 9 września 2026:
 
 Zachowuj identyczne odstępy panelu i sekcji we wszystkich trzech stanach. Minimalizm: bez zbędnych instrukcji i statystyk w uproszczonej nawigacji. Nazwa „zarządzaj ulubionymi”, podtytuł „Zapisz ulubione w pliku lub załaduj nowe.” Bez stałej instrukcji „Podczas importu…”. Błędy i wynik rzeczywistej operacji można komunikować.
 
-Pastylki: krótkie nazwy, maksymalnie długość „Cudzoziem”; wyłączone pozycje są niewidoczne. Licznik +N liczy wyłącznie pastylki po prawej stronie, nie po lewej. Pod koniec pozostaje plus, który maleje i znika w miarę odsłaniania drugiej połowy ostatniej pastylki. Nigdy +0, 0, znak wyboru ani strzałka końca. Wybór aktu: tylko skrót i pełna nazwa, bez nagłówka, przycisku X i liczby artykułów; zamknięcie wyborem lub kliknięciem poza oknem.
+Pastylki: krótkie nazwy, maksymalnie długość „Cudzoziem”; wyłączone pozycje są niewidoczne. Licznik +N liczy wyłącznie pastylki po prawej stronie, nie po lewej. Pod koniec pozostaje plus, który maleje i znika od około 30% do 100% widoczności ostatniej pastylki. Treść +N jest wyśrodkowana; krawędzie przewijanej listy łagodnie wygaszone gradientem. W jednej kolumnie bez wyszukiwania ukryty jest cały pasek wraz z jego odstępem. Nigdy +0, 0, znak wyboru ani strzałka końca. Wybór aktu: tylko skrót i pełna nazwa, bez nagłówka, przycisku X i liczby artykułów; zamknięcie wyborem lub kliknięciem poza oknem.
 
 W lewym panelu dwukolumnowym zachowuj produkcyjną typografię, rozdziały rzymskie i brak kursywy. Dane o imporcie mają być w rozwijance „Pokaż dane szczegółowe”, z fontami odpowiednimi do bieżącego widoku.
 

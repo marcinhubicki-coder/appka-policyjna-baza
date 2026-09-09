@@ -30,8 +30,10 @@
   const more=button('','acts-more',openActPicker),moreLabel=document.createElement('span');moreLabel.textContent='+';more.append(moreLabel);more.dataset.maxCount='+'+DATA.length;more.setAttribute('aria-label','Wybierz akt z pełnej listy');wrap.append(more);
   let pillsQueued=false;
   function measurePills(){
-    const pills=[...bar.querySelectorAll('button[data-act]')].filter(p=>!p.hidden),viewport=bar.getBoundingClientRect();
-    const cue=core.overflowCue(pills.map(p=>p.getBoundingClientRect()),{right:viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0)});
+    const pills=[...bar.querySelectorAll('button[data-act]')].filter(p=>!p.hidden),viewport=bar.getBoundingClientRect(),rects=pills.map(p=>p.getBoundingClientRect());
+    const right=viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0),cue=core.overflowCue(rects,{right});
+    bar.style.setProperty('--pills-fade-left',Math.min(20,Math.max(0,bar.scrollLeft))+'px');
+    bar.style.setProperty('--pills-fade-right',Math.min(20,Math.max(0,(rects.at(-1)?.right||0)-right))+'px');
     if(moreLabel.textContent!==cue.text)moreLabel.textContent=cue.text;
     more.style.setProperty('--cue-amount',String(cue.amount));more.disabled=cue.amount===0;more.tabIndex=cue.amount===0?-1:0;more.setAttribute('aria-hidden',String(cue.amount===0));
     more.setAttribute('aria-label',cue.count?cue.count+' ustaw po prawej. Wybierz ustawę.':'Wybierz ustawę');

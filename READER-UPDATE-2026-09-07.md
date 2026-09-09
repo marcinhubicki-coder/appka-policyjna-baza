@@ -6,7 +6,7 @@ Wersja robocza na gałęzi `feature/reader-2026-09-07`. Nie została scalona do 
 
 Przywrócono produkcyjny podział ustawień: systemowe w jednej kolumnie (z zarządzaniem ulubionymi), wyświetlania w dwóch, wyszukiwania przy aktywnym zapytaniu. Wspólne odstępy; pakiety z przełącznikami, rozwijane pakiety i dokumentacja; szczegóły importu schowane. Przywrócono klasy typograficzne i rzymskie numery rozdziałów lewego panelu. Preferencje i nazwy zapisano w `AGENTS.md`.
 
-Wyłączone ustawy są ukryte. Licznik liczy wyłącznie prawą stronę, przechodzi w sam plus przy połowie ostatniej pastylki i zanika do pełnego odsłonięcia. Ma wspólne style z pastylkami oraz stałą przestrzeń pomiarową, żeby zmiana liczby nie przesuwała granicy widoczności. Wybór ustawy zawiera tylko skrót i nazwę, zamykany wyborem lub kliknięciem poza oknem. Gesty z lewej czekają na osobną rundę uwag.
+Wyłączone ustawy są ukryte. Licznik liczy wyłącznie prawą stronę, przechodzi w sam plus przy około 30% widoczności ostatniej pastylki i zanika do pełnego odsłonięcia. Ma wspólne style z pastylkami oraz stałą przestrzeń pomiarową, żeby zmiana liczby nie przesuwała granicy widoczności. Licznik ma wyśrodkowaną treść, krawędzie listy wygasza gradient; w zwykłym widoku jednokolumnowym ukryty jest cały wiersz nawigacji, bez pustego odstępu. Wybór ustawy zawiera tylko skrót i nazwę, zamykany wyborem lub kliknięciem poza oknem. Gesty z lewej czekają na osobną rundę uwag.
 
 20 zestawów testów przechodzi po korekcie, w tym rzeczywiste moduły trzech stanów ustawień, wyłączenia, uproszczony wybór i progi licznika. Geometria jest symulowana; wygląd i animacja na telefonie pozostają do odbioru na podglądzie Vercela wymagającym logowania.
 

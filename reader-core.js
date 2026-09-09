@@ -9,13 +9,14 @@
     try{root.localStorage.setItem(KEY,JSON.stringify(next))}catch(_){return false}
     preferences=next;return true;
   }
+  const CUE_START=.3;
   function hiddenPills(rects,viewport){
-    return rects.filter(rect=>rect.width>0&&rect.left+rect.width/2>viewport.right).length;
+    return rects.filter(rect=>rect.width>0&&rect.left+rect.width*CUE_START>viewport.right).length;
   }
   function overflowCue(rects,viewport){
     const count=hiddenPills(rects,viewport),last=rects.at(-1);
     const visible=last?.width?Math.max(0,Math.min(1,(viewport.right-last.left)/last.width)):1;
-    const amount=count?1:Math.max(0,Math.min(1,2*(1-visible)));
+    const amount=count?1:Math.max(0,Math.min(1,(1-visible)/(1-CUE_START)));
     return {count,text:count?'+'+count:'+',amount};
   }
   function sections(rows,sectionInfo){

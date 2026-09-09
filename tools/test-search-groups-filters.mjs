@@ -43,10 +43,10 @@ match(app, /__POLICE_SEARCH_FILTERS=\{list:searchActList,setEnabled:setSearchAct
 match(index, /id="searchSettings"[^>]*hidden/);
 match(index, /id="searchActFilters"/);
 match(index, /id="searchEnableAll"/);
-match(settings, /Filtry wyszukiwania/);
+match(settings, /Ustawienia wyszukiwania/);
 match(settings, /toggle\.type='checkbox'/);
 match(settings, /api\.setEnabled\(item\.code,toggle\.checked\)/);
-match(settings, /detail\.textContent=item\.packageEnabled===false\?'Pakiet wyłączony — włącz go poniżej':pluralHits\(item\.hits\)/);
+match(settings, /detail\.textContent=item\.packageEnabled===false\?'Pakiet wyłączony':pluralHits\(item\.hits\)/);
 noMatch(settings, /detail\.textContent=`\$\{item\.name\}/);
 match(appCss, /body\.search-filters-active \.settings-button/);
 
@@ -117,7 +117,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-07\.1'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-09\.1'/);
 
 console.log(JSON.stringify({
   status: "ok",

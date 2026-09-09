@@ -2,6 +2,14 @@
 
 Wersja robocza na gałęzi `feature/reader-2026-09-07`. Nie została scalona do produkcji.
 
+## Korekta według uwag z 9 września 2026
+
+Przywrócono produkcyjny podział ustawień: systemowe w jednej kolumnie (z zarządzaniem ulubionymi), wyświetlania w dwóch, wyszukiwania przy aktywnym zapytaniu. Wspólne odstępy; pakiety z przełącznikami, rozwijane pakiety i dokumentacja; szczegóły importu schowane. Przywrócono klasy typograficzne i rzymskie numery rozdziałów lewego panelu. Preferencje i nazwy zapisano w `AGENTS.md`.
+
+Wyłączone ustawy są ukryte. Licznik liczy wyłącznie prawą stronę, przechodzi w sam plus przy połowie ostatniej pastylki i zanika do pełnego odsłonięcia. Ma wspólne style z pastylkami oraz stałą przestrzeń pomiarową, żeby zmiana liczby nie przesuwała granicy widoczności. Wybór ustawy zawiera tylko skrót i nazwę, zamykany wyborem lub kliknięciem poza oknem. Gesty z lewej czekają na osobną rundę uwag.
+
+20 zestawów testów przechodzi po korekcie, w tym rzeczywiste moduły trzech stanów ustawień, wyłączenia, uproszczony wybór i progi licznika. Geometria jest symulowana; wygląd i animacja na telefonie pozostają do odbioru na podglądzie Vercela wymagającym logowania.
+
 ## Zmiany
 
 - Usunięto powtarzalne przepisywanie spisu treści i obserwatory, które wykonywały pracę po edycji ulubionych. Zachowano pamięć gotowego menu i DOM edytowanego artykułu.
@@ -9,7 +17,7 @@ Wersja robocza na gałęzi `feature/reader-2026-09-07`. Nie została scalona do 
 - Trafienie wyszukiwania w ulubionych otwiera ulubione wszystkich ustaw, z filtrem i pełnym trafionym artykułem. Filtry wyszukiwania są oddzielone od filtrów czytnika. Powrót odtwarza wyszukiwanie.
 - Bezpośrednie skoki do odwołań; kompaktowy przycisk powrotu na szerokość telefonu w widoku dzielonym.
 - Lewy panel rozdziałów: 70% szerokości, maksymalnie 520 px; oficjalna hierarchia, zakresy artykułów i listy tworzone po rozwinięciu. Oba gesty pokazują panel w trakcie ruchu i cofają niedokończone przeciągnięcie.
-- Stały licznik ukrytych aktów i pełna lista wyboru. Widoczność powyżej połowy zalicza pastylkę jako widoczną. Licznik uwzględnia obie strony przewiniętej listy; strzałka oznacza dojście do prawego końca.
+- Licznik i wybór aktów — mechanikę z 7 września zastąpiła korekta opisana powyżej.
 - Komentarze są opcjonalne, konfigurowane w `article-comments.js`. Ikona pojawia się tylko przy artykule z komentarzem. Nie dodano przykładowych porad do bazy ani panelu administracyjnego.
 - Cofnięcie usunięcia ulubionego, ostrzeżenie przed utratą niezapisanej edycji, obsługa klawiatury separatora, dostępny eksport także w pełnym widoku.
 

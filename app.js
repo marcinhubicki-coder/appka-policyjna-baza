@@ -6,7 +6,7 @@ kpk:["KPK","Kodeks postępowania karnego","Dz.U. 2026 poz. 490"],
 kpow:["KPoW","Kodeks postępowania w sprawach o wykroczenia","Dz.U. 2025 poz. 860"],
 spb:["ŚPB i BP","Ustawa o środkach przymusu bezpośredniego i broni palnej","Dz.U. 2026 poz. 244"],
 prd:["PRD","Prawo o ruchu drogowym","Dz.U. 2024 poz. 1251 · snapshot"],
-cudz:["Cudzoziemcy","Ustawa o cudzoziemcach","Dz.U. 2025 poz. 1079"],
+cudz:["Cudzoziem","Ustawa o cudzoziemcach","Dz.U. 2025 poz. 1079"],
 nieletni:["Nieletni","Ustawa o wspieraniu i resocjalizacji nieletnich","Dz.U. 2026 poz. 163"],
 bim:["Imprezy","Ustawa o bezpieczeństwie imprez masowych","Dz.U. 2023 poz. 616"],
 alk:["Alkohol","Ustawa o wychowaniu w trzeźwości i przeciwdziałaniu alkoholizmowi","Dz.U. 2023 poz. 2151"],
@@ -56,7 +56,7 @@ function favoriteSearchIds(){const ids=favoritesSearchApi()?.ids?.();return new 
 function hasSearchFilters(){return searchExcluded.size>0||(searchState.active&&searchFavoritesOnly)}
 function syncSearchFilterIndicator(){document.body.classList.toggle("search-filters-active",hasSearchFilters())}
 function searchActList(){return DATA.map(A=>{const meta=META[A[0]]||[A[0],A[1],""];return{code:A[0],short:meta[0],name:meta[1],enabled:packages.isEnabled(A[0])&&!searchExcluded.has(A[0]),packageEnabled:packages.isEnabled(A[0]),hits:searchState.counts.get(A[0])||0}})}
-function paintSearchPills(active,counts){quickbar?.querySelectorAll("button[data-act]").forEach(button=>{const code=button.dataset.act,meta=META[code]||[code,code,""];button.classList.remove("search-has-hit","search-no-hit","search-excluded");delete button.dataset.hitCount;button.disabled=false;button.removeAttribute("aria-disabled");button.setAttribute("aria-label",`${meta[0]} — ${meta[1]}`);if(!active)return;if(!packages.isEnabled(code)||searchExcluded.has(code)){button.classList.add("search-excluded");button.disabled=true;button.setAttribute("aria-disabled","true");button.setAttribute("aria-label",`${meta[0]} — wyłączona z wyszukiwania`);return}const hits=counts.get(code)||0;button.classList.add(hits?"search-has-hit":"search-no-hit");button.dataset.hitCount=String(hits);button.disabled=!hits;button.setAttribute("aria-disabled",String(!hits));button.setAttribute("aria-label",hits?`${meta[0]} — ${hits} ${searchResultWord(hits)}; przejdź do sekcji`:`${meta[0]} — brak wyników`)})}
+function paintSearchPills(active,counts){quickbar?.querySelectorAll("button[data-act]").forEach(button=>{const code=button.dataset.act,meta=META[code]||[code,code,""],hits=counts.get(code)||0;button.classList.remove("search-has-hit","search-no-hit","search-excluded");delete button.dataset.hitCount;button.hidden=!packages.isEnabled(code)||(active&&(searchExcluded.has(code)||!hits));button.disabled=button.hidden;button.removeAttribute("aria-disabled");button.setAttribute("aria-label",meta[0]+" — "+meta[1])})}
 function emitSearchState(active,counts=new Map()){searchState={active,counts,favoritesOnly:active&&searchFavoritesOnly};document.body.classList.toggle("search-active",active);syncSearchFilterIndicator();paintSearchPills(active,counts);const detail={active,counts:Object.fromEntries(counts),excluded:[...searchExcluded],favoritesOnly:searchState.favoritesOnly};globalThis.__POLICE_SEARCH_STATE=detail;window.dispatchEvent(new CustomEvent("police-law-search-state",{detail}))}
 function clearSearchReturn(){searchReturn=null;searchRet?.classList.remove("show")}
 function closeSearch(preserveReturn=false){searchFavoritesOnly=false;searchResultGroups.clear();results.classList.remove("show");emitSearchState(false,new Map());if(!preserveReturn)clearSearchReturn()}
@@ -95,6 +95,7 @@ function rebuildSearchIndex(){
   for(const A of DATA)if(packages.isEnabled(A[0]))for(const R of A[3])searchIndex.push({act:A[0],row:R,text:null});
   PERF.update({searchWorkMs:0},{searchItems:searchIndex.length,enabledPackages:DATA.filter(A=>packages.isEnabled(A[0])).length});
   scheduleSearchWarmup();if(searchState.active)search();
+  paintSearchPills(searchState.active,searchState.counts);
   window.dispatchEvent(new CustomEvent("police-law-packages-change"));
 }
 globalThis.__POLICE_PACKAGES={
@@ -186,11 +187,12 @@ let streamScrollQueued=false;
 window.addEventListener('scroll',()=>{if(streamScrollQueued||!streamState)return;streamScrollQueued=true;requestAnimationFrame(()=>{streamScrollQueued=false;checkStreamMargins()})},{passive:true});
 function populateToc(){const grid=document.getElementById('tocgrid');if(!grid||grid.dataset.ready==='1')return;const started=PERF.now();grid.innerHTML=ACT[3].map(row=>`<a class="toc-link" href="#${row[0]}" title="${esc(row[2]+(row[3]?' · '+row[3]:''))}"><b>${esc(tocNumber(row[2]))}</b></a>`).join('');grid.dataset.ready='1';bindLinks(grid);PERF.update({lastTocBuildMs:PERF.now()-started},{lastTocAct:ACT[0],lastTocArticles:ACT[3].length});window.dispatchEvent(new CustomEvent('police-law-toc-rendered',{detail:{act:ACT[0]}}))}
 function sourceCoverage(act){
-  const s=act[4];if(!s)return '<p class="source-coverage">Starszy zakres danych — zweryfikuj z publikacją źródłową.</p>';
+  const s=act[4],head='<details class="source-details"><summary>Pokaż dane szczegółowe</summary>';
+  if(!s)return head+'<p>Starszy zakres danych — zweryfikuj z publikacją źródłową.</p></details>';
   const expired=s.versionTo&&new Date().toISOString().slice(0,10)>s.versionTo;
-  let html='<p class="source-coverage">Stan importu: '+esc(s.retrieved)+' · '+esc(s.first)+'–'+esc(s.last)+' · '+s.articles+' artykułów'+(s.annexesAvailable?' · załączniki w PDF':'')+'.</p>';
-  if(expired)html+='<p class="source-warning" role="alert">Dostępna może być nowsza wersja przepisów. Sprawdź aktualne źródło.</p>';
-  html+='<details class="source-details"><summary>Zakres i pochodzenie treści</summary><p>Tekst ustawowy: <a href="'+esc(s.url)+'" target="_blank" rel="noopener">wersja HTML Inforlex</a>. Opisy artykułów są własnymi pomocami nawigacyjnymi, nie częścią ustawy. Import nie jest pełnym audytem zgodności każdego przepisu. Zmiany przyszłe oznaczono osobno.</p>';
+  let html=head+'<p class="source-coverage">Stan importu: '+esc(s.retrieved)+' · '+esc(s.first)+'–'+esc(s.last)+' · '+s.articles+' artykułów'+(s.annexesAvailable?' · załączniki w PDF':'')+'.</p>';
+  if(expired)html+='<p role="alert">Dostępna może być nowsza wersja przepisów. Sprawdź aktualne źródło.</p>';
+  html+='<p>Tekst ustawowy: <a href="'+esc(s.url)+'" target="_blank" rel="noopener">wersja HTML Inforlex</a>. Opisy artykułów są pomocami nawigacyjnymi. Zmiany przyszłe oznaczono osobno.</p>';
   if(s.preamble?.length)html+='<p>'+s.preamble.map(esc).join(' ')+'</p>';
   return html+'</details>';
 }
@@ -229,4 +231,4 @@ q.oninput=()=>{clearTimeout(timer);clearSearchReturn();if(norm(q.value.trim()).l
 function search(){const s=norm(q.value.trim());if(s.length<2){closeSearch();return}if(!searchState.active)captureSearchScope();const terms=s.split(/\s+/),favorites=searchFavoritesOnly?favoriteSearchIds():null,byAct=new Map(DATA.map(A=>[A[0],[]]));for(const item of searchIndex){if(!packages.isEnabled(item.act)||searchExcluded.has(item.act)||(favorites&&!favorites.has(item.row[0])))continue;if(terms.every(term=>searchText(item).includes(term)))byAct.get(item.act)?.push(item.row)}const groups=DATA.map(A=>({act:A[0],rows:byAct.get(A[0])||[]})).filter(group=>group.rows.length);const counts=new Map(groups.map(group=>[group.act,group.rows.length]));searchResultGroups.clear();if(!groups.length){const allExcluded=DATA.every(A=>!packages.isEnabled(A[0])||searchExcluded.has(A[0]));results.innerHTML=`<div class="search-empty"><b>Brak wyników</b><small>${allExcluded?"Wszystkie ustawy są wyłączone z wyszukiwania.":searchFavoritesOnly?"Brak pasujących wyników w ulubionych.":"Spróbuj krótszego lub innego hasła."}</small></div>`}else{const perGroup=Math.max(4,Math.min(24,Math.floor(48/groups.length)));for(const group of groups){group.shown=Math.min(group.rows.length,perGroup);searchResultGroups.set(group.act,group)}results.innerHTML=groups.map(searchGroupMarkup).join("")}results.classList.add("show");emitSearchState(true,counts);bindSearchResultLinks()}
 globalThis.__POLICE_SEARCH_REFRESH=search;
 window.addEventListener("police-law-favorites-change",()=>{if(searchState.active&&searchFavoritesOnly)search()});
-(async()=>{await load();buildMenu();const hash=canonicalLegalId(decodeURIComponent(location.hash.slice(1))),target=idMap.has(hash)?hash:null;document.body.classList.add('act-selected');renderAct(target?idMap.get(target):'uop',target,false);scheduleSearchWarmup()})();
+(async()=>{await load();buildMenu();paintSearchPills(false,new Map());const hash=canonicalLegalId(decodeURIComponent(location.hash.slice(1))),target=idMap.has(hash)?hash:null;document.body.classList.add('act-selected');renderAct(target?idMap.get(target):'uop',target,false);scheduleSearchWarmup()})();

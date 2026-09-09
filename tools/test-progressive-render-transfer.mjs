@@ -55,8 +55,8 @@ noMatch(ux, /patchChapters|MutationObserver/);
 // full-view installation settings.
 match(index, /data-full-only="true"[^>]*>.*Dostęp offline/s);
 match(index, /data-full-only="true"[^>]*>.*Aplikacja PWA/s);
-match(index, /class="settings-section settings-general settings-transfer" id="favoritesTransfer"/);
-match(index, /class="settings-section settings-general settings-packages" id="lawPackages"/);
+match(index, /class="settings-section settings-general settings-transfer" data-full-only="true" id="favoritesTransfer"/);
+match(index, /class="settings-section settings-general settings-packages" data-split-only="true" hidden id="lawPackages"/);
 match(settings, /openedFromDrawer=document\.body\.classList\.contains\('drawer-open'\)/);
 noMatch(settings, /__POLICE_DRAWER_CLOSE|captureDrawerContext|restoreDrawerContext/);
 match(appCss, /html\.settings-open-root\{overflow:hidden!important/);
@@ -79,7 +79,7 @@ match(transfer, /fileInput\.click\(\)/);
 match(transfer, /mode==='replace'\?pendingItems:merge/);
 match(transfer, /function mergeParts\(current,incoming,row\)/);
 match(transfer, /valid:merge\(\[\],valid\)/);
-match(serviceWorker, /CACHE_VERSION='2026-09-07\.1'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-09\.1'/);
 match(serviceWorker, /'\.\/favorites-transfer\.js'/);
 
 // Exercise the same bounded-cost contract against every real act. This is a

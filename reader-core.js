@@ -10,7 +10,13 @@
     preferences=next;return true;
   }
   function hiddenPills(rects,viewport){
-    return rects.filter(rect=>Math.max(0,Math.min(rect.right,viewport.right)-Math.max(rect.left,viewport.left))<=rect.width/2).length;
+    return rects.filter(rect=>rect.width>0&&rect.left+rect.width/2>viewport.right).length;
+  }
+  function overflowCue(rects,viewport){
+    const count=hiddenPills(rects,viewport),last=rects.at(-1);
+    const visible=last?.width?Math.max(0,Math.min(1,(viewport.right-last.left)/last.width)):1;
+    const amount=count?1:Math.max(0,Math.min(1,2*(1-visible)));
+    return {count,text:count?'+'+count:'+',amount};
   }
   function sections(rows,sectionInfo){
     const roots=[];
@@ -52,6 +58,6 @@
       root.__FAVORITES_MIGRATION={review:next.filter(item=>item.needsFragmentReview).length};
     }catch(error){root.__FAVORITES_MIGRATION={error:true}}
   }
-  root.__READER_CORE={hiddenPills,sections,migrateFavorites};
+  root.__READER_CORE={hiddenPills,overflowCue,sections,migrateFavorites};
   root.__LAW_PACKAGES={isEnabled,setEnabled};
 })(typeof window!=='undefined'?window:globalThis);

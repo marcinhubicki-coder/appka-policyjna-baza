@@ -59,7 +59,7 @@ body.search-filters-active .settings-button{background:var(--target);border-colo
 .search-group-more{display:block;width:100%;padding:8px 12px 9px;border:0;border-top:1px solid #edf1f4;background:#fbfdff;color:#315e87;font:inherit;font-size:9.5px;font-weight:800;text-align:center;cursor:pointer}.search-group-more:active{background:#eef5fb}.search-group-more:focus-visible{outline:3px solid rgba(35,91,141,.2);outline-offset:-3px}
 .search-empty{padding:20px 15px;text-align:center}.search-empty b,.search-empty small{display:block}.search-empty b{color:#315e87;font-size:14px}.search-empty small{margin-top:3px;color:var(--muted);font-size:11px}
 .quickbar{display:flex;gap:6px;overflow-x:auto;padding-top:8px;scrollbar-width:none;max-width:100%}.quickbar::-webkit-scrollbar{display:none}
-.quickbar button{flex:0 0 auto;border:1px solid #d3dce5;background:#fff;border-radius:999px;padding:6px 10px;color:var(--accent);font:inherit;font-size:12px;font-weight:750}
+.quickbar button,.acts-more{flex:0 0 auto;border:1px solid #d3dce5;background:#fff;border-radius:999px;padding:6px 10px;color:var(--accent);font:inherit;font-size:12px;font-weight:750}
 .quickbar button.on{background:var(--soft);border-color:#8fb2d4}
 body.search-active .quickbar{display:flex!important}
 body.search-active .quickbar button{display:inline-flex;align-items:center;gap:5px}

@@ -15,43 +15,45 @@
   const button=(label,className,action)=>{const b=document.createElement('button');b.type='button';b.className=className;b.textContent=label;if(action)b.onclick=action;return b};
   let modal=null,modalFocus=null;
   function closeModal(){if(!modal)return;modal.close();modal.remove();modal=null;modalFocus?.focus?.({preventScroll:true});modalFocus=null}
-  function dialog(title){
+  function dialog(title,minimal=false){
     closeModal();modalFocus=document.activeElement;modal=document.createElement('dialog');modal.className='reader-dialog';
     const head=document.createElement('div');head.className='reader-dialog-head';const heading=document.createElement('h2');heading.id='readerDialogTitle';heading.textContent=title;
-    modal.setAttribute('aria-labelledby',heading.id);const close=button('×','reader-close',closeModal);close.setAttribute('aria-label','Zamknij');head.append(heading,close);
-    const body=document.createElement('div');body.className='reader-dialog-body';modal.append(head,body);document.body.append(modal);
+    if(minimal){modal.classList.add('act-picker');modal.setAttribute('aria-label',title)}else modal.setAttribute('aria-labelledby',heading.id);const close=button('×','reader-close',closeModal);close.setAttribute('aria-label','Zamknij');head.append(heading,close);
+    const body=document.createElement('div');body.className='reader-dialog-body';if(!minimal)modal.append(head);modal.append(body);document.body.append(modal);
     modal.addEventListener('cancel',event=>{event.preventDefault();closeModal()});
     modal.addEventListener('click',event=>{if(event.target!==modal)return;const r=modal.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeModal()});
-    modal.showModal();close.focus();return body;
+    modal.showModal();if(!minimal)close.focus();return body;
   }
   document.addEventListener('keydown',event=>{if(modal&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closeModal()}},true);
 
   const wrap=document.createElement('div');wrap.className='quickbar-wrap';bar.before(wrap);wrap.append(bar);
-  const more=button('+','acts-more',openActPicker);more.setAttribute('aria-label','Wybierz akt z pełnej listy');wrap.append(more);
+  const more=button('','acts-more',openActPicker),moreLabel=document.createElement('span');moreLabel.textContent='+';more.append(moreLabel);more.dataset.maxCount='+'+DATA.length;more.setAttribute('aria-label','Wybierz akt z pełnej listy');wrap.append(more);
   let pillsQueued=false;
   function measurePills(){
-    const pills=[...bar.querySelectorAll('button[data-act]')],viewport=bar.getBoundingClientRect(),rects=pills.map(p=>p.getBoundingClientRect());
-    const hidden=core.hiddenPills(rects,viewport),atEnd=bar.scrollLeft+bar.clientWidth>=bar.scrollWidth-2;
-    const text=hidden?'+'+hidden+(atEnd?' ‹':''):'✓';if(more.textContent!==text)more.textContent=text;
-    more.dataset.complete=String(!hidden);more.dataset.atEnd=String(atEnd);
-    more.setAttribute('aria-label',hidden?`${hidden} aktów poza widokiem${atEnd?' · koniec listy':''}. Wybierz z pełnej listy.`:'Wszystkie akty widoczne. Otwórz listę.');
+    const pills=[...bar.querySelectorAll('button[data-act]')].filter(p=>!p.hidden),viewport=bar.getBoundingClientRect();
+    const cue=core.overflowCue(pills.map(p=>p.getBoundingClientRect()),{right:viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0)});
+    if(moreLabel.textContent!==cue.text)moreLabel.textContent=cue.text;
+    more.style.setProperty('--cue-amount',String(cue.amount));more.disabled=cue.amount===0;more.tabIndex=cue.amount===0?-1:0;more.setAttribute('aria-hidden',String(cue.amount===0));
+    more.setAttribute('aria-label',cue.count?cue.count+' ustaw po prawej. Wybierz ustawę.':'Wybierz ustawę');
   }
   function queuePills(){if(pillsQueued)return;pillsQueued=true;requestAnimationFrame(()=>{pillsQueued=false;measurePills()})}
   bar.addEventListener('scroll',queuePills,{passive:true});new ResizeObserver(queuePills).observe(bar);new MutationObserver(queuePills).observe(bar,{childList:true});
   function openActPicker(){
-    const body=dialog('Wybierz akt prawny'),searching=!!globalThis.__POLICE_SEARCH_STATE?.active;
+    const body=dialog('Wybierz akt prawny',true),searching=!!globalThis.__POLICE_SEARCH_STATE?.active;
     const filters=new Map((globalThis.__POLICE_SEARCH_FILTERS?.list()||[]).map(item=>[item.code,item]));
     for(const act of DATA){
       const meta=META[act[0]]||[act[0],act[1]],state=filters.get(act[0]);
+      if(!globalThis.__LAW_PACKAGES.isEnabled(act[0])||(searching&&(!state?.enabled||!state?.hits)))continue;
       const item=button('','act-picker-item',()=>{
         const code=act[0];closeModal();const pill=bar.querySelector('[data-act="'+CSS.escape(code)+'"]');
         pill?.click();pill?.scrollIntoView({inline:'center',block:'nearest',behavior:'auto'});queuePills();
       });
       item.setAttribute('aria-current',String(ACT?.[0]===act[0]));
       const short=document.createElement('b');short.textContent=meta[0];const copy=document.createElement('span');copy.textContent=meta[1];
-      const detail=document.createElement('small');detail.textContent=searching?(state?.enabled?`${state.hits} wyników`:'Wyłączony z wyszukiwania'):(globalThis.__LAW_PACKAGES.isEnabled(act[0])?`${act[3].length} artykułów`:'Pakiet wyszukiwania wyłączony · można czytać');
-      item.disabled=searching&&(!state?.enabled||!state?.hits);copy.append(detail);item.append(short,copy);body.append(item);
+
+      item.append(short,copy);body.append(item);
     }
+    body.querySelector('button')?.focus();
   }
 
   const toc=document.createElement('aside');toc.className='reader-toc';toc.id='readerToc';toc.setAttribute('role','dialog');toc.setAttribute('aria-modal','true');toc.setAttribute('aria-label','Spis treści bieżącej ustawy');toc.inert=true;
@@ -132,11 +134,11 @@
   }
   function renderPackages(){
     const list=document.getElementById('packageList'),summary=document.getElementById('packageSummary'),api=globalThis.__POLICE_PACKAGES;if(!list||!api)return;
-    const items=api.list(),enabled=items.filter(item=>item.enabled);summary.textContent=`Włączone: ${enabled.length} z ${items.length} · ${enabled.reduce((sum,item)=>sum+item.articles,0)} artykułów w wyszukiwaniu.`;
+    const items=api.list();summary.textContent='';
     if(list.dataset.ready){for(const input of list.querySelectorAll('input'))input.checked=items.find(item=>item.code===input.dataset.code)?.enabled;return}
     list.textContent='';
     for(const item of items){
-      const label=document.createElement('label');label.className='package-row';const copy=document.createElement('span'),name=document.createElement('b'),detail=document.createElement('small');name.textContent=item.name;detail.textContent=`${item.articles} artykułów`;copy.append(name,detail);
+      const label=document.createElement('label');label.className='search-filter-row';const copy=document.createElement('span'),name=document.createElement('b'),detail=document.createElement('small');copy.className='search-filter-copy';name.textContent=item.short;detail.textContent=item.name;copy.append(name,detail);
       const input=document.createElement('input');input.type='checkbox';input.dataset.code=item.code;input.checked=item.enabled;input.setAttribute('aria-label','Wyszukiwanie: '+item.name);
       input.onchange=()=>{if(!api.setEnabled(item.code,input.checked)){input.checked=!input.checked;summary.textContent='Nie udało się zapisać wyboru pakietów. Spróbuj ponownie.'}else renderPackages()};label.append(copy,input);list.append(label);
     }
@@ -148,6 +150,6 @@
   }
   function clearState(){document.getElementById('clear').hidden=!document.getElementById('q').value}
   document.getElementById('q').addEventListener('input',clearState);window.addEventListener('police-law-search-state',()=>{queuePills();clearState()});
-  window.addEventListener('police-law-rendered',onRendered);window.addEventListener('police-law-articles-rendered',()=>installArticleTools());window.addEventListener('police-law-favorites-change',()=>requestAnimationFrame(()=>installArticleTools()));window.addEventListener('police-law-packages-change',renderPackages);
+  window.addEventListener('police-law-rendered',onRendered);window.addEventListener('police-law-articles-rendered',()=>installArticleTools());window.addEventListener('police-law-favorites-change',()=>requestAnimationFrame(()=>installArticleTools()));window.addEventListener('police-law-packages-change',()=>{renderPackages();queuePills()});
   window.addEventListener('resize',()=>{if(tocOpen)closeToc();queuePills()},{passive:true});clearState();
 })();

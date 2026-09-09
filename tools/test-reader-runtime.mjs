@@ -37,6 +37,39 @@ assert.equal(w.__POLICE_PACKAGES.list().find(a=>a.code==='alk').enabled,false);
 assert.equal(w.eval('searchIndex.length'),6);
 assert.equal(w.__POLICE_PACKAGES.setEnabled('alk',true),true);assert.equal(w.eval('searchIndex.length'),7);
 w.__POLICE_PACKAGES.setEnabled('alk',false);assert.equal(w.eval('searchIndex.length'),6);
+assert.equal(query('#quickbar [data-act="alk"]').hidden,true);
+
+// The same gear opens the production context, with favorites in system settings.
+click('#settingsButton');
+assert.equal(query('#settingsTitle').textContent,'Ustawienia systemowe');
+assert.equal(query('#favoritesTransfer').hidden,false);
+assert.equal(query('#lawPackages').hidden,true);
+assert.equal(query('#performanceDiagnostics').hidden,true);
+assert.equal(query('#favoritesTransferStatus').textContent,'');
+click('#settingsClose');click('#hamburger');await settle();click('#settingsButton');
+assert.equal(query('#settingsTitle').textContent,'Ustawienia wyświetlania');
+assert.equal(query('#favoritesTransfer').hidden,true);
+assert.equal(query('#lawPackages').hidden,false);
+assert.equal(query('#performanceDiagnostics').hidden,false);
+assert.equal(query('.chapter-no').textContent,'Rozdział I');
+assert.equal(query('.chapter-title').textContent,'Zadania');
+for(const id of ['packageDetails','readerHelpDetails']){
+  assert.equal(query('#'+id).hidden,true);
+  const toggle=click('[aria-controls="'+id+'"]');
+  assert.equal(query('#'+id).hidden,false);assert.equal(toggle.className,query('#performanceToggle').className);
+  toggle.click();assert.equal(query('#'+id).hidden,true);
+}
+assert.equal(w.document.querySelectorAll('#packageList input[type="checkbox"]').length,2);
+click('#settingsClose');click('#hamburger');
+query('#q').value='sluzba';query('#q').dispatchEvent(new w.Event('input'));await settle();await settle();
+click('#settingsButton');assert.equal(query('#settingsTitle').textContent,'Ustawienia wyszukiwania');
+assert.equal(query('#searchSettings').hidden,false);
+assert.ok([...w.document.querySelectorAll('.settings-general')].every(n=>n.hidden));
+w.__POLICE_SEARCH_FILTERS.setEnabled('uop',false);await settle();
+assert.equal(query('#quickbar [data-act="uop"]').hidden,true);
+w.__POLICE_SEARCH_FILTERS.resetAll();await settle();
+assert.equal(query('#quickbar [data-act="uop"]').hidden,false);
+click('#settingsClose');w.__POLICE_SEARCH_CLEAR();await settle();
 
 // A saved article outside the initial stream must appear immediately.
 w.localStorage.setItem('police-law-bookmarks-v1',JSON.stringify([{id:'uop-art-315',act:'uop',num:'Art. 315',parts:['uop-art-315-ust-1']}]))
@@ -85,11 +118,24 @@ assert.equal(w.document.querySelectorAll('.reader-toc-article').length,6);
 [...w.document.querySelectorAll('.reader-toc-article')].at(-1).click();await settle();
 assert.equal(w.location.hash,'#uop-art-315');assert.equal(w.document.body.classList.contains('drawer-open'),false);
 
-click('.acts-more');assert.equal(w.document.querySelectorAll('.act-picker-item').length,2);click('.reader-dialog .reader-close');
+const pill=query('#quickbar [data-act="uop"]'),originalRect=pill.getBoundingClientRect;
+pill.getBoundingClientRect=()=>({left:370,right:450,width:80});
+query('#quickbar').dispatchEvent(new w.Event('scroll'));await settle();
+assert.equal(query('.acts-more').textContent,'+1');
+click('.acts-more');assert.equal(w.document.querySelectorAll('.act-picker-item').length,1);
+assert.equal(query('.act-picker .reader-dialog-head'),null);assert.equal(query('.act-picker .reader-close'),null);assert.equal(query('.act-picker small'),null);
+query('.act-picker').dispatchEvent(new w.MouseEvent('click',{clientX:500,clientY:200}));assert.equal(query('.act-picker'),null);
+click('.acts-more');click('.act-picker-item');assert.equal(query('.act-picker'),null);
+for(const [left,text,amount] of [[350,'+',1],[330,'+',.5],[310,'+',0],[370,'+1',1]]){
+  pill.getBoundingClientRect=()=>({left,right:left+80,width:80});query('#quickbar').dispatchEvent(new w.Event('scroll'));await settle();
+  assert.equal(query('.acts-more').textContent,text);assert.equal(Number(query('.acts-more').style.getPropertyValue('--cue-amount')),amount);
+  assert.equal(query('.acts-more').disabled,amount===0);
+}
+pill.getBoundingClientRect=originalRect;
 assert.equal(w.document.querySelectorAll('.unit-comment').length,0);
 w.__ARTICLE_COMMENTS={'uop-art-315':{title:'Test administracyjny',body:'<b>Tekst bez HTML</b>',updated:'2026-09-07'}};
 w.dispatchEvent(new w.CustomEvent('police-law-articles-rendered'));click('.unit-comment');assert.equal(query('.comment-body').textContent,'<b>Tekst bez HTML</b>');assert.equal(query('.comment-body b'),null);click('.reader-dialog .reader-close');
-assert.equal(w.__READER_CORE.hiddenPills([{left:-40,right:40,width:80},{left:40,right:120,width:80}],{left:0,right:81}),1,'exact half is hidden; more than half is visible');
+assert.equal(w.__READER_CORE.hiddenPills([{left:-40,right:40,width:80},{left:40,right:120,width:80}],{left:0,right:81}),0,'pills hidden on the left are never counted');
 // Both panels follow the pointer before release and roll back cancelled drags.
 const pointerEvent=(target,type,x,y=250)=>target.dispatchEvent(new w.MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:x,clientY:y}));
 let article=query('#uop-art-315');

@@ -65,5 +65,6 @@ saveEditor();assert.equal(exited,false);
 editorContext.save=()=>true;saveEditor();assert.equal(exited,true);
 
 assert.match(fs.readFileSync('index.html','utf8'),/id="packageList"/);
-assert.match(settings,/section\.id!=='lawPackages'/);
+assert.match(settings,/section\.dataset\.splitOnly==='true'&&!openedFromDrawer/);
+assert.deepEqual(pills.map(x=>x.hidden),[false,false,false]);
 console.log(JSON.stringify({status:'ok',scenarios:['Polish search and highlighting','all/partial/zero search scope','Escape keeps split view','nested import priority','Tab focus containment','disabled search pills and reset','storage failure preserves editor','package availability visible']},null,2));

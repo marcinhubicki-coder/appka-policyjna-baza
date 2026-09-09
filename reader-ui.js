@@ -2,6 +2,9 @@
 (function(){
   const core=globalThis.__READER_CORE,bar=document.getElementById('quickbar');
   if(!core||!bar)return;
+  // Focus remains functional; its visual cue is opt-in through keyboard use.
+  document.addEventListener('keydown',event=>{if(event.key==='Tab')document.documentElement.classList.add('keyboard-navigation')},true);
+  document.addEventListener('pointerdown',()=>document.documentElement.classList.remove('keyboard-navigation'),true);
   function migrationNotice(){
     const state=globalThis.__FAVORITES_MIGRATION,items=JSON.parse(localStorage.getItem('police-law-bookmarks-v1')||'[]');
     const count=Array.isArray(items)?items.filter(item=>item.needsFragmentReview).length:0;

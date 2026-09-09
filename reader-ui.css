@@ -6,6 +6,11 @@ body.drawer-open .quickbar-wrap,body.search-active .quickbar-wrap{display:flex}
 .acts-more::before{content:attr(data-max-count);visibility:hidden;grid-area:1/1}.acts-more>span{grid-area:1/1}
 .acts-more[aria-hidden="true"]{visibility:hidden;pointer-events:none}
 .quickbar button[hidden]{display:none!important}
+body.search-active .quickbar-wrap .quickbar button.search-has-hit{padding:4px 4px 4px 9px!important}
+:is(a,button,input,textarea,select,summary,dialog,[tabindex]){-webkit-tap-highlight-color:transparent}
+:focus{outline:none!important}
+.search-wrap input:focus{border-color:#c7d1da;box-shadow:none}
+@media(hover:hover) and (pointer:fine){html.keyboard-navigation :is(a,button,input,textarea,select,summary,[tabindex]):focus-visible{outline:1px solid #8aa6bd!important;outline-offset:2px}}
 .reader-dialog{box-sizing:border-box;width:min(520px,calc(100vw - 28px));max-height:80dvh;padding:0;border:1px solid #d1dce5;border-radius:18px;color:#233c51;background:#fff;box-shadow:0 15px 60px #142b4540}
 .reader-dialog::backdrop{background:#172c4359}
 .reader-dialog-head{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;background:#fff;border-bottom:1px solid #e3ebf1;z-index:1}

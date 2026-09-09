@@ -20,7 +20,7 @@ Object.assign(w,{Response,Blob,DecompressionStream,TextDecoder,TextEncoder,inner
 w.matchMedia=()=>({matches:false,addEventListener(){}});
 w.ResizeObserver=class{observe(){}disconnect(){}};w.IntersectionObserver=class{observe(){}disconnect(){}};
 w.HTMLCanvasElement.prototype.getContext=()=>({measureText:t=>({width:t.length*6})});
-w.HTMLElement.prototype.scrollIntoView=function(){};w.scrollTo=()=>{};w.scrollBy=()=>{};
+w.HTMLElement.prototype.scrollIntoView=function(){};w.HTMLElement.prototype.scrollTo=function(){};w.scrollTo=()=>{};w.scrollBy=()=>{};
 w.HTMLElement.prototype.getBoundingClientRect=function(){const far=this.classList.contains('law-stream-sentinel');return{x:0,y:far?10000:120,left:0,right:390,top:far?10000:120,bottom:far?10010:700,width:390,height:580}};
 w.HTMLElement.prototype.getClientRects=function(){return this.closest('[hidden]')?[]:[this.getBoundingClientRect()]};
 w.document.elementFromPoint=()=>w.document.querySelector('.legal-unit');
@@ -33,6 +33,11 @@ const click=selector=>{const el=w.document.querySelector(selector);assert.ok(el,
 const query=selector=>w.document.querySelector(selector);
 assert.equal(errors.length,0,errors.map(e=>e.message).join('\n'));
 assert.equal(query('#clear').hidden,true);
+assert.equal(w.document.documentElement.classList.contains('keyboard-navigation'),false);
+w.document.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Tab',bubbles:true}));
+assert.equal(w.document.documentElement.classList.contains('keyboard-navigation'),true);
+w.document.body.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true}));
+assert.equal(w.document.documentElement.classList.contains('keyboard-navigation'),false);
 assert.equal(w.__POLICE_PACKAGES.list().find(a=>a.code==='alk').enabled,false);
 assert.equal(w.eval('searchIndex.length'),6);
 assert.equal(w.__POLICE_PACKAGES.setEnabled('alk',true),true);assert.equal(w.eval('searchIndex.length'),7);
@@ -69,7 +74,21 @@ w.__POLICE_SEARCH_FILTERS.setEnabled('uop',false);await settle();
 assert.equal(query('#quickbar [data-act="uop"]').hidden,true);
 w.__POLICE_SEARCH_FILTERS.resetAll();await settle();
 assert.equal(query('#quickbar [data-act="uop"]').hidden,false);
-click('#settingsClose');w.__POLICE_SEARCH_CLEAR();await settle();
+click('#settingsClose');
+const searchPill=query('#quickbar [data-act="uop"]'),searchPillRect=searchPill.getBoundingClientRect;
+assert.equal(searchPill.dataset.hitCount,'6');assert.equal(searchPill.classList.contains('search-has-hit'),true);
+assert.match(searchPill.getAttribute('aria-label'),/6 wyników/);
+searchPill.getBoundingClientRect=()=>({left:370,right:470,width:100});
+query('#quickbar').dispatchEvent(new w.Event('scroll'));await settle();
+assert.equal(query('.acts-more').textContent,'+1','overflow counts acts, not search hits');
+click('.acts-more');click('.act-picker-item');
+assert.equal(query('.act-picker'),null);assert.equal(w.document.body.classList.contains('search-active'),true);
+assert.equal(w.document.documentElement.classList.contains('keyboard-navigation'),false,'programmatic modal focus does not enable a ring');
+searchPill.getBoundingClientRect=()=>({left:290,right:390,width:100});
+query('#quickbar').dispatchEvent(new w.Event('scroll'));await settle();assert.equal(query('.acts-more').disabled,true);
+searchPill.getBoundingClientRect=searchPillRect;
+w.__POLICE_SEARCH_CLEAR();await settle();
+assert.equal(searchPill.dataset.hitCount,undefined);assert.equal(searchPill.classList.contains('search-has-hit'),false);
 
 // A saved article outside the initial stream must appear immediately.
 w.localStorage.setItem('police-law-bookmarks-v1',JSON.stringify([{id:'uop-art-315',act:'uop',num:'Art. 315',parts:['uop-art-315-ust-1']}]))

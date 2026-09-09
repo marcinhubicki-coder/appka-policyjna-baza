@@ -64,7 +64,7 @@ body.search-filters-active .settings-button{background:var(--target);border-colo
 body.search-active .quickbar{display:flex!important}
 body.search-active .quickbar button{display:inline-flex;align-items:center;gap:5px}
 body.search-active .quickbar button.search-has-hit{background:#eaf3fb;border-color:#78a7cf;color:#174f7d;opacity:1}
-body.search-active .quickbar button.search-has-hit::after{content:attr(data-hit-count);display:grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#2e78b5;color:#fff;font-size:8.5px;line-height:1}
+body.search-active .quickbar button.search-has-hit::after{content:attr(data-hit-count);display:grid;place-items:center;box-sizing:border-box;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#2e78b5;color:#fff;font-size:8.5px;line-height:1}
 body.search-active .quickbar button.search-no-hit{background:#f7f9fb;border-color:#dce3e9;color:#8996a3;opacity:.55}
 body.search-active .quickbar button.search-excluded{background:#f3f4f5;border-color:#d7dce0;color:#98a1aa;opacity:.48;text-decoration:line-through}
 main{max-width:1100px;margin:auto;padding:14px 10px 80px;min-width:0}

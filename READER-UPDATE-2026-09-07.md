@@ -10,6 +10,8 @@ Wyłączone ustawy są ukryte. Licznik liczy wyłącznie prawą stronę, przecho
 
 20 zestawów testów przechodzi po korekcie, w tym rzeczywiste moduły trzech stanów ustawień, wyłączenia, uproszczony wybór i progi licznika. Geometria jest symulowana; wygląd i animacja na telefonie pozostają do odbioru na podglądzie Vercela wymagającym logowania.
 
+Dalsze doprecyzowanie: przywrócono liczbę trafień wewnątrz pastylek wyszukiwania z odstępem 4 px od prawej i dolnej krawędzi. +N nadal wskazuje ukryte ustawy. Wizualny fokus jest wyłączony na dotyku; na urządzeniu z precyzyjnym wskaźnikiem i hover delikatny obrys pojawia się dopiero po użyciu Tab, znika po kliknięciu. Logiczny fokus i powrót do przycisku pozostają sprawne.
+
 ## Zmiany
 
 - Usunięto powtarzalne przepisywanie spisu treści i obserwatory, które wykonywały pracę po edycji ulubionych. Zachowano pamięć gotowego menu i DOM edytowanego artykułu.

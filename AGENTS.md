@@ -14,3 +14,5 @@ Pastylki: krótkie nazwy, maksymalnie długość „Cudzoziem”; wyłączone po
 W lewym panelu dwukolumnowym zachowuj produkcyjną typografię, rozdziały rzymskie i brak kursywy. Dane o imporcie mają być w rozwijance „Pokaż dane szczegółowe”, z fontami odpowiednimi do bieżącego widoku.
 
 Runda z 9 września nie obejmuje zmian mechaniki gestu ani wysuwanego spisu z lewej — użytkownik zapowiedział osobne uwagi.
+
+Doprecyzowanie: w aktywnym wyszukiwaniu pastylki ustaw zawierają liczbę trafień. Odstęp wewnętrznego licznika od prawej i dolnej krawędzi jest równy; +N nadal liczy ukryte ustawy, a nie trafienia, i działa jak w dwóch kolumnach. Bez wizualnych oznaczeń fokusu na telefonie. Na pozostałych urządzeniach delikatny obrys tylko po rozpoczęciu nawigacji klawiszem Tab; domyślnie oraz po kliknięciu/dotyku niewidoczny. Zachowuj logiczny fokus i obsługę klawiatury.

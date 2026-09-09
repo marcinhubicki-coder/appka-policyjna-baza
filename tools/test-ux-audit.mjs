@@ -50,7 +50,9 @@ const pills=[node(),node(),node()];pills.forEach((p,i)=>p.dataset.act=['uop','kw
 const pillContext={packages:{isEnabled:()=>true},quickbar:{querySelectorAll:()=>pills},META:{},searchExcluded:new Set(['kw']),searchResultWord:()=> 'wyniki'};
 const paint=vm.runInNewContext(`${lineFunction(app,'paintSearchPills')};paintSearchPills`,pillContext);
 paint(true,new Map([['uop',3]]));assert.deepEqual(pills.map(x=>x.disabled),[false,true,true]);
+assert.equal(pills[0].dataset.hitCount,'3');assert.equal(pills[0].classList.contains('search-has-hit'),true);
 paint(false,new Map());assert.deepEqual(pills.map(x=>x.disabled),[false,false,false]);
+assert.equal(pills[0].dataset.hitCount,undefined);assert.equal(pills[0].classList.contains('search-has-hit'),false);
 
 let errors=0,events=0,writes=0;
 const saveContext={KEY:'test',localStorage:{setItem(){throw Error('QuotaExceededError')}},showSaveError(){errors++},window:{dispatchEvent(){events++}},document:{getElementById(){return null}},CustomEvent:class{}};

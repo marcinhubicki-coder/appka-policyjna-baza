@@ -1,12 +1,14 @@
 /* Persistent favorites context and a measured stack of dismissible returns. */
 (function(){
   const banner=document.createElement('div');banner.className='reader-favorites-context';banner.setAttribute('aria-label','Widok ulubionych');
-  const label=document.createElement('b'),law=document.createElement('span');label.textContent='Ulubione';banner.append(label,law);document.body.append(banner);
+  const label=document.createElement('b'),law=document.createElement('span'),lawNav=document.createElement('div'),prev=document.createElement('button'),next=document.createElement('button');label.textContent='Ulubione';lawNav.className='reader-favorites-law-nav';prev.textContent='‹';next.textContent='›';prev.setAttribute('aria-label','Poprzednia ustawa');next.setAttribute('aria-label','Następna ustawa');lawNav.append(law,prev,next);banner.append(label,lawNav);document.body.append(banner);
+  for(const [button,step] of [[prev,-1],[next,1]])button.onclick=()=>{const codes=globalThis.__FAVORITES_NAV?.laws()||[],code=globalThis.__READER_STATE?.activeArticle()?.dataset.sourceAct;const target=codes[codes.indexOf(code)+step];if(target)globalThis.__FAVORITES_NAV.gotoLaw(target)};
   let queued=false;
   function context(){
     if(!document.body.matches('.favorites-filter-on:not(.drawer-open):not(.search-active):not(.favorite-editing)'))return;
     const article=globalThis.__READER_STATE?.activeArticle(),code=article?.dataset.sourceAct||ACT?.[0],name=!article&&document.body.classList.contains('favorites-all-acts')?'Wszystkie ustawy':META[code]?.[1]||ACT?.[1]||'';
     if(law.textContent!==name)law.textContent=name;
+    const codes=globalThis.__FAVORITES_NAV?.laws()||[],index=codes.indexOf(code);prev.hidden=next.hidden=!document.body.classList.contains('favorites-all-acts');prev.disabled=index<=0;next.disabled=index<0||index>=codes.length-1;
   }
   function stack(){
     queued=false;context();const split=document.body.classList.contains('drawer-open'),pager=document.querySelector('.article-pager');let bottom=split?8:10;
@@ -34,6 +36,7 @@
     bar.addEventListener('keydown',event=>{if(event.key==='Escape'&&!globalThis.__READER_STATE?.frozen){event.preventDefault();dismiss()}});
   }
   window.addEventListener('police-law-active-article',context);
+  window.addEventListener('police-law-favorites-visibility',queue);
   for(const event of ['police-law-rendered','police-law-favorites-change','police-law-navigation-settled','resize','police-law-drawer-ready'])window.addEventListener(event,queue);
   window.addEventListener('police-law-drawer-ready',()=>{const pager=document.querySelector('.article-pager');if(pager)sizes.observe(pager)});
   queue();

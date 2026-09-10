@@ -51,11 +51,12 @@ const fixedLabel=query('.drawer > .favorites-label');assert.ok(fixedLabel);asser
 const eye=query('.favorites-highlight');eye.dispatchEvent(new w.MouseEvent('contextmenu',{bubbles:true,cancelable:true}));
 assert.equal(w.__READER_STATE.frozen,true);assert.equal(query('.drawer').inert,true);
 const decoration=query('[data-display-option="highlights"]'),night=query('[data-display-option="dark"]');
-assert.equal(decoration.checked,true);assert.equal(night.checked,false);
-decoration.checked=false;decoration.dispatchEvent(new w.Event('change'));night.checked=true;night.dispatchEvent(new w.Event('change'));
+assert.equal(decoration.getAttribute('aria-checked'),'true');assert.equal(night.getAttribute('aria-checked'),'false');
+assert.ok(decoration.matches('.favorites-scope-toggle'));assert.ok(query('.reader-display-options.favorites-scope-popover'));
+decoration.click();night.click();
 assert.equal(w.document.documentElement.classList.contains('reader-highlights-off'),true);assert.equal(w.document.documentElement.dataset.readerTheme,'dark');assert.equal(w.localStorage.getItem('reader-dark'),'on');
 w.dispatchEvent(new w.Event('scroll'));assert.ok(query('.reader-display-options'),'scroll does not move or close an open long-press menu');
-night.checked=false;night.dispatchEvent(new w.Event('change'));decoration.checked=true;decoration.dispatchEvent(new w.Event('change'));click('.reader-popover-shade');
+night.click();decoration.click();click('.reader-popover-shade');
 assert.equal(w.__READER_STATE.frozen,false);assert.equal(query('.reader-display-options'),null);
 w.eval("renderAct('uop', 'uop-art-2', false)");await settle();assert.equal(query('.drawer > .favorites-label'),fixedLabel);click('#hamburger');await settle();
 
@@ -238,7 +239,7 @@ assert.equal(query('.reader-toc').classList.contains('is-open'),false);assert.eq
 w.__READER_TOC_OPEN();assert.equal(query('.reader-toc').classList.contains('is-open'),false);
 click('#settingsButton');assert.equal(query('#searchReturn').inert,true);click('#settingsClose');
 assert.equal(w.__READER_STATE.frozen,true);assert.equal(query('main').inert,true);assert.equal(query('.top').inert,false);
-w.__POLICE_SEARCH_CLEAR();assert.equal(w.__READER_STATE.frozen,false);assert.equal(query('main').inert,false);
+click('.reader-search-shade');assert.equal(q.value,'');assert.equal(w.__READER_STATE.frozen,false);assert.equal(query('main').inert,false);
 // Return bars form a stack above the pager and can be dismissed without navigating.
 query('#return').classList.add('show');query('#searchReturn').classList.add('show');await settle();
 const rb=query('#return'),sb=query('#searchReturn');assert.ok(parseFloat(rb.style.getPropertyValue('--return-bottom'))>parseFloat(sb.style.getPropertyValue('--return-bottom')));
@@ -251,5 +252,27 @@ click('#settingsButton');const input=query('#favoritesImportFile'),file={name:'m
 Object.defineProperty(input,'files',{value:[file],configurable:true});input.dispatchEvent(new w.Event('change'));await settle();click('[data-import-mode="merge"]');
 assert.match(query('.favorites-import-source').textContent,/moje-ulubione\.json · Wczytano /);
 const imported=JSON.parse(w.localStorage.getItem('police-law-bookmarks-v1-last-import'));assert.equal(imported.file,file.name);assert.ok(Number.isFinite(Date.parse(imported.at)));click('#settingsClose');
+// All-law favorites share one visible scope with both pagers and the left list.
+w.localStorage.setItem('police-law-bookmarks-v1',JSON.stringify([{id:'uop-art-1',act:'uop'},{id:'uop-art-315',act:'uop'},{id:'alk-art-1',act:'alk'}]));
+w.dispatchEvent(new w.CustomEvent('police-law-favorites-change'));w.__FAVORITES_OPEN_ALL('uop','uop-art-1');await settle();await settle();await settle();
+assert.deepEqual(Array.from(w.__FAVORITES_NAV.rows(),r=>r[0]),['uop-art-1','uop-art-315','alk-art-1']);
+w.__POLICE_DRAWER_OPEN();await settle();await settle();await settle();
+click('.favorites-all-law[data-act="uop"] .favorites-all-law-title');await settle();await settle();await settle();
+assert.equal(query('.favorites-all-act[data-favorite-act="uop"]').hidden,true);
+assert.deepEqual(Array.from(w.__FAVORITES_NAV.rows(),r=>r[0]),['alk-art-1']);
+w.__READER_FOLLOW.follow('uop-art-1');assert.ok(query('.favorites-all-law[data-act="uop"]').classList.contains('is-collapsed'));
+click('.favorites-all-law[data-act="uop"] .favorites-all-law-title');await settle();await settle();await settle();
+assert.equal(query('.favorites-all-act[data-favorite-act="uop"]').hidden,false);
+w.__POLICE_DRAWER_CLOSE();await settle();await settle();await settle();
+const realActive=w.__READER_STATE.activeArticle,realScroll=w.__POLICE_SCROLL_ARTICLE;let navigated='';
+w.__READER_STATE.activeArticle=()=>query('#uop-art-1');w.__POLICE_SCROLL_ARTICLE=id=>{navigated=id};
+w.dispatchEvent(new w.CustomEvent('police-law-navigation-settled'));await settle();
+assert.equal(query('.reader-favorites-law-nav button').disabled,true);
+click('.article-pager .next');assert.equal(navigated,'uop-art-315','article pager skips unsaved articles');
+click('.reader-favorites-law-nav button:last-child');assert.equal(navigated,'alk-art-1','law pager crosses law boundaries');
+w.__READER_STATE.activeArticle=()=>query('#alk-art-1');w.dispatchEvent(new w.CustomEvent('police-law-navigation-settled'));await settle();
+assert.equal(query('.reader-favorites-law-nav button:last-child').disabled,true);assert.equal(query('.article-pager .next').disabled,true);
+w.__READER_STATE.activeArticle=realActive;w.__POLICE_SCROLL_ARTICLE=realScroll;
+const appearance=fs.readFileSync('reader-display.css','utf8');assert.match(appearance,/search-favorites-only \.act-pill-count/);assert.doesNotMatch(appearance,/search-favorites-only #results/);
 assert.equal(errors.length,0,errors.map(e=>e.message).join('\n'));dom.window.close();
 console.log('Reader runtime: packages, distant favorites, cached menu, search scope, TOC, picker and comments passed.');

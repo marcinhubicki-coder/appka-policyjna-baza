@@ -21,6 +21,8 @@ const centered=40*24-(650-24)/2;assert.ok(Math.abs(scroller.scrollTop-centered)<
 scroller.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true}));scroller.scrollTop=100;active();pump();assert.equal(scroller.scrollTop,100,'manual list reading takes control');
 scroller.dispatchEvent(new w.MouseEvent('pointerup',{bubbles:true}));active();pump();assert.equal(scroller.scrollTop,100,'releasing the list does not pull it back');
 y=10;w.dispatchEvent(new w.Event('scroll'));active();pump();assert.ok(Math.abs(scroller.scrollTop-centered)<1,'right reader movement resumes following even for the same article');
-rectangles.set(40,[70,110]);rectangles.set(41,[180,620]);assert.equal(active(),'art-41');pump();assert.ok(Math.abs(scroller.scrollTop-(41*24-(650-24)/2))<1);
+rectangles.set(39,[-10,30]);rectangles.set(40,[70,110]);rectangles.set(41,[180,620]);assert.equal(active(),'art-41');pump();assert.ok(Math.abs(scroller.scrollTop-(41*24-(650-24)/2))<1);
+rectangles.set(39,[90,50]);rectangles.set(40,[140,80]);rectangles.set(41,[220,900]);assert.equal(active(),'art-40','only the immediate next article may replace the top tail');pump();
+rectangles.set(39,[105,50]);assert.equal(active(),'art-39','a complete short article at the top remains active');pump();
 w.__READER_STATE.lock('popover',true);const frozen=scroller.scrollTop;w.__READER_FOLLOW.follow('art-39');pump();assert.equal(scroller.scrollTop,frozen,'long press freezes automatic list movement');w.__READER_STATE.lock('popover',false);
 console.log('Reader following: dominant area, centered list, manual takeover, resumed following and popup freeze passed.');dom.window.close();

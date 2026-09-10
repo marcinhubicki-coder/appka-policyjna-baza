@@ -6,7 +6,7 @@
     activeId=id||activeId;
     if(manual||touching||!document.body.classList.contains('drawer-open')||globalThis.__READER_STATE?.frozen||globalThis.__READER_STATE?.busy)return;
     const list=document.getElementById('drawerArticles'),link=list?.querySelector('[data-id="'+CSS.escape(activeId)+'"]'),scroller=document.querySelector('.drawer-scroll');
-    if(!link||!scroller)return;
+    if(!link||!scroller||link.closest('.favorites-all-law.is-collapsed'))return;
     for(let ancestor=link.parentElement;ancestor&&ancestor!==list;ancestor=ancestor.parentElement){if(ancestor.matches('details'))ancestor.open=true;if(ancestor.hidden)ancestor.hidden=false;if(ancestor.classList.contains('favorites-all-law')){ancestor.classList.remove('is-collapsed');ancestor.querySelector('button')?.setAttribute('aria-expanded','true')}}
     if(targetId===activeId&&frame)return;stop();targetId=activeId;
     let from=scroller.scrollTop;const bounds=scroller.getBoundingClientRect(),r=link.getBoundingClientRect(),target=Math.max(0,Math.min(scroller.scrollHeight-scroller.clientHeight,from+r.top-bounds.top-(bounds.height-r.height)/2));
@@ -14,7 +14,7 @@
     if(matchMedia('(prefers-reduced-motion: reduce)').matches){scroller.scrollTop=target;return}
     if(Math.abs(target-from)>scroller.clientHeight*1.5){from=target-Math.sign(target-from)*80;scroller.scrollTop=from}
     const began=performance.now();
-    function tick(now){if(manual||touching||globalThis.__READER_STATE?.frozen||globalThis.__READER_STATE?.busy){frame=0;return}const t=Math.min(1,(now-began)/240);scroller.scrollTop=from+(target-from)*(1-Math.pow(1-t,3));frame=t<1?requestAnimationFrame(tick):0}
+    function tick(now){if(manual||touching||globalThis.__READER_STATE?.frozen||globalThis.__READER_STATE?.busy){frame=0;return}const t=Math.min(1,(now-began)/360),ease=1-Math.pow(1-t,4)*(1+4*t);scroller.scrollTop=from+(target-from)*ease;frame=t<1?requestAnimationFrame(tick):0}
     frame=requestAnimationFrame(tick);
   }
   function resume(){manual=false;follow(globalThis.__READER_STATE?.activeArticle()?.id||activeId)}

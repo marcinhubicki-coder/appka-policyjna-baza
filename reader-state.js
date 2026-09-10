@@ -11,16 +11,17 @@
   function activeArticle(){
     const view=document.getElementById('actview');if(!view)return null;
     const box=view.getBoundingClientRect(),left=Math.max(0,box.left),right=Math.min(innerWidth,box.right),ceiling=top();
-    const floor=innerHeight,occluders=[];let best=null,area=0,distance=Infinity;
+    const floor=innerHeight,occluders=[],visibleArticles=[];
     for(const bar of document.querySelectorAll('.article-pager,#return.show,#searchReturn.show')){if(getComputedStyle(bar).display==='none'||bar.matches('.article-pager')&&body.classList.contains('drawer-open'))continue;const r=(bar.querySelector('button')||bar).getBoundingClientRect();if(r.height>0)occluders.push(r)}
     for(const article of view.querySelectorAll('article.legal-unit')){
       if(article.closest('[hidden]'))continue;const r=article.getBoundingClientRect(),l=Math.max(left,r.left),rr=Math.min(right,r.right),t=Math.max(ceiling,r.top),b=Math.min(floor,r.bottom);
       let visible=Math.max(0,b-t)*Math.max(0,rr-l);
       for(const cover of occluders)visible-=Math.max(0,Math.min(b,cover.bottom)-Math.max(t,cover.top))*Math.max(0,Math.min(rr,cover.right)-Math.max(l,cover.left));
-      const centerDistance=Math.abs((t+b)/2-(ceiling+floor)/2);
-      if(visible>area||(visible>0&&Math.abs(visible-area)<1&&centerDistance<distance)){area=visible;distance=centerDistance;best=article}
+      if(visible>0)visibleArticles.push({article,top:r.top,height:visible/Math.max(1,rr-l)});
+      if(visibleArticles.length===2)break;
     }
-    return best;
+    const [first,next]=visibleArticles;
+    return first?(first.top<ceiling&&next&&next.height>first.height?next.article:first.article):null;
   }
   function capture(){
     const article=activeArticle();if(!article)return null;
@@ -38,12 +39,12 @@
     const r=node.getBoundingClientRect(),caret=anchor.range?.startContainer?.isConnected?anchor.range.getBoundingClientRect?.():null;
     instant(window.scrollY+(caret?.height?caret.top-anchor.point:r.top+r.height*anchor.ratio-(top()+innerHeight)/2));
   }
-  function layout(change){
+  function layout(change,{articleTop=false}={}){
     const anchor=capture(),token=cancel();busy=true;body.classList.add('reader-layout-changing');change();
-    frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);complete()})});
+    frame=requestAnimationFrame(()=>{if(token!==generation)return;if(articleTop&&anchor){toElement(document.getElementById(anchor.articleId),{alignTop:true});return}restore(anchor);frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);complete()})});
   }
   function toElement(element,{alignTop=false,animate=true}={}){
-    const token=cancel();if(!element)return;busy=true;
+    const changing=body.classList.contains('reader-layout-changing'),token=cancel();if(!element)return;busy=true;if(changing)body.classList.add('reader-layout-changing');
     frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(()=>{
       if(token!==generation||locks.size||!element.isConnected){if(token===generation)complete();return}
       const r=element.getBoundingClientRect(),offset=alignTop?top()+8:top()+Math.max(0,(innerHeight-top()-r.height)/2);
@@ -76,6 +77,7 @@
     syncInert();
   }
   const shade=document.createElement('div');shade.className='reader-search-shade';shade.setAttribute('aria-hidden','true');body.append(shade);
+  shade.onclick=()=>{if(body.classList.contains('search-active'))globalThis.__POLICE_SEARCH_CLEAR?.()};
   globalThis.__READER_STATE={cancel,capture,restore,layout,toElement,lock,instant,activeArticle,remember,recall:code=>places.get(code),restorePlace,get busy(){return busy},get frozen(){return locks.size>0},get generation(){return generation}};
   for(const type of ['wheel','touchstart','pointerdown'])document.addEventListener(type,()=>{if(busy)cancel()},{passive:true,capture:true});
   document.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].includes(e.key)&&busy)cancel()},true);

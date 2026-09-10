@@ -122,9 +122,21 @@
   function observeAllDrawer(list){if(drawerResizeObserver||typeof ResizeObserver==='undefined')return;drawerResizeObserver=new ResizeObserver(()=>{if(allActs)requestAnimationFrame(fitAllLawTitles)});drawerResizeObserver.observe(list)}
   function syncAllVisibleLaws(){const visible=new Set([...view.querySelectorAll('.favorites-all-act:not([hidden])')].map(section=>section.dataset.favoriteAct));document.querySelectorAll('.quickbar button').forEach(button=>button.classList.toggle('favorites-all-visible',visible.has(button.dataset.act)))}
   function applyAllActVisibility(code,collapsed){
-    // Collapsing a law changes the navigation list only.
+    const anchor=globalThis.__READER_STATE?.capture(),right=[...view.querySelectorAll('.favorites-all-act')].find(node=>node.dataset.favoriteAct===code);
+    if(right){right.hidden=collapsed;right.classList.toggle('is-filtered-out',collapsed)}
     const section=[...document.querySelectorAll('#drawerArticles .favorites-all-law')].find(node=>node.dataset.act===code),items=section?.querySelector('.favorites-all-law-items'),title=section?.querySelector('.favorites-all-law-title');section?.classList.toggle('is-collapsed',collapsed);if(items)items.hidden=collapsed;if(title)title.setAttribute('aria-expanded',String(!collapsed));syncAllVisibleLaws();
+    const current=anchor&&document.getElementById(anchor.articleId);
+    if(current&&!current.closest('[hidden]'))globalThis.__READER_STATE?.restorePlace(anchor);
+    else{const target=view.querySelector('.favorites-all-act:not([hidden]) article');if(target){setAllActive(target.id);globalThis.__READER_STATE?.toElement(target,{alignTop:true})}else setAllActive('')}
+    window.dispatchEvent(new CustomEvent('police-law-favorites-visibility'));
   }
+  function navigationGroups(){return groupedFavorites(read()).filter(group=>allActs?!collapsedActs.has(group.act[0]):group.act[0]===ACT?.[0])}
+  globalThis.__FAVORITES_NAV={
+    rows:()=>filter?navigationGroups().flatMap(group=>group.rows):null,
+    laws:()=>filter&&allActs?navigationGroups().map(group=>group.act[0]):[],
+    gotoArticle(id){if(!filter||!navigationGroups().some(group=>group.rows.some(row=>row[0]===id)))return false;if(allActs)setAllActive(id);if(document.getElementById(id))globalThis.__POLICE_SCROLL_ARTICLE?.(id,false);else globalThis.__POLICE_GOTO_ID?.(id,{alignTop:true});return true},
+    gotoLaw(code){const row=navigationGroups().find(group=>group.act[0]===code)?.rows[0];if(row)this.gotoArticle(row[0])}
+  };
   function setAllActive(id){
     if(!allActs)return;allActiveId=id||'';
     document.querySelectorAll('#drawerArticles .drawer-article').forEach(link=>link.classList.toggle('active',link.dataset.id===id));
@@ -142,7 +154,7 @@
     const signature=allViewCycle+'|'+items.map(item=>item.id).sort().join('|');if(signature===allSignature&&view.classList.contains('favorites-all-view'))return;
     globalThis.__POLICE_STREAM_STOP?.();
     allSignature=signature;let html='<div class="favorites-all-heading"><b>Ulubione</b><span>Wszystkie ustawy</span></div>';
-    for(const {act,rows} of groups){const meta=metaFor(act),collapsed=false;html+='<section class="favorites-all-act'+(collapsed?' is-filtered-out':'')+'" data-favorite-act="'+esc(act[0])+'"'+(collapsed?' hidden':'')+'><h2>'+esc(meta[1]||act[1]||act[0])+'</h2>';for(const row of rows)html+=globalThis.__renderLegalArticle(row,act[0]);html+='</section>'}
+    for(const {act,rows} of groups){const meta=metaFor(act),collapsed=collapsedActs.has(act[0]);html+='<section class="favorites-all-act'+(collapsed?' is-filtered-out':'')+'" data-favorite-act="'+esc(act[0])+'"'+(collapsed?' hidden':'')+'><h2>'+esc(meta[1]||act[1]||act[0])+'</h2>';for(const row of rows)html+=globalThis.__renderLegalArticle(row,act[0]);html+='</section>'}
     view.innerHTML=html;view.classList.add('favorites-all-view');for(const {act,rows} of groups)for(const row of rows){const article=document.getElementById(row[0]);if(article)formatSectionHeading(article,row,act[0])}if(typeof bindLinks==='function')bindLinks();
   }
   function renderAllDrawer(groups){

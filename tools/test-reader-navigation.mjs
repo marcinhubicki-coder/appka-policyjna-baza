@@ -49,10 +49,12 @@ w.scrollTo({top:0});pump();assert.equal(ids()[0],1);assert.ok(ids().length<35);
 // A new destination supersedes every queued frame from the previous click.
 w.__POLICE_GOTO_ID('uop-art-478');w.__POLICE_GOTO_ID('uop-art-12');pump();
 assert.equal(w.location.hash,'#uop-art-12');assert.ok(Math.abs(w.document.getElementById('uop-art-12').getBoundingClientRect().top-108)<1);
-// Changing columns preserves the same subunit point in the viewport center.
+// Width-only layout preserves the same subunit point in the viewport center.
 const anchor=w.__READER_STATE.capture();assert.ok(anchor?.id);
 w.__READER_STATE.layout(()=>w.document.body.classList.add('drawer-open'));pump();
-const after=w.__READER_STATE.capture();assert.equal(after.id,anchor.id);const anchored=w.document.getElementById(anchor.id).getBoundingClientRect();assert.ok(Math.abs(anchored.top+anchored.height*anchor.ratio-450)<1);
+const anchored=w.document.getElementById(anchor.id).getBoundingClientRect();assert.ok(Math.abs(anchored.top+anchored.height*anchor.ratio-450)<1);
+// Column count changes top-align the active article in either direction.
+for(const split of [false,true]){const id=w.__READER_STATE.activeArticle().id;w.__READER_STATE.layout(()=>w.document.body.classList.toggle('drawer-open',split),{articleTop:true});pump();assert.ok(Math.abs(w.document.getElementById(id).getBoundingClientRect().top-108)<1);assert.equal(w.__READER_STATE.activeArticle().id,id)}
 // Nested overlays hold one position; unlock is synchronous and cannot race a link.
 const lockedAt=y;w.__READER_STATE.lock('search',true);w.__READER_STATE.lock('settings',true);
 assert.equal(w.document.querySelector('main').inert,true);assert.equal(w.document.querySelector('.top').inert,true);

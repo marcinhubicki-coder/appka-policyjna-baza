@@ -3,7 +3,7 @@
     const h=document.querySelector('.top');
     if(!h)return;
     const px=Math.ceil(h.getBoundingClientRect().height||h.offsetHeight||0);
-    if(px>0)document.documentElement.style.setProperty('--topH',px+'px');
+    if(px>0&&document.documentElement.style.getPropertyValue('--topH')!==px+'px')document.documentElement.style.setProperty('--topH',px+'px');
   }
   const header=document.querySelector('.top');
   if(header){syncHeaderHeight();try{new ResizeObserver(syncHeaderHeight).observe(header)}catch(_){}}

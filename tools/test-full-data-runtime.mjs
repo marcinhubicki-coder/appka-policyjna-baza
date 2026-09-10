@@ -35,5 +35,6 @@ assert.equal(w.document.querySelectorAll('.drawer-article').length,1018);
 w.__POLICE_DRAWER_CLOSE();w.__POLICE_DRAWER_OPEN();assert.equal(w.document.querySelector('.drawer').dataset.renderCount,builds);
 w.__POLICE_DRAWER_CLOSE();w.__READER_TOC_OPEN();
 assert.ok(w.document.querySelectorAll('.reader-toc-group').length>20);assert.equal(w.document.querySelectorAll('.reader-toc-article').length,0);
+await settle(); // Let queued layout observers finish before disposing the test window.
 assert.equal(errors.length,0,errors.map(e=>e.message).join('\n'));dom.window.close();
 console.log('Full-data runtime: all 14 acts loaded; legacy URL, distant targets, PDF sources, bounded DOM and cached KPK menu passed.');

@@ -51,6 +51,7 @@ const fixedLabel=query('.drawer > .favorites-label');assert.ok(fixedLabel);asser
 const eye=query('.favorites-highlight');eye.dispatchEvent(new w.MouseEvent('contextmenu',{bubbles:true,cancelable:true}));
 assert.equal(w.__READER_STATE.frozen,true);assert.equal(query('.drawer').inert,true);
 const decoration=query('[data-display-option="highlights"]'),night=query('[data-display-option="dark"]');
+const favoritesAppearance=query('[data-display-option="favorites"]');assert.equal(favoritesAppearance.getAttribute('aria-checked'),'true');favoritesAppearance.click();assert.equal(w.__FAVORITES_HIGHLIGHT.get(),false);assert.equal(decoration.getAttribute('aria-checked'),'true');favoritesAppearance.click();
 assert.equal(decoration.getAttribute('aria-checked'),'true');assert.equal(night.getAttribute('aria-checked'),'false');
 assert.ok(decoration.matches('.favorites-scope-toggle'));assert.ok(query('.reader-display-options.favorites-scope-popover'));
 decoration.click();night.click();
@@ -183,7 +184,13 @@ for(const [left,text,amount] of [[366,'+',1],[338,'+',.5],[310,'+',0],[367,'+1',
 pill.getBoundingClientRect=originalRect;
 // Reclaim the counter gutter only after release; reverse movement restores it.
 const quickbar=query('#quickbar');Object.defineProperty(quickbar,'clientWidth',{value:390,configurable:true});
-Object.defineProperty(quickbar,'scrollWidth',{value:1000,configurable:true});quickbar.scrollLeft=610;
+Object.defineProperty(quickbar,'scrollWidth',{value:1000,configurable:true});quickbar.scrollLeft=500;
+pill.getBoundingClientRect=()=>({left:335,right:415,width:80});
+quickbar.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,clientX:100,clientY:100}));quickbar.dispatchEvent(new w.Event('scroll'));await settle();
+assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),true,'a cue under 45% finishes automatically even during a slow gesture');
+quickbar.dispatchEvent(new w.MouseEvent('pointermove',{bubbles:true,clientX:120,clientY:100}));assert.equal(query('.quickbar-wrap').classList.contains('is-tail-resting'),false);
+quickbar.dispatchEvent(new w.MouseEvent('pointerup',{bubbles:true,clientX:120,clientY:100}));
+quickbar.scrollLeft=610;
 pill.getBoundingClientRect=()=>({left:310,right:390,width:80});
 quickbar.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,clientX:100,clientY:100}));
 const touchStart=new w.Event('touchstart',{bubbles:true});Object.defineProperty(touchStart,'touches',{value:[{clientX:100,clientY:100}]});quickbar.dispatchEvent(touchStart);
@@ -240,11 +247,12 @@ w.__READER_TOC_OPEN();assert.equal(query('.reader-toc').classList.contains('is-o
 click('#settingsButton');assert.equal(query('#searchReturn').inert,true);click('#settingsClose');
 assert.equal(w.__READER_STATE.frozen,true);assert.equal(query('main').inert,true);assert.equal(query('.top').inert,false);
 click('.reader-search-shade');assert.equal(q.value,'');assert.equal(w.__READER_STATE.frozen,false);assert.equal(query('main').inert,false);
-// Return bars form a stack above the pager and can be dismissed without navigating.
+// A short swipe only reveals Delete; the separate action removes a return.
 query('#return').classList.add('show');query('#searchReturn').classList.add('show');await settle();
 const rb=query('#return'),sb=query('#searchReturn');assert.ok(parseFloat(rb.style.getPropertyValue('--return-bottom'))>parseFloat(sb.style.getPropertyValue('--return-bottom')));
 const hashBefore=w.location.hash;
-rb.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,button:0,clientX:380,clientY:600}));rb.dispatchEvent(new w.MouseEvent('pointermove',{bubbles:true,cancelable:true,clientX:290,clientY:600}));rb.dispatchEvent(new w.MouseEvent('pointerup',{bubbles:true,clientX:290,clientY:600}));
+rb.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,button:0,clientX:380,clientY:600}));rb.dispatchEvent(new w.MouseEvent('pointermove',{bubbles:true,cancelable:true,clientX:356,clientY:600}));rb.dispatchEvent(new w.MouseEvent('pointerup',{bubbles:true,clientX:356,clientY:600}));
+assert.equal(rb.classList.contains('show'),true);assert.equal(rb.classList.contains('return-revealed'),true);click('#return .return-delete');
 assert.equal(rb.classList.contains('show'),false);assert.equal(sb.classList.contains('show'),true);assert.equal(w.location.hash,hashBefore);assert.ok(query('.article-pager'));
 w.__POLICE_DISMISS_RETURN('search');
 // Import reports the actual selected file and import time, including after reload.

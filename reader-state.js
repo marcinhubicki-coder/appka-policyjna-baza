@@ -33,7 +33,7 @@
     return{id:node.id,articleId:article.id,ratio:Math.max(0,Math.min(1,(y-rect.top)/Math.max(1,rect.height))),range,point:range?.getBoundingClientRect?.().top??y};
   }
   function remember(code){if(!code||locks.size||busy)return;const anchor=capture();if(anchor&&document.getElementById(anchor.articleId)?.dataset.sourceAct===code)places.set(code,{id:anchor.id,articleId:anchor.articleId,ratio:anchor.ratio})}
-  function restorePlace(anchor){const token=cancel();busy=true;frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);complete()})})}
+  function restorePlace(anchor){const token=cancel();busy=true;restore(anchor);frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);complete()})}
   function restore(anchor){
     const node=anchor&&document.getElementById(anchor.id);if(!node)return;
     const r=node.getBoundingClientRect(),caret=anchor.range?.startContainer?.isConnected?anchor.range.getBoundingClientRect?.():null;
@@ -41,12 +41,15 @@
   }
   function layout(change,{articleTop=false}={}){
     const anchor=capture(),token=cancel();busy=true;body.classList.add('reader-layout-changing');change();
-    frame=requestAnimationFrame(()=>{if(token!==generation)return;if(articleTop&&anchor){toElement(document.getElementById(anchor.articleId),{alignTop:true});return}restore(anchor);frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);complete()})});
+    if(articleTop&&anchor){toElement(document.getElementById(anchor.articleId),{alignTop:true});return}
+    restore(anchor);frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);complete()});
   }
   function toElement(element,{alignTop=false,animate=true}={}){
     const changing=body.classList.contains('reader-layout-changing'),token=cancel();if(!element)return;busy=true;if(changing)body.classList.add('reader-layout-changing');
-    frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(()=>{
       if(token!==generation||locks.size||!element.isConnected){if(token===generation)complete();return}
+      // Lay out and place the new content before its first paint, avoiding two
+      // frames at the previous law's scroll position.
+      const header=document.querySelector('.top');if(header){const height=Math.ceil(header.getBoundingClientRect().height)+'px';if(root.style.getPropertyValue('--topH')!==height)root.style.setProperty('--topH',height)}
       const r=element.getBoundingClientRect(),offset=alignTop?top()+8:top()+Math.max(0,(innerHeight-top()-r.height)/2);
       const max=Math.max(0,document.documentElement.scrollHeight-innerHeight),destination=Math.max(0,Math.min(max,scrollY+r.top-offset));
       const delta=destination-scrollY;
@@ -60,7 +63,6 @@
         if(t<1)frame=requestAnimationFrame(tick);else{instant(destination);complete()}
       }
       frame=requestAnimationFrame(tick);
-    })});
   }
   function syncInert(){
     const locked=locks.size>0,settings=locks.has('settings')||locks.has('popover');

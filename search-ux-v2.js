@@ -28,16 +28,22 @@
   function resultId(a){const href=a.getAttribute('href')||'';if(href.startsWith('#'))return href.slice(1);return a.dataset.target||''}
 
   function clearResultDecoration(a){a.querySelectorAll('mark.search-result-hit').forEach(m=>m.replaceWith(document.createTextNode(m.textContent||'')));a.querySelectorAll('.search-match-info').forEach(x=>x.remove())}
+  function visiblePreviewHit(mark){
+    if(!mark)return false;
+    const preview=mark.closest('small,b')||mark.parentElement,bounds=preview.getBoundingClientRect(),style=getComputedStyle(preview),clipped=preview.scrollHeight>preview.clientHeight+1;
+    const line=parseFloat(style.lineHeight)||16,ellipsis=parseFloat(style.fontSize)||12;
+    return [...mark.getClientRects()].some(r=>r.width>0&&r.height>0&&r.top>=bounds.top-1&&r.bottom<=bounds.bottom+1&&r.left>=bounds.left-1&&r.right<=bounds.right-(clipped&&r.bottom>bounds.bottom-line*.5?ellipsis:0)+1);
+  }
   function decorateResults(){const term=q.value.trim();for(const a of box.querySelectorAll('.search-item')){
-      if(a.dataset.searchUxTerm===term)continue;
+      if(a.dataset.searchUxTerm===term){const info=a.querySelector('.search-match-info'),mark=a.querySelector('.search-result-hit');if(info&&mark){const visible=visiblePreviewHit(mark);info.classList.toggle('far',!visible);const text=visible?'trafienie widoczne w podglądzie':'↳ trafienie poza podglądem · kliknij, aby skoczyć do frazy';if(info.textContent!==text)info.textContent=text}continue}
       clearResultDecoration(a);a.dataset.searchUxTerm=term;
       if(term.length<2)continue;
       const visibleHit=markFirst(a,term,'search-result-hit');
       const id=resultId(a),r=currentRow(id),full=rowText(r),hit=locate(full,term);
       if(!hit)continue;
       const info=document.createElement('small');info.className='search-match-info';
-      if(visibleHit){info.textContent='trafienie widoczne w podglądzie';}
-      else{const ratio=full.length?hit.s/full.length:0;info.classList.add('far');info.textContent=ratio>.18?'↳ trafienie dalej w artykule · kliknij, aby skoczyć do frazy':'↳ trafienie poza podglądem · kliknij, aby skoczyć do frazy';}
+      if(visiblePreviewHit(visibleHit)){info.textContent='trafienie widoczne w podglądzie';}
+      else{const ratio=full.length?hit.s/full.length:0;info.classList.add('far');info.textContent=!visibleHit&&ratio>.18?'↳ trafienie dalej w artykule · kliknij, aby skoczyć do frazy':'↳ trafienie poza podglądem · kliknij, aby skoczyć do frazy';}
       a.appendChild(info);
     }}
 
@@ -56,6 +62,7 @@
 
   let decoRaf=0;
   new MutationObserver(()=>{cancelAnimationFrame(decoRaf);decoRaf=requestAnimationFrame(decorateResults)}).observe(box,{childList:true,subtree:true});
+  new ResizeObserver(()=>{cancelAnimationFrame(decoRaf);decoRaf=requestAnimationFrame(decorateResults)}).observe(box);
   q.addEventListener('input',()=>{decorateResults();refreshVisibleHighlights()});
   q.addEventListener('focus',()=>{decorateResults();refreshVisibleHighlights()});
   window.addEventListener('scroll',()=>{if(q.value.trim().length>=2)refreshVisibleHighlights()},{passive:true});

@@ -32,6 +32,7 @@
   const wrap=document.createElement('div');wrap.className='quickbar-wrap';bar.before(wrap);wrap.append(bar);
   const more=button('','acts-more',openActPicker),moreLabel=document.createElement('span'),moreSlot=document.createElement('div');moreLabel.textContent='+';more.append(moreLabel);more.dataset.maxCount='+'+DATA.length;more.setAttribute('aria-label','Wybierz akt z pełnej listy');moreSlot.className='acts-more-slot';moreSlot.append(more);wrap.append(moreSlot);
   let pillsQueued=false,tailResting=false,releaseTimer=0,settleTimer=0,settlingUntil=0,lastLeft=0,lastCue=1,pillPointer=null,pillTouch=null,tailPull=0,tailAnchor=null,pillSuppressUntil=0;
+  let tailCanSnap=true;
   function atRightEdge(){return bar.clientWidth>0&&bar.scrollWidth>bar.clientWidth&&bar.scrollLeft>=bar.scrollWidth-bar.clientWidth-1.5}
   function renderedPull(){
     const pill=bar.querySelector('button[data-act]:not([hidden])');if(!pill)return 0;
@@ -68,7 +69,7 @@
     if(pulled||atRightEdge()){lastCue=0;restTail(true)}else releaseTail();
   }
   function restTail(on){
-    if(tailResting===on)return;tailResting=on;clearTimeout(releaseTimer);clearTimeout(settleTimer);
+    if(tailResting===on)return;if(!on)tailCanSnap=false;tailResting=on;clearTimeout(releaseTimer);clearTimeout(settleTimer);
     settlingUntil=performance.now()+360;wrap.classList.toggle('is-tail-resting',on);if(on){more.style.setProperty('--cue-amount','0');more.disabled=true;more.tabIndex=-1;more.setAttribute('aria-hidden','true')}
     settleTimer=setTimeout(()=>{lastLeft=bar.scrollLeft;queuePills()},370);queuePills();
   }
@@ -84,6 +85,8 @@
     const right=viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0),cue=atRightEdge()||(tailResting&&performance.now()<settlingUntil)?{text:'+',amount:0,count:0}:core.overflowCue(rects,{right});
     if(tailResting&&!atRightEdge()&&performance.now()>=settlingUntil&&(rects.at(-1)?.right||0)>right+1.5)restTail(false);
     lastCue=cue.amount;
+    if(cue.amount>.65)tailCanSnap=true;
+    if(!tailResting&&tailCanSnap&&cue.amount>0&&cue.amount<=.45&&bar.scrollWidth>bar.clientWidth&&!bar.querySelector('[data-count-moving]')){restTail(true);return}
     bar.style.setProperty('--pills-fade-left',Math.min(20,Math.max(0,bar.scrollLeft))+'px');
     bar.style.setProperty('--pills-fade-right',Math.min(20,Math.max(0,(rects.at(-1)?.right||0)-right))+'px');
     if(moreLabel.textContent!==cue.text)moreLabel.textContent=cue.text;

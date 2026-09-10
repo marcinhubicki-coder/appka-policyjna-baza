@@ -1,8 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#245f8c"/>
-  <path d="M256 78 400 132v116c0 91-59 157-144 190-85-33-144-99-144-190V132l144-54Z" fill="#fff" opacity=".96"/>
-  <path d="M256 123 358 161v87c0 63-39 110-102 141-63-31-102-78-102-141v-87l102-38Z" fill="#e8f2fa"/>
-  <path d="M197 190h118v24H197zm0 54h118v24H197zm0 54h78v24h-78z" fill="#245f8c"/>
-  <circle cx="316" cy="310" r="42" fill="#245f8c"/>
-  <path d="m316 282 8 18 20 2-15 13 5 20-18-10-18 10 5-20-15-13 20-2 8-18Z" fill="#fff"/>
+  <defs>
+    <linearGradient id="blue" x2=".2" y2="1"><stop stop-color="#3886b1"/><stop offset=".52" stop-color="#266890"/><stop offset="1" stop-color="#174669"/></linearGradient>
+    <radialGradient id="light" cx=".22" cy="0" r=".9"><stop stop-color="#b1edff" stop-opacity=".23"/><stop offset="1" stop-color="#8ddfff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="rim" x2=".5" y2="1"><stop stop-color="#fff"/><stop offset=".5" stop-color="#edf7fc"/><stop offset="1" stop-color="#c4deec"/></linearGradient>
+    <linearGradient id="glass" x2=".6" y2="1"><stop stop-color="#effaff"/><stop offset="1" stop-color="#c8e2ef"/></linearGradient>
+    <linearGradient id="ink" x2="0" y2="1"><stop stop-color="#265f84"/><stop offset="1" stop-color="#327ba4"/></linearGradient>
+    <linearGradient id="edge" x2=".5" y2="1"><stop stop-color="#fff" stop-opacity=".48"/><stop offset=".55" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#fff" stop-opacity=".15"/></linearGradient>
+    <filter id="shadow" x="-.3" y="-.2" width="1.6" height="1.6"><feDropShadow dx="0" dy="9" stdDeviation="9" flood-color="#092f4b" flood-opacity=".22"/></filter>
+    <clipPath id="bars"><path d="M256 164 322 189v59c0 50-26 85-66 108-40-23-66-58-66-108v-59Z"/></clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#blue)"/>
+  <rect width="512" height="512" rx="112" fill="url(#light)"/>
+  <rect x="2" y="2" width="508" height="508" rx="110" fill="none" stroke="url(#edge)" stroke-width="3"/>
+  <path d="M256 78 400 132v116c0 91-59 157-144 190-85-33-144-99-144-190V132l144-54Z" fill="url(#rim)" filter="url(#shadow)"/>
+  <path d="M256 123 358 161v87c0 63-39 110-102 141-63-31-102-78-102-141v-87l102-38Z" fill="url(#glass)" stroke="#fff" stroke-opacity=".6" stroke-width="2"/>
+  <path d="M188 190h136v25H188zm0 53h136v25H188zm0 53h136v25H188z" clip-path="url(#bars)" fill="url(#ink)"/>
 </svg>

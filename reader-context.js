@@ -17,23 +17,29 @@
   }
   function queue(){if(queued)return;queued=true;requestAnimationFrame(stack)}
   new MutationObserver(queue).observe(document.body,{attributes:true,attributeFilter:['class']});
-  const sizes=new ResizeObserver(queue);
+  const sizes=new ResizeObserver(queue);let closeRevealed=null;
+  document.addEventListener('pointerdown',event=>{if(!event.target.closest('.return,.search-return'))closeRevealed?.()},{passive:true});
   for(const id of ['searchReturn','return']){
-    const bar=document.getElementById(id);if(!bar)continue;sizes.observe(bar);new MutationObserver(queue).observe(bar,{attributes:true,attributeFilter:['class']});
-    let drag=null,suppress=0;
-    function reset(){bar.classList.remove('return-dragging');bar.style.removeProperty('--return-drag');bar.style.removeProperty('--return-opacity')}
+    const bar=document.getElementById(id),main=bar?.querySelector('button');if(!bar||!main)continue;
+    const surface=document.createElement('div'),content=document.createElement('div'),remove=document.createElement('button');
+    surface.className='return-surface';content.className='return-content';main.classList.add('return-main');remove.type='button';remove.className='return-delete';remove.textContent='Usuń';remove.setAttribute('aria-label',id==='searchReturn'?'Usuń powrót do wyszukiwania':'Usuń powrót do odwołania');remove.tabIndex=-1;
+    content.append(main,remove);surface.append(content);bar.append(surface);sizes.observe(bar);
+    let drag=null,suppress=0,revealed=false,removing=false,animation=null;
+    function reveal(on){if(on&&closeRevealed!==close)closeRevealed?.();revealed=on;bar.classList.toggle('return-revealed',on);bar.classList.remove('return-dragging');bar.style.removeProperty('--return-reveal');remove.tabIndex=on?0:-1;if(on)closeRevealed=close;else if(closeRevealed===close)closeRevealed=null}
+    function close(){reveal(false)}
+    function finish(){globalThis.__POLICE_DISMISS_RETURN?.(id==='searchReturn'?'search':'reference');animation=null;removing=false;bar.classList.remove('return-removing');close();queue()}
     function dismiss(){
-      const r=bar.getBoundingClientRect(),ghost=bar.cloneNode(true);ghost.removeAttribute('id');ghost.classList.add('reader-return-ghost');ghost.inert=true;
-      ghost.style.cssText=`position:fixed!important;left:${r.left}px!important;right:auto!important;top:${r.top}px!important;bottom:auto!important;width:${r.width}px!important;height:${r.height}px!important;pointer-events:none!important;opacity:1;transform:none;`;
-      document.body.append(ghost);globalThis.__POLICE_DISMISS_RETURN?.(id==='searchReturn'?'search':'reference');reset();
-      if(ghost.animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const animation=ghost.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX(-110vw)',opacity:0}],{duration:220,easing:'cubic-bezier(.3,0,.7,1)',fill:'forwards'});animation.onfinish=()=>ghost.remove()}else ghost.remove();queue();
+      if(removing||globalThis.__READER_STATE?.frozen)return;removing=true;bar.classList.add('return-removing');
+      if(content.animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){animation=content.animate([{transform:'translateY(0)'},{transform:'translateY(105%)'}],{duration:240,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});animation.onfinish=()=>{animation?.cancel();finish()}}else finish();
     }
-    bar.addEventListener('pointerdown',event=>{if(event.button!==0||globalThis.__READER_STATE?.frozen)return;const r=bar.getBoundingClientRect();if(event.clientX<r.left+r.width*.45)return;drag={x:event.clientX,y:event.clientY,dx:0,axis:null};bar.setPointerCapture?.(event.pointerId)});
-    bar.addEventListener('pointermove',event=>{if(!drag)return;const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(!drag.axis&&Math.max(Math.abs(dx),Math.abs(dy))>8)drag.axis=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y';if(drag.axis!=='x')return;event.preventDefault();drag.dx=Math.min(0,dx);bar.classList.add('return-dragging');bar.style.setProperty('--return-drag',drag.dx+'px');bar.style.setProperty('--return-opacity',String(Math.max(.35,1+drag.dx/300)))});
-    bar.addEventListener('pointerup',()=>{if(!drag)return;const remove=drag.axis==='x'&&drag.dx<-52;if(drag.axis==='x')suppress=Date.now()+400;drag=null;if(remove)dismiss();else reset()});
-    bar.addEventListener('pointercancel',()=>{drag=null;reset()});
-    bar.addEventListener('click',event=>{if(event.detail!==0&&Date.now()<suppress){event.preventDefault();event.stopImmediatePropagation()}},true);
-    bar.addEventListener('keydown',event=>{if(event.key==='Escape'&&!globalThis.__READER_STATE?.frozen){event.preventDefault();dismiss()}});
+    remove.onclick=event=>{event.stopPropagation();dismiss()};
+    new MutationObserver(()=>{if(!bar.classList.contains('show')&&(revealed||removing)){animation?.cancel();animation=null;removing=false;close()}queue()}).observe(bar,{attributes:true,attributeFilter:['class']});
+    bar.addEventListener('pointerdown',event=>{if(event.button!==0||globalThis.__READER_STATE?.frozen||removing||event.target.closest('.return-delete'))return;drag={x:event.clientX,y:event.clientY,dx:0,axis:null,start:revealed?-66:0}});
+    bar.addEventListener('pointermove',event=>{if(!drag)return;const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(!drag.axis&&Math.max(Math.abs(dx),Math.abs(dy))>6)drag.axis=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y';if(drag.axis!=='x')return;event.preventDefault();bar.setPointerCapture?.(event.pointerId);drag.dx=dx;bar.classList.add('return-dragging');bar.style.setProperty('--return-reveal',Math.max(-66,Math.min(0,drag.start+dx))+'px')});
+    bar.addEventListener('pointerup',()=>{if(!drag)return;const horizontal=drag.axis==='x',open=drag.start+drag.dx<-18;if(horizontal)suppress=Date.now()+350;drag=null;if(horizontal)reveal(open)});
+    bar.addEventListener('pointercancel',()=>{drag=null;reveal(revealed)});
+    bar.addEventListener('click',event=>{if(event.target.closest('.return-delete'))return;if(event.detail!==0&&Date.now()<suppress||revealed){event.preventDefault();event.stopImmediatePropagation();if(Date.now()>=suppress)close()}},true);
+    bar.addEventListener('keydown',event=>{if(globalThis.__READER_STATE?.frozen)return;if(event.key==='Escape'&&revealed){event.preventDefault();close()}else if(event.key==='ArrowLeft'||event.key==='Delete'){event.preventDefault();reveal(true);remove.focus({preventScroll:true})}});
   }
   window.addEventListener('police-law-active-article',context);
   window.addEventListener('police-law-favorites-visibility',queue);

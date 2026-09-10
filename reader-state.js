@@ -2,21 +2,37 @@
 (function(){
   const root=document.documentElement,body=document.body,locks=new Set(),inertNodes=new Map();
   let generation=0,frame=0,busy=false,lockedY=0;
+  const places=new Map();
   const reduced=()=>globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const top=()=>document.querySelector('.top')?.getBoundingClientRect().bottom||0;
+  const top=()=>{const header=document.querySelector('.top')?.getBoundingClientRect().bottom||0;return document.body.matches('.favorites-filter-on:not(.drawer-open):not(.search-active):not(.favorite-editing)')?Math.max(header,document.querySelector('.reader-favorites-context')?.getBoundingClientRect().bottom||header):header};
   function instant(y){window.scrollTo({top:Math.max(0,y),left:0,behavior:'auto'})}
   function cancel(){generation++;cancelAnimationFrame(frame);busy=false;body.classList.remove('reader-layout-changing');return generation}
-  function complete(){busy=false;body.classList.remove('reader-layout-changing');window.dispatchEvent(new CustomEvent('police-law-navigation-settled'))}
-  function capture(){
+  function complete(){busy=false;body.classList.remove('reader-layout-changing');window.dispatchEvent(new CustomEvent('police-law-navigation-settled',{detail:{navigation:true}}))}
+  function activeArticle(){
     const view=document.getElementById('actview');if(!view)return null;
-    const box=view.getBoundingClientRect(),y=(top()+innerHeight)/2,x=Math.max(1,Math.min(innerWidth-1,box.left+box.width/2));
+    const box=view.getBoundingClientRect(),left=Math.max(0,box.left),right=Math.min(innerWidth,box.right),ceiling=top();
+    const floor=innerHeight,occluders=[];let best=null,area=0,distance=Infinity;
+    for(const bar of document.querySelectorAll('.article-pager,#return.show,#searchReturn.show')){if(getComputedStyle(bar).display==='none'||bar.matches('.article-pager')&&body.classList.contains('drawer-open'))continue;const r=(bar.querySelector('button')||bar).getBoundingClientRect();if(r.height>0)occluders.push(r)}
+    for(const article of view.querySelectorAll('article.legal-unit')){
+      if(article.closest('[hidden]'))continue;const r=article.getBoundingClientRect(),l=Math.max(left,r.left),rr=Math.min(right,r.right),t=Math.max(ceiling,r.top),b=Math.min(floor,r.bottom);
+      let visible=Math.max(0,b-t)*Math.max(0,rr-l);
+      for(const cover of occluders)visible-=Math.max(0,Math.min(b,cover.bottom)-Math.max(t,cover.top))*Math.max(0,Math.min(rr,cover.right)-Math.max(l,cover.left));
+      const centerDistance=Math.abs((t+b)/2-(ceiling+floor)/2);
+      if(visible>area||(visible>0&&Math.abs(visible-area)<1&&centerDistance<distance)){area=visible;distance=centerDistance;best=article}
+    }
+    return best;
+  }
+  function capture(){
+    const article=activeArticle();if(!article)return null;
+    const box=article.getBoundingClientRect(),y=(Math.max(top(),box.top)+Math.min(innerHeight,box.bottom))/2,x=Math.max(1,Math.min(innerWidth-1,box.left+box.width/2));
     let node=document.elementFromPoint(x,y)?.closest?.('#actview .subunit[id],#actview .legal-unit[id]');
-    if(!node)node=[...view.querySelectorAll('.subunit[id],.legal-unit[id]')].find(el=>{const r=el.getBoundingClientRect();return r.top<=y&&r.bottom>=y});
-    if(!node)return null;
+    if(!node||!article.contains(node))node=[...article.querySelectorAll('.subunit[id]')].find(el=>{const r=el.getBoundingClientRect();return r.top<=y&&r.bottom>=y})||article;
     const rect=node.getBoundingClientRect();let range=null;
     try{const caret=document.caretRangeFromPoint?.(x,y);if(caret&&node.contains(caret.startContainer)){range=caret.cloneRange();if(range.startContainer.nodeType===3&&range.startOffset<range.startContainer.length)range.setEnd(range.startContainer,range.startOffset+1)}}catch(_){}
-    return{id:node.id,ratio:Math.max(0,Math.min(1,(y-rect.top)/Math.max(1,rect.height))),range,point:range?.getBoundingClientRect?.().top??y};
+    return{id:node.id,articleId:article.id,ratio:Math.max(0,Math.min(1,(y-rect.top)/Math.max(1,rect.height))),range,point:range?.getBoundingClientRect?.().top??y};
   }
+  function remember(code){if(!code||locks.size||busy)return;const anchor=capture();if(anchor)places.set(code,{id:anchor.id,articleId:anchor.articleId,ratio:anchor.ratio})}
+  function restorePlace(anchor){const token=cancel();busy=true;frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);complete()})})}
   function restore(anchor){
     const node=anchor&&document.getElementById(anchor.id);if(!node)return;
     const r=node.getBoundingClientRect(),caret=anchor.range?.startContainer?.isConnected?anchor.range.getBoundingClientRect?.():null;
@@ -46,7 +62,7 @@
     })});
   }
   function syncInert(){
-    const locked=locks.size>0,settings=locks.has('settings');
+    const locked=locks.size>0,settings=locks.has('settings')||locks.has('popover');
     for(const node of document.querySelectorAll('main,.drawer,.article-pager,.return,.search-return,.split-handle,.top')){
       const should=locked&&(!node.matches('.top')||settings);
       if(should&&!inertNodes.has(node)){inertNodes.set(node,node.inert||false);node.inert=true}
@@ -56,11 +72,11 @@
   function lock(owner,on){
     const was=locks.size>0;if(on)locks.add(owner);else locks.delete(owner);
     if(!was&&locks.size){cancel();lockedY=Math.max(0,scrollY);body.style.setProperty('--reader-lock-top',-lockedY+'px');root.classList.add('reader-frozen');body.classList.add('reader-frozen')}
-    if(was&&!locks.size){root.classList.remove('reader-frozen');body.classList.remove('reader-frozen');body.style.removeProperty('--reader-lock-top');instant(lockedY);window.dispatchEvent(new CustomEvent('police-law-navigation-settled'))}
+    if(was&&!locks.size){root.classList.remove('reader-frozen');body.classList.remove('reader-frozen');body.style.removeProperty('--reader-lock-top');instant(lockedY);window.dispatchEvent(new CustomEvent('police-law-navigation-settled',{detail:{navigation:false}}))}
     syncInert();
   }
   const shade=document.createElement('div');shade.className='reader-search-shade';shade.setAttribute('aria-hidden','true');body.append(shade);
-  globalThis.__READER_STATE={cancel,capture,restore,layout,toElement,lock,instant,get busy(){return busy},get frozen(){return locks.size>0},get generation(){return generation}};
+  globalThis.__READER_STATE={cancel,capture,restore,layout,toElement,lock,instant,activeArticle,remember,recall:code=>places.get(code),restorePlace,get busy(){return busy},get frozen(){return locks.size>0},get generation(){return generation}};
   for(const type of ['wheel','touchstart','pointerdown'])document.addEventListener(type,()=>{if(busy)cancel()},{passive:true,capture:true});
   document.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].includes(e.key)&&busy)cancel()},true);
   window.addEventListener('police-law-drawer-ready',syncInert);

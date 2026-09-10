@@ -45,6 +45,20 @@ assert.equal(w.__POLICE_PACKAGES.setEnabled('alk',true),true);assert.equal(w.eva
 w.__POLICE_PACKAGES.setEnabled('alk',false);assert.equal(w.eval('searchIndex.length'),6);
 assert.equal(query('#quickbar [data-act="alk"]').hidden,true);
 
+// The permanent display row survives every reader render and has no duplicate scope button.
+click('#hamburger');await settle();
+const fixedLabel=query('.drawer > .favorites-label');assert.ok(fixedLabel);assert.equal(query('.favorites-label-text').textContent,'Wyświetlanie');assert.equal(query('.favorites-scope-button'),null);
+const eye=query('.favorites-highlight');eye.dispatchEvent(new w.MouseEvent('contextmenu',{bubbles:true,cancelable:true}));
+assert.equal(w.__READER_STATE.frozen,true);assert.equal(query('.drawer').inert,true);
+const decoration=query('[data-display-option="highlights"]'),night=query('[data-display-option="dark"]');
+assert.equal(decoration.checked,true);assert.equal(night.checked,false);
+decoration.checked=false;decoration.dispatchEvent(new w.Event('change'));night.checked=true;night.dispatchEvent(new w.Event('change'));
+assert.equal(w.document.documentElement.classList.contains('reader-highlights-off'),true);assert.equal(w.document.documentElement.dataset.readerTheme,'dark');assert.equal(w.localStorage.getItem('reader-dark'),'on');
+w.dispatchEvent(new w.Event('scroll'));assert.ok(query('.reader-display-options'),'scroll does not move or close an open long-press menu');
+night.checked=false;night.dispatchEvent(new w.Event('change'));decoration.checked=true;decoration.dispatchEvent(new w.Event('change'));click('.reader-popover-shade');
+assert.equal(w.__READER_STATE.frozen,false);assert.equal(query('.reader-display-options'),null);
+w.eval("renderAct('uop', 'uop-art-2', false)");await settle();assert.equal(query('.drawer > .favorites-label'),fixedLabel);click('#hamburger');await settle();
+
 // The same gear opens the production context, with favorites in system settings.
 click('#settingsButton');
 assert.equal(query('main').inert,true);assert.equal(query('.top').inert,true);assert.equal(w.__READER_STATE.frozen,true);
@@ -225,6 +239,13 @@ w.__READER_TOC_OPEN();assert.equal(query('.reader-toc').classList.contains('is-o
 click('#settingsButton');assert.equal(query('#searchReturn').inert,true);click('#settingsClose');
 assert.equal(w.__READER_STATE.frozen,true);assert.equal(query('main').inert,true);assert.equal(query('.top').inert,false);
 w.__POLICE_SEARCH_CLEAR();assert.equal(w.__READER_STATE.frozen,false);assert.equal(query('main').inert,false);
+// Return bars form a stack above the pager and can be dismissed without navigating.
+query('#return').classList.add('show');query('#searchReturn').classList.add('show');await settle();
+const rb=query('#return'),sb=query('#searchReturn');assert.ok(parseFloat(rb.style.getPropertyValue('--return-bottom'))>parseFloat(sb.style.getPropertyValue('--return-bottom')));
+const hashBefore=w.location.hash;
+rb.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,button:0,clientX:380,clientY:600}));rb.dispatchEvent(new w.MouseEvent('pointermove',{bubbles:true,cancelable:true,clientX:290,clientY:600}));rb.dispatchEvent(new w.MouseEvent('pointerup',{bubbles:true,clientX:290,clientY:600}));
+assert.equal(rb.classList.contains('show'),false);assert.equal(sb.classList.contains('show'),true);assert.equal(w.location.hash,hashBefore);assert.ok(query('.article-pager'));
+w.__POLICE_DISMISS_RETURN('search');
 // Import reports the actual selected file and import time, including after reload.
 click('#settingsButton');const input=query('#favoritesImportFile'),file={name:'moje-ulubione.json',size:200,text:async()=>JSON.stringify([{id:'uop-art-1',act:'uop'}])};
 Object.defineProperty(input,'files',{value:[file],configurable:true});input.dispatchEvent(new w.Event('change'));await settle();click('[data-import-mode="merge"]');

@@ -40,7 +40,7 @@ assert.doesNotMatch(ux, /observer\.observe\(view,\{childList:true,subtree:true\}
 assert.match(tocLayout, /function measure\(\)/);
 assert.doesNotMatch(tocLayout, /MutationObserver/);
 
-assert.match(nav, /document\.elementFromPoint\(x,y\)/);
+assert.match(nav, /__READER_STATE\?\.activeArticle\(\)/);
 assert.doesNotMatch(nav, /while\(low<=high\)/);
 assert.match(nav, /window\.addEventListener\('police-law-rendered',\(\)=>\{if\(drawer\?\.classList\.contains\('open'\)&&ready\(\)&&ACT\[0\]!==lastActCode\)populateDrawer\(\);installArticleBookmark\(\)\}\)/);
 assert.doesNotMatch(nav, /new MutationObserver/);

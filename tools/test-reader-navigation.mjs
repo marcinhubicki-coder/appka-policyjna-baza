@@ -52,12 +52,17 @@ assert.equal(w.location.hash,'#uop-art-12');assert.ok(Math.abs(w.document.getEle
 // Changing columns preserves the same subunit point in the viewport center.
 const anchor=w.__READER_STATE.capture();assert.ok(anchor?.id);
 w.__READER_STATE.layout(()=>w.document.body.classList.add('drawer-open'));pump();
-const after=w.__READER_STATE.capture();assert.equal(after.id,anchor.id);assert.ok(Math.abs(after.ratio-anchor.ratio)<.01);
+const after=w.__READER_STATE.capture();assert.equal(after.id,anchor.id);const anchored=w.document.getElementById(anchor.id).getBoundingClientRect();assert.ok(Math.abs(anchored.top+anchored.height*anchor.ratio-450)<1);
 // Nested overlays hold one position; unlock is synchronous and cannot race a link.
 const lockedAt=y;w.__READER_STATE.lock('search',true);w.__READER_STATE.lock('settings',true);
 assert.equal(w.document.querySelector('main').inert,true);assert.equal(w.document.querySelector('.top').inert,true);
 w.__READER_STATE.lock('settings',false);assert.equal(w.__READER_STATE.frozen,true);assert.equal(w.document.querySelector('.top').inert,false);
 w.__READER_STATE.lock('search',false);assert.equal(y,lockedAt);assert.equal(w.__READER_STATE.frozen,false);
 w.__POLICE_GOTO_ID('uop-art-600');pump();assert.ok(Math.abs(w.document.getElementById('uop-art-600').getBoundingClientRect().top-108)<1);
+// Switching laws remembers a concrete fragment; an explicit link still wins.
+const remembered=w.__READER_STATE.capture();
+w.eval(`DATA.push(['alk','Alkohol','https://example.test',Array.from({length:20},(_,i)=>['alk-art-'+(i+1),'Rozdział 1','Art. '+(i+1),'Opis',[['alk-art-'+(i+1)+'-ust-1','u','1','Treść']]])]);for(const row of DATA[1][3]){idMap.set(row[0],'alk');articleMap.set(row[0],{act:'alk',r:row});idMap.set(row[4][0][0],'alk');unitMap.set(row[4][0][0],{act:'alk',article:row[0]})}renderAct('alk')`);pump();
+w.eval("renderAct('uop')");pump();assert.equal(w.location.hash,'#'+remembered.id);assert.ok(w.document.getElementById(remembered.id));
+w.__POLICE_GOTO_ID('uop-art-1');pump();assert.equal(w.location.hash,'#uop-art-1');
 console.log('Reader navigation: bounded DOM, spacers, distant jumps, cancellation, center anchor and nested locks passed.');
 dom.window.close();

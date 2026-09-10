@@ -85,7 +85,7 @@ match(menuHotfix, /\.unit-star:not\(\.on\)\{visibility:hidden/);
 // top-alignment path instead of estimated off-screen rectangles.
 match(app, /globalThis\.__POLICE_SCROLL_ARTICLE=scrollArticleStart/);
 match(app, /alignTop\|\|el\.matches\('\.legal-unit'\)/);
-match(nav, /document\.elementFromPoint\(x,y\)/);
+match(nav, /__READER_STATE\?\.activeArticle\(\)/);
 match(read('reader-state.js'), /document\.elementFromPoint\(x,y\)/);
 match(nav, /globalThis\.__POLICE_SCROLL_ARTICLE\(id,false\)/);
 noMatch(menuSync, /pinArticleToTop|settleHeaderAndArticle/);

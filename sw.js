@@ -1,4 +1,4 @@
-const CACHE_VERSION='2026-09-09.8';
+const CACHE_VERSION='2026-09-10.1';
 const CACHE_PREFIX='policyjna-baza-';
 const CACHE_NAME=CACHE_PREFIX+CACHE_VERSION;
 const PRECACHE_URLS=Object.freeze([
@@ -17,6 +17,10 @@ const PRECACHE_URLS=Object.freeze([
   './chapter-titles.js',
   './app.js',
   './reader-state.js',
+  './reader-display.js',
+  './reader-follow.js',
+  './reader-context.js',
+  './reader-display.css',
   './reader-core.js',
   './reader-ui.js',
   './quickbar-motion.js',

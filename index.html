@@ -11,11 +11,13 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script>try{document.documentElement.dataset.readerTheme=localStorage.getItem('reader-dark')==='on'?'dark':'light';document.documentElement.classList.toggle('reader-highlights-off',localStorage.getItem('reader-highlights')==='off')}catch(_){}</script>
 <link href="app.css" rel="stylesheet">
 <link href="nav.css" rel="stylesheet">
 <link href="menu-hotfix.css" rel="stylesheet">
 <link href="favorites-ui.css" rel="stylesheet">
 <link href="reader-ui.css" rel="stylesheet">
+<link href="reader-display.css" rel="stylesheet">
 </head>
 <body>
 <header class="top"><div class="top-inner">
@@ -59,11 +61,14 @@
 <script src="toc-layout-fix.js"></script>
 <script src="search-ux-v2.js"></script>
 <script src="favorites-model.js"></script>
+<script src="reader-display.js"></script>
+<script src="reader-follow.js"></script>
 <script src="favorites-ui.js"></script>
 <script src="favorites-transfer.js"></script>
 <script src="settings.js"></script>
 <script src="reader-ui.js"></script>
 <script src="quickbar-motion.js"></script>
+<script src="reader-context.js"></script>
 <script src="offline.js"></script>
 </body>
 </html>

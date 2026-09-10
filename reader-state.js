@@ -31,7 +31,7 @@
     try{const caret=document.caretRangeFromPoint?.(x,y);if(caret&&node.contains(caret.startContainer)){range=caret.cloneRange();if(range.startContainer.nodeType===3&&range.startOffset<range.startContainer.length)range.setEnd(range.startContainer,range.startOffset+1)}}catch(_){}
     return{id:node.id,articleId:article.id,ratio:Math.max(0,Math.min(1,(y-rect.top)/Math.max(1,rect.height))),range,point:range?.getBoundingClientRect?.().top??y};
   }
-  function remember(code){if(!code||locks.size||busy)return;const anchor=capture();if(anchor)places.set(code,{id:anchor.id,articleId:anchor.articleId,ratio:anchor.ratio})}
+  function remember(code){if(!code||locks.size||busy)return;const anchor=capture();if(anchor&&document.getElementById(anchor.articleId)?.dataset.sourceAct===code)places.set(code,{id:anchor.id,articleId:anchor.articleId,ratio:anchor.ratio})}
   function restorePlace(anchor){const token=cancel();busy=true;frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);frame=requestAnimationFrame(()=>{if(token!==generation)return;restore(anchor);complete()})})}
   function restore(anchor){
     const node=anchor&&document.getElementById(anchor.id);if(!node)return;

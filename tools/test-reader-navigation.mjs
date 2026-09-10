@@ -60,7 +60,7 @@ w.__READER_STATE.lock('settings',false);assert.equal(w.__READER_STATE.frozen,tru
 w.__READER_STATE.lock('search',false);assert.equal(y,lockedAt);assert.equal(w.__READER_STATE.frozen,false);
 w.__POLICE_GOTO_ID('uop-art-600');pump();assert.ok(Math.abs(w.document.getElementById('uop-art-600').getBoundingClientRect().top-108)<1);
 // Switching laws remembers a concrete fragment; an explicit link still wins.
-const remembered=w.__READER_STATE.capture();
+const remembered=w.__READER_STATE.capture();w.__READER_STATE.remember('alk');assert.equal(w.__READER_STATE.recall('alk'),undefined,'a cross-law favorites view cannot save an anchor under the wrong act');
 w.eval(`DATA.push(['alk','Alkohol','https://example.test',Array.from({length:20},(_,i)=>['alk-art-'+(i+1),'Rozdział 1','Art. '+(i+1),'Opis',[['alk-art-'+(i+1)+'-ust-1','u','1','Treść']]])]);for(const row of DATA[1][3]){idMap.set(row[0],'alk');articleMap.set(row[0],{act:'alk',r:row});idMap.set(row[4][0][0],'alk');unitMap.set(row[4][0][0],{act:'alk',article:row[0]})}renderAct('alk')`);pump();
 w.eval("renderAct('uop')");pump();assert.equal(w.location.hash,'#'+remembered.id);assert.ok(w.document.getElementById(remembered.id));
 w.__POLICE_GOTO_ID('uop-art-1');pump();assert.equal(w.location.hash,'#uop-art-1');

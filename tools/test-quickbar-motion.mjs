@@ -14,6 +14,7 @@ const pills=[...w.document.querySelectorAll('button')],badge=pills[0].firstEleme
 Object.defineProperties(results,{scrollHeight:{value:1400},clientHeight:{value:400}});
 results.getBoundingClientRect=()=>({top:100});
 groups.forEach((group,i)=>group.getBoundingClientRect=()=>({top:100+i*700-results.scrollTop}));
+const reveals=[];w.__READER_QUICKBAR={reveal:code=>reveals.push(code)};
 w.eval(fs.readFileSync('quickbar-motion.js','utf8'));
 function emit(active=true,pending=false){const detail={active,pending};w.__POLICE_SEARCH_STATE=detail;w.dispatchEvent(new w.CustomEvent('police-law-search-state',{detail}))}
 emit();tick(149);assert.equal(badge.classList.contains('count-ready'),false);
@@ -33,6 +34,7 @@ reduced=true;pills[0].dataset.hitCount='3';emit();assert.equal(badge.textContent
 assert.equal(w.__POLICE_SEARCH_SCROLL('kw'),true);tick(140);const middle=results.scrollTop;
 assert.ok(middle>350&&middle<700);tick(160);assert.ok(Math.abs(results.scrollTop-699)<1);
 assert.equal(pills[1].classList.contains('on'),true);
+assert.equal(reveals.at(-1),'kw','active result law asks the permanent pill rail to reveal it');
 w.__POLICE_SEARCH_SCROLL('uop');tick(64);results.dispatchEvent(new w.Event('pointerdown'));const stopped=results.scrollTop;tick(400);assert.equal(results.scrollTop,stopped);
 results.scrollTop=0;results.dispatchEvent(new w.Event('scroll'));tick(16);assert.equal(pills[0].classList.contains('on'),true);
 assert.equal(pills.filter(p=>p.classList.contains('on')).length,1);

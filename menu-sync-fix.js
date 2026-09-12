@@ -4,6 +4,7 @@
     if(!h)return;
     const px=Math.ceil(h.getBoundingClientRect().height||h.offsetHeight||0);
     if(px>0&&document.documentElement.style.getPropertyValue('--topH')!==px+'px')document.documentElement.style.setProperty('--topH',px+'px');
+    globalThis.__READER_STATE?.syncLockedLayout();
   }
   const header=document.querySelector('.top');
   if(header){syncHeaderHeight();try{new ResizeObserver(syncHeaderHeight).observe(header)}catch(_){}}

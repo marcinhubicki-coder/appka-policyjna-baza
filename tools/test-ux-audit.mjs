@@ -23,10 +23,10 @@ assert.equal(scope(items,true),'Całe ulubione artykuły · w 11 z 12 ustaw.');
 assert.match(scope(items.map(()=>({enabled:false})),false),/Wszystkie ustawy wyłączone/);
 
 function classList(){const set=new Set();return {add:(...xs)=>xs.forEach(x=>set.add(x)),remove:(...xs)=>xs.forEach(x=>set.delete(x)),contains:x=>set.has(x),toggle(x,on){if(on===undefined)on=!set.has(x);on?set.add(x):set.delete(x)}}}
-function node(){return {dataset:{},attrs:{},classList:classList(),hidden:false,disabled:false,style:{setProperty(){},removeProperty(){}},setAttribute(k,v){this.attrs[k]=v},removeAttribute(k){delete this.attrs[k]},addEventListener(k,fn){this[k]=fn},querySelectorAll(){return[]},querySelector(){return null},getClientRects(){return[{}]},closest(){return null},focus(){this.focused=true}}}
+function node(){return {dataset:{},attrs:{},classList:classList(),hidden:false,disabled:false,style:{setProperty(){},removeProperty(){}},setAttribute(k,v){this.attrs[k]=v},getAttribute(k){return this.attrs[k]},hasAttribute(k){return k==='data-hit-count'?this.dataset.hitCount!==undefined:k in this.attrs},removeAttribute(k){delete this.attrs[k]},addEventListener(k,fn){this[k]=fn},querySelectorAll(){return[]},querySelector(){return null},getClientRects(){return[{}]},closest(){return null},matches(selectors){return selectors.split(',').some(s=>this.classList.contains(s.trim().slice(1)))},focus(){this.focused=true}}}
 const nodes=new Map(),listeners=[];
 const document={body:node(),documentElement:node(),activeElement:null,getElementById(id){if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)},querySelectorAll(){return[]},addEventListener(type,fn,options){listeners.push({type,fn,options})}};
-const context={document,window:{scrollY:500,addEventListener(){},scrollTo(){}},requestAnimationFrame:fn=>fn()};
+const context={document,CustomEvent:class{},window:{scrollY:500,addEventListener(){},dispatchEvent(){},scrollTo(){}},requestAnimationFrame:fn=>fn()};
 vm.runInNewContext(settings,context);
 const keyListener=listeners.find(x=>x.type==='keydown');
 assert.equal(keyListener.options.capture,true);
@@ -48,7 +48,7 @@ document.activeElement=first;const back=event('Tab');back.shiftKey=true;keyListe
 
 const pills=[node(),node(),node()];pills.forEach((p,i)=>p.dataset.act=['uop','kw','kk'][i]);
 const pillContext={packages:{isEnabled:()=>true},quickbar:{querySelectorAll:()=>pills},META:{},searchExcluded:new Set(['kw']),searchResultWord:()=> 'wyniki'};
-const paint=vm.runInNewContext(`${lineFunction(app,'paintSearchPills')};paintSearchPills`,pillContext);
+const paint=vm.runInNewContext(`${app.slice(app.indexOf('function paintSearchPills'),app.indexOf('function emitSearchState'))};paintSearchPills`,pillContext);
 paint(true,new Map([['uop',3]]));assert.deepEqual(pills.map(x=>x.disabled),[false,true,true]);
 assert.equal(pills[0].dataset.hitCount,'3');assert.equal(pills[0].classList.contains('search-has-hit'),true);
 paint(false,new Map());assert.deepEqual(pills.map(x=>x.disabled),[false,false,false]);

@@ -7,13 +7,13 @@ Object.assign(w,{innerWidth:600,innerHeight:800});w.CSS={escape:x=>x};w.matchMed
 let now=0,seq=0,frames=new Map(),y=0;w.requestAnimationFrame=fn=>{frames.set(++seq,fn);return seq};w.cancelAnimationFrame=id=>frames.delete(id);Object.defineProperty(w.performance,'now',{value:()=>now});Object.defineProperty(w,'scrollY',{get:()=>y});w.scrollTo=({top})=>{y=top};
 const scroller=w.document.querySelector('.drawer-scroll'),list=w.document.querySelector('#drawerArticles'),view=w.document.querySelector('#actview');
 Object.defineProperties(scroller,{scrollHeight:{value:2600},clientHeight:{value:650}});
-for(let i=0;i<100;i++){const chapter=w.document.createElement('details');chapter.open=false;const link=w.document.createElement('a');link.dataset.id='art-'+i;link.textContent='Art. '+i;link.dataset.index=String(i);chapter.append(link);list.append(chapter)}
+for(let i=0;i<100;i++){const chapter=w.document.createElement('details');chapter.open=false;const link=w.document.createElement('a');link.dataset.id='art-'+i;link.dataset.act=i===99?'kw':'uop';link.textContent='Art. '+i;link.dataset.index=String(i);chapter.append(link);list.append(chapter)}
 for(const id of [39,40,41]){const a=w.document.createElement('article');a.className='legal-unit';a.id='art-'+id;view.append(a)}
 const rectangles=new Map([[39,[80,30]],[40,[110,560]],[41,[670,300]]]);
 const rect=(left,top,width,height)=>({left,top,width,height,right:left+width,bottom:top+height});
 w.HTMLElement.prototype.getBoundingClientRect=function(){if(this.matches('.top'))return rect(0,0,600,100);if(this===view)return rect(240,100,360,700);if(this===scroller)return rect(0,100,240,650);if(this.dataset.index)return rect(0,100+Number(this.dataset.index)*24-scroller.scrollTop,240,24);if(this.matches('article'))return rect(240,...[rectangles.get(Number(this.id.slice(4)))[0],360,rectangles.get(Number(this.id.slice(4)))[1]]);return rect(0,0,10,10)};
 w.document.elementFromPoint=()=>view.children[1];
-for(const file of ['reader-state.js','reader-follow.js'])vm.runInContext(fs.readFileSync(file,'utf8'),dom.getInternalVMContext(),{filename:file});
+for(const file of ['reader-core.js','reader-state.js','reader-follow.js'])vm.runInContext(fs.readFileSync(file,'utf8'),dom.getInternalVMContext(),{filename:file});
 function pump(){for(let n=0;frames.size&&n<50;n++){now+=16;const callbacks=[...frames.values()];frames.clear();callbacks.forEach(fn=>fn(now))}assert.equal(frames.size,0)}
 function active(){const id=w.__READER_STATE.activeArticle()?.id;w.dispatchEvent(new w.CustomEvent('police-law-active-article',{detail:{id}}));return id}
 assert.equal(active(),'art-40','a 10px tail of the previous article cannot own the reader');pump();
@@ -25,4 +25,11 @@ rectangles.set(39,[-10,30]);rectangles.set(40,[70,110]);rectangles.set(41,[180,6
 rectangles.set(39,[90,50]);rectangles.set(40,[140,80]);rectangles.set(41,[220,900]);assert.equal(active(),'art-40','only the immediate next article may replace the top tail');pump();
 rectangles.set(39,[105,50]);assert.equal(active(),'art-39','a complete short article at the top remains active');pump();
 w.__READER_STATE.lock('popover',true);const frozen=scroller.scrollTop;w.__READER_FOLLOW.follow('art-39');pump();assert.equal(scroller.scrollTop,frozen,'long press freezes automatic list movement');w.__READER_STATE.lock('popover',false);
+w.__READER_FOLLOW.selection('art-40');pump();w.__READER_FOLLOW.selection('art-41');
+now+=240;{const callbacks=[...frames.values()];frames.clear();callbacks.forEach(fn=>fn(now))}
+assert.ok(parseFloat(list.querySelector('.drawer-active-morph').style.height)>24,'highlight stretches across adjacent articles during its move');pump();
+assert.ok(Math.abs(parseFloat(list.querySelector('.drawer-active-morph').style.height)-24)<.01,'highlight contracts to the final row');
+w.__READER_FOLLOW.selection('art-99');assert.equal(frames.size,0,'cross-law changes do not stretch through other laws');
+const ease=w.__READER_CORE.readingEase;assert.equal(ease(0),0);assert.equal(ease(1),1);
+assert.ok(ease(.5)-ease(.4)>ease(.1)-ease(0));assert.ok(ease(1)-ease(.9)<ease(.2)-ease(.1),'the ending slows down more gently than the initial acceleration');
 console.log('Reader following: dominant area, centered list, manual takeover, resumed following and popup freeze passed.');dom.window.close();

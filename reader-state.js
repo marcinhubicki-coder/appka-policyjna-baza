@@ -1,7 +1,7 @@
 /* One owner for reader movement and nested background locks. */
 (function(){
   const root=document.documentElement,body=document.body,locks=new Set(),inertNodes=new Map();
-  let generation=0,frame=0,busy=false,lockedY=0;
+  let generation=0,frame=0,busy=false,lockedY=0,lockedPadding=0;
   const places=new Map();
   const reduced=()=>globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const top=()=>{const header=document.querySelector('.top')?.getBoundingClientRect().bottom||0;return document.body.matches('.favorites-filter-on:not(.drawer-open):not(.search-active):not(.favorite-editing)')?Math.max(header,document.querySelector('.reader-favorites-context')?.getBoundingClientRect().bottom||header):header};
@@ -74,13 +74,16 @@
   }
   function lock(owner,on){
     const was=locks.size>0;if(on)locks.add(owner);else locks.delete(owner);
-    if(!was&&locks.size){cancel();lockedY=Math.max(0,scrollY);body.style.setProperty('--reader-lock-top',-lockedY+'px');root.classList.add('reader-frozen');body.classList.add('reader-frozen')}
+    if(!was&&locks.size){cancel();globalThis.__READER_FOLLOW?.stop();lockedY=Math.max(0,scrollY);lockedPadding=parseFloat(getComputedStyle(body).paddingTop)||0;body.style.setProperty('--reader-lock-top',-lockedY+'px');root.classList.add('reader-frozen');body.classList.add('reader-frozen')}
     if(was&&!locks.size){root.classList.remove('reader-frozen');body.classList.remove('reader-frozen');body.style.removeProperty('--reader-lock-top');instant(lockedY);window.dispatchEvent(new CustomEvent('police-law-navigation-settled',{detail:{navigation:false}}))}
     syncInert();
   }
+  function syncLockedLayout(){if(!locks.size)return;const padding=parseFloat(getComputedStyle(body).paddingTop)||0,value=-(lockedY+padding-lockedPadding)+'px';if(body.style.getPropertyValue('--reader-lock-top')!==value)body.style.setProperty('--reader-lock-top',value)}
+  const header=document.querySelector('.top');if(header&&typeof ResizeObserver!=='undefined')new ResizeObserver(syncLockedLayout).observe(header);
+  window.addEventListener('police-law-search-state',syncLockedLayout);
   const shade=document.createElement('div');shade.className='reader-search-shade';shade.setAttribute('aria-hidden','true');body.append(shade);
-  shade.onclick=()=>{if(body.classList.contains('search-active'))globalThis.__POLICE_SEARCH_CLEAR?.()};
-  globalThis.__READER_STATE={cancel,capture,restore,layout,toElement,lock,instant,activeArticle,remember,recall:code=>places.get(code),restorePlace,get busy(){return busy},get frozen(){return locks.size>0},get generation(){return generation}};
+  shade.onclick=()=>{if(body.matches('.search-active,.search-editing'))globalThis.__POLICE_SEARCH_CLEAR?.()};
+  globalThis.__READER_STATE={cancel,capture,restore,layout,toElement,lock,instant,activeArticle,remember,recall:code=>places.get(code),restorePlace,syncLockedLayout,get busy(){return busy},get frozen(){return locks.size>0},get generation(){return generation}};
   for(const type of ['wheel','touchstart','pointerdown'])document.addEventListener(type,()=>{if(busy)cancel()},{passive:true,capture:true});
   document.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].includes(e.key)&&busy)cancel()},true);
   window.addEventListener('police-law-drawer-ready',syncInert);

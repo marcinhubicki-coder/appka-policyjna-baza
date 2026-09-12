@@ -30,7 +30,7 @@ match(app, /setTimeout\(search,300\)/);
 match(app, /class="search-act-heading" id="search-act-\$\{esc\(group\.act\)\}"/);
 match(app, /class="search-group" data-search-act=/);
 match(app, /globalThis\.__POLICE_SEARCH_GOTO_ACT=gotoSearchAct/);
-match(app, /search-has-hit","search-no-hit","search-excluded/);
+match(app, /classList\.contains\('search-has-hit'\)!==hasHit/);
 match(appCss, /body\.search-active \.quickbar\{display:flex!important\}/);
 match(appCss, /\.search-act-heading\{position:sticky/);
 match(index, /id="results" role="region"/);
@@ -46,7 +46,8 @@ match(index, /id="searchEnableAll"/);
 match(settings, /Ustawienia wyszukiwania/);
 match(settings, /toggle\.type='checkbox'/);
 match(settings, /api\.setEnabled\(item\.code,toggle\.checked\)/);
-match(settings, /detail\.textContent=item\.packageEnabled===false\?'Pakiet wyłączony':pluralHits\(item\.hits\)/);
+match(settings, /api\.list\(\)\.filter\(item=>item\.packageEnabled!==false\)/);
+match(settings, /text=pluralHits\(item\.hits\)/);
 noMatch(settings, /detail\.textContent=`\$\{item\.name\}/);
 match(appCss, /body\.search-filters-active \.settings-button/);
 
@@ -117,7 +118,7 @@ match(slider, /body\.search-active \.split-handle\{visibility:hidden!important;p
 
 // PWA clients must receive the changed shell instead of keeping the previous
 // cache-first build indefinitely.
-match(serviceWorker, /CACHE_VERSION='2026-09-10\.4'/);
+match(serviceWorker, /CACHE_VERSION='2026-09-12\.1'/);
 
 console.log(JSON.stringify({
   status: "ok",

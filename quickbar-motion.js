@@ -3,7 +3,7 @@
   const bar=document.getElementById('quickbar'),results=document.getElementById('results');
   if(!bar||!results)return;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),badges=new Map();
-  let scrollFrame=0,activeFrame=0,scrollTarget='',groups=[];
+  let scrollFrame=0,activeFrame=0,scrollTarget='',groups=[],highlighted='';
   function stopBadge(state){clearTimeout(state.delay);clearTimeout(state.expand);state.animation?.cancel();state.animation=null;state.badge.removeAttribute('data-count-moving')}
   function exactBadge(state){state.badge.textContent=String(state.value);state.badge.style.setProperty('--hit-digits',String(String(state.value).length));state.badge.removeAttribute('data-count-moving');window.dispatchEvent(new CustomEvent('police-law-quickbar-motion'))}
   function rollBadge(state){
@@ -35,10 +35,12 @@
     }
   }
   function highlight(code){
+    const changed=highlighted!==code;highlighted=code;
     for(const pill of bar.querySelectorAll('button[data-act]')){
-      const on=pill.dataset.act===code;pill.classList.toggle('on',on);
-      if(on)pill.setAttribute('aria-current','true');else pill.removeAttribute('aria-current');
+      const on=pill.dataset.act===code;if(pill.classList.contains('on')!==on)pill.classList.toggle('on',on);
+      if(on&&pill.getAttribute('aria-current')!=='true')pill.setAttribute('aria-current','true');else if(!on&&pill.hasAttribute('aria-current'))pill.removeAttribute('aria-current');
     }
+    if(changed&&globalThis.__POLICE_SEARCH_STATE?.active)globalThis.__READER_QUICKBAR?.reveal(code);
   }
   function syncActive(){
     activeFrame=0;if(!globalThis.__POLICE_SEARCH_STATE?.active||scrollTarget)return;

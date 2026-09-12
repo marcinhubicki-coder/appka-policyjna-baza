@@ -56,12 +56,18 @@ function favoriteSearchIds(){const ids=favoritesSearchApi()?.ids?.();return new 
 function hasSearchFilters(){return searchExcluded.size>0||(searchState.active&&searchFavoritesOnly)}
 function syncSearchFilterIndicator(){document.body.classList.toggle("search-filters-active",hasSearchFilters())}
 function searchActList(){return DATA.map(A=>{const meta=META[A[0]]||[A[0],A[1],""];return{code:A[0],short:meta[0],name:meta[1],enabled:packages.isEnabled(A[0])&&!searchExcluded.has(A[0]),packageEnabled:packages.isEnabled(A[0]),hits:searchState.counts.get(A[0])||0}})}
-function paintSearchPills(active,counts){quickbar?.querySelectorAll("button[data-act]").forEach(button=>{const code=button.dataset.act,meta=META[code]||[code,code,""],hits=counts.get(code)||0;button.classList.remove("search-has-hit","search-no-hit","search-excluded");delete button.dataset.hitCount;button.hidden=!packages.isEnabled(code)||(active&&(searchExcluded.has(code)||!hits));button.disabled=button.hidden;button.removeAttribute("aria-disabled");if(active&&!button.hidden){button.classList.add("search-has-hit");button.dataset.hitCount=String(hits)}button.setAttribute("aria-label",meta[0]+" — "+meta[1]+(active&&!button.hidden?" · "+hits+" "+searchResultWord(hits):""))})}
+function paintSearchPills(active,counts){quickbar?.querySelectorAll("button[data-act]").forEach(button=>{
+  const code=button.dataset.act,meta=META[code]||[code,code,""],hits=counts.get(code)||0,hidden=!packages.isEnabled(code)||(active&&(searchExcluded.has(code)||!hits)),hasHit=active&&!hidden;
+  if(button.hidden!==hidden)button.hidden=hidden;if(button.disabled!==hidden)button.disabled=hidden;
+  if(button.classList.contains('search-has-hit')!==hasHit)button.classList.toggle('search-has-hit',hasHit);
+  if(hasHit){if(button.dataset.hitCount!==String(hits))button.dataset.hitCount=String(hits)}else if(button.hasAttribute('data-hit-count'))delete button.dataset.hitCount;
+  const label=meta[0]+" — "+meta[1]+(hasHit?" · "+hits+" "+searchResultWord(hits):"");if(button.getAttribute('aria-label')!==label)button.setAttribute('aria-label',label);
+})}
 function emitSearchState(active,counts=new Map(),pending=false){searchState={active,counts,pending,favoritesOnly:active&&searchFavoritesOnly};document.body.classList.toggle("search-active",active);document.body.classList.toggle("search-favorites-only",active&&searchFavoritesOnly);globalThis.__READER_STATE?.lock("search",active);if(active)globalThis.__READER_TOC_CLOSE?.(false);syncSearchFilterIndicator();if(!pending)paintSearchPills(active,counts);const detail={active,pending,counts:Object.fromEntries(counts),excluded:[...searchExcluded],favoritesOnly:searchState.favoritesOnly};globalThis.__POLICE_SEARCH_STATE=detail;window.dispatchEvent(new CustomEvent("police-law-search-state",{detail}))}
 globalThis.__POLICE_DISMISS_RETURN=kind=>{if(kind==='search')clearSearchReturn();else{origin=null;ret.classList.remove("show")}};
 function clearSearchReturn(){searchReturn=null;searchRet?.classList.remove("show")}
 function closeSearch(preserveReturn=false){searchFavoritesOnly=false;searchResultGroups.clear();results.classList.remove("show");emitSearchState(false,new Map());if(!preserveReturn)clearSearchReturn()}
-function clearSearchInput(refocus=false){clearTimeout(timer);q.value="";closeSearch();q.blur();if(refocus)q.focus({preventScroll:true})}
+function clearSearchInput(refocus=false){clearTimeout(timer);q.value="";closeSearch();if(refocus){document.body.classList.add('search-editing');q.focus({preventScroll:true})}else{document.body.classList.remove('search-editing');q.blur();globalThis.__READER_STATE?.lock('keyboard',false)}}
 function captureSearchReturn(){if(searchReturn)return;searchReturn={query:q.value,scrollTop:results.scrollTop,html:results.innerHTML,favoritesOnly:searchFavoritesOnly,counts:[...searchState.counts],groups:[...searchResultGroups].map(([code,group])=>[code,{act:group.act,rows:[...group.rows],shown:group.shown}])};searchRet?.classList.add("show")}
 function restoreSearchReturn(){if(!searchReturn)return;const saved=searchReturn;clearSearchReturn();clearTimeout(timer);q.value=saved.query;searchFavoritesOnly=saved.favoritesOnly;searchResultGroups.clear();for(const[code,group]of saved.groups)searchResultGroups.set(code,group);results.innerHTML=saved.html;results.querySelectorAll("[data-search-bound]").forEach(node=>node.removeAttribute("data-search-bound"));results.classList.add("show");emitSearchState(true,new Map(saved.counts));bindSearchResultLinks();requestAnimationFrame(()=>{results.scrollTop=saved.scrollTop;q.focus({preventScroll:true})})}
 globalThis.__POLICE_SEARCH_CLEAR=()=>clearSearchInput(false);
@@ -82,6 +88,7 @@ async function gunzipB64(b64){const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(
 async function load(){
   const loadStarted=PERF.now(),decodeStarted=PERF.now(),raw=await gunzipB64((window.__POLICE_B64||[]).join(""));
   DATA=JSON.parse(raw);
+  const ordered=packages.order?.(DATA.map(act=>act[0]))||DATA.map(act=>act[0]);DATA.sort((a,b)=>ordered.indexOf(a[0])-ordered.indexOf(b[0]));
   globalThis.__READER_CORE?.migrateFavorites(DATA);
   if(window.__LEGAL_FIX_B64)FIX=JSON.parse(await gunzipB64(window.__LEGAL_FIX_B64));
   const decodedAt=PERF.now(),lookupStarted=PERF.now();
@@ -101,7 +108,21 @@ function rebuildSearchIndex(){
 }
 globalThis.__POLICE_PACKAGES={
   list:()=>DATA.map(A=>({code:A[0],name:META[A[0]]?.[1]||A[1],short:META[A[0]]?.[0]||A[0],enabled:packages.isEnabled(A[0]),articles:A[3].length})),
-  setEnabled(code,on){if(!DATA.some(A=>A[0]===code)||!packages.setEnabled?.(code,on))return false;rebuildSearchIndex();return true}
+  groups:()=>[
+    {id:'basic',name:'Podstawowe',codes:['uop','kw','kpow','kk','kpk','spb']},
+    {id:'traffic',name:'Ruch drogowy',codes:['prd','z30']},
+    {id:'special',name:'Ustawy szczególne',codes:['cudz','nieletni','alk','bim']},
+    {id:'orders',name:'Zarządzenia KGP',codes:DATA.map(act=>act[0]).filter(code=>code.startsWith('z')&&code!=='z30')}
+  ].map(group=>({...group,codes:group.codes.filter(code=>DATA.some(act=>act[0]===code))})).filter(group=>group.codes.length),
+  setEnabled(code,on){if(!DATA.some(A=>A[0]===code)||!packages.setEnabled?.(code,on))return false;rebuildSearchIndex();return true},
+  setGroup(codes,on){if(!codes.length||codes.some(code=>!DATA.some(act=>act[0]===code))||!packages.setMany?.(codes,on))return false;rebuildSearchIndex();return true},
+  setOrder(codes){
+    if(!Array.isArray(codes)||codes.length!==DATA.length||new Set(codes).size!==DATA.length||codes.some(code=>!DATA.some(act=>act[0]===code))||!packages.setOrder?.(codes))return false;
+    DATA.sort((a,b)=>codes.indexOf(a[0])-codes.indexOf(b[0]));
+    // Move the existing nodes only on an explicit saved reorder, never on navigation.
+    for(const code of codes){for(const container of [quickbar,actgrid]){const node=container.querySelector('[data-act="'+CSS.escape(code)+'"]');if(node)container.append(node)}}
+    clearSearchReturn();if(searchState.active)search();window.dispatchEvent(new CustomEvent('police-law-order-change'));return true;
+  }
 };
 function readerRows(){return globalThis.__POLICE_READER_ROWS?.(ACT)||ACT[3]}
 function refreshReader(target=null){
@@ -231,7 +252,7 @@ function renderAct(code,target=null,scroll=true){
   if(remembered)target=remembered.id;
   globalThis.__READER_STATE?.cancel();stopStream();
   ACT=actBy(code);const meta=META[ACT[0]]||[ACT[0],ACT[1],""];
-  document.querySelectorAll("[data-act]").forEach(b=>b.classList.toggle("on",b.dataset.act===ACT[0]));
+  document.querySelectorAll("#quickbar [data-act],#actgrid [data-act]").forEach(b=>{const on=b.dataset.act===ACT[0];if(b.classList.contains('on')!==on)b.classList.toggle('on',on)});
   let h=`<div class="act-head"><h2>${esc(meta[1])}</h2><div class="act-meta">${esc(meta[2])}</div><a class="source" href="${esc(ACT[2])}" target="_blank" rel="noopener">oficjalne źródło · ${/\.docx?(?:$|\?)/i.test(ACT[2])?'DOCX':'PDF'} ↗</a>${sourceCoverage(ACT)}</div>`;
   h+=`<div class="toc is-collapsed"><div class="toc-title"><b>Spis Artykułów</b><button id="collapseToc" type="button" aria-expanded="false" aria-controls="tocgrid">rozwiń</button></div><div class="toc-grid" id="tocgrid" hidden></div></div>`;
   h+=`<div class="law-stream" id="lawStream"><div aria-hidden="true" class="law-stream-sentinel" data-direction="before" hidden id="lawStreamBefore"></div><div aria-hidden="true" class="law-stream-sentinel" data-direction="after" id="lawStreamAfter"></div></div>`;
@@ -258,7 +279,11 @@ function bindSearchResultLinks(root=results){root.querySelectorAll("a.search-ite
 function nextSearchBatch(remaining){const normal=Math.min(10,remaining);return remaining-normal>0&&remaining-normal<5?remaining:normal}
 function expandSearchGroup(button){const group=searchResultGroups.get(button.dataset.searchMore);if(!group)return;const remaining=group.rows.length-group.shown,batch=nextSearchBatch(remaining);if(!batch){button.remove();return}const template=document.createElement("template");template.innerHTML=group.rows.slice(group.shown,group.shown+batch).map(row=>searchItemMarkup(row,group.act)).join("");button.before(template.content);group.shown+=batch;bindSearchResultLinks(button.closest(".search-group")||results);const left=group.rows.length-group.shown;if(left)button.textContent=remainingResultText(left);else button.remove()}
 results.addEventListener("click",event=>{const button=event.target.closest("button[data-search-more]");if(!button)return;event.preventDefault();expandSearchGroup(button)});
-q.oninput=()=>{clearTimeout(timer);clearSearchReturn();if(norm(q.value.trim()).length<2){closeSearch();return}if(!searchState.active)captureSearchScope();emitSearchState(true,searchState.counts,true);timer=setTimeout(search,300)};q.addEventListener("focus",()=>{if(norm(q.value.trim()).length>=2&&!results.classList.contains("show")){clearSearchReturn();search()}});document.getElementById("clear").onclick=()=>clearSearchInput(true);document.getElementById("home").onclick=e=>{e.preventDefault();clearSearchInput(false);document.getElementById("start").scrollIntoView({behavior:"auto"});history.replaceState(null,"","#start")};
+function beginSearchEditing(){globalThis.__READER_STATE?.lock('keyboard',true);document.body.classList.add('search-editing');globalThis.__READER_TOC_CLOSE?.(false)}
+q.addEventListener('pointerdown',beginSearchEditing,{passive:true});
+q.addEventListener('focus',beginSearchEditing);
+q.addEventListener('blur',()=>{document.body.classList.remove('search-editing');globalThis.__READER_STATE?.lock('keyboard',false)});
+q.oninput=()=>{clearTimeout(timer);clearSearchReturn();if(norm(q.value.trim()).length<2){closeSearch();return}if(!searchState.active)captureSearchScope();emitSearchState(true,searchState.counts,true);timer=setTimeout(search,300)};q.addEventListener("focus",()=>{if(norm(q.value.trim()).length>=2&&!results.classList.contains("show")){clearSearchReturn();search()}});document.getElementById("clear").addEventListener('pointerdown',event=>event.preventDefault());document.getElementById("clear").onclick=()=>clearSearchInput(true);document.getElementById("home").onclick=e=>{e.preventDefault();clearSearchInput(false);document.getElementById("start").scrollIntoView({behavior:"auto"});history.replaceState(null,"","#start")};
 function search(){const s=norm(q.value.trim());if(s.length<2){closeSearch();return}if(!searchState.active)captureSearchScope();const terms=s.split(/\s+/),favorites=searchFavoritesOnly?favoriteSearchIds():null,byAct=new Map(DATA.map(A=>[A[0],[]]));for(const item of searchIndex){if(!packages.isEnabled(item.act)||searchExcluded.has(item.act)||(favorites&&!favorites.has(item.row[0])))continue;if(terms.every(term=>searchText(item).includes(term)))byAct.get(item.act)?.push(item.row)}const groups=DATA.map(A=>({act:A[0],rows:byAct.get(A[0])||[]})).filter(group=>group.rows.length);const counts=new Map(groups.map(group=>[group.act,group.rows.length]));searchResultGroups.clear();if(!groups.length){const allExcluded=DATA.every(A=>!packages.isEnabled(A[0])||searchExcluded.has(A[0]));results.innerHTML=`<div class="search-empty"><b>Brak wyników</b><small>${allExcluded?"Wszystkie ustawy są wyłączone z wyszukiwania.":searchFavoritesOnly?"Brak pasujących wyników w ulubionych.":"Spróbuj krótszego lub innego hasła."}</small></div>`}else{const perGroup=Math.max(4,Math.min(24,Math.floor(48/groups.length)));for(const group of groups){group.shown=Math.min(group.rows.length,perGroup);searchResultGroups.set(group.act,group)}results.innerHTML=groups.map(searchGroupMarkup).join("")}results.classList.add("show");emitSearchState(true,counts);bindSearchResultLinks()}
 globalThis.__POLICE_SEARCH_REFRESH=search;
 window.addEventListener("police-law-favorites-change",()=>{if(searchState.active&&searchFavoritesOnly)search()});

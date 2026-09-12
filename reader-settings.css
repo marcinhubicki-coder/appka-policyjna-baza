@@ -1,0 +1,46 @@
+/* A single catalog, one visual language for nested settings. */
+.settings-order{display:grid;grid-template-columns:1fr;gap:9px}
+.law-package{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.package-title{border:0;border-radius:0;list-style:none;background:transparent;color:var(--accent);font-size:12px}
+.package-title::-webkit-details-marker{display:none}
+.package-title>b{position:relative;padding-left:12px;font-size:12px}
+.package-title>b::before{content:'›';position:absolute;left:0;top:-1px;transform-origin:center;transition:transform .2s ease}
+.law-package[open]>.package-title>b::before{transform:rotate(90deg)}
+.package-acts{display:grid;gap:5px;margin:0 6px 6px;padding-top:5px;border-top:1px solid var(--line)}
+.package-acts .search-filter-row{padding:6px 7px}
+.search-filter-row input:indeterminate{background:#aebecb}
+.search-filter-row input:indeterminate::after{transform:translateX(8px)}
+#packageList{max-height:none;overflow:visible;gap:6px}
+.scroll-cue-frame{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.scroll-cue-frame>.search-act-filters,.scroll-cue-frame>.order-list{min-height:0;overscroll-behavior:contain;scrollbar-width:none;-webkit-mask-image:linear-gradient(#000 calc(100% - var(--list-fade,0px)),transparent);mask-image:linear-gradient(#000 calc(100% - var(--list-fade,0px)),transparent)}
+.scroll-cue-frame>div::-webkit-scrollbar{display:none}
+.scroll-cue-footer{height:22px;flex:none;display:flex;justify-content:center;align-items:flex-end;pointer-events:none}
+.list-overflow-cue{display:grid;place-items:center;min-width:30px;height:19px;padding:1px 7px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--accent);font-size:9px;font-weight:750;line-height:1;opacity:var(--list-cue-amount,0);transform:scale(var(--list-cue-amount,0));transition:opacity .2s ease,transform .24s cubic-bezier(.42,0,.2,1)}
+.settings-panel[data-mode="search"]{overflow:hidden}
+.settings-panel[data-mode="search"]>.settings-search{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden}
+.settings-search .search-filter-head{flex:none}
+.settings-search .scroll-cue-frame{flex:1 1 auto}
+.settings-search .search-act-filters{max-height:min(54dvh,520px)}
+.order-list{display:flex;flex-direction:column;gap:5px;max-height:min(40dvh,330px);overflow:auto;overflow-anchor:none;touch-action:pan-y}
+.order-slot{display:grid;grid-template-columns:19px minmax(0,1fr);gap:5px;align-items:center;min-height:39px;flex:none}
+.order-number{grid-column:1;color:var(--muted);font-size:10px;font-variant-numeric:tabular-nums;text-align:center}
+.order-tile{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:39px;width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--accent);font:inherit;text-align:left;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y}
+.order-copy{display:flex;align-items:baseline;gap:6px;min-width:0;white-space:nowrap}
+.order-copy b{font-size:11px;flex:none}.order-copy small{font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.order-grip{font-size:17px;line-height:1;color:var(--muted);opacity:.5;flex:none}
+.order-tile[aria-pressed="true"]{background:var(--soft)}
+.order-drag-source{visibility:hidden}
+.order-drag-ghost{position:fixed;z-index:230;pointer-events:none;box-shadow:0 8px 22px #15334b30;background:var(--soft);border-color:#8fb2d4;cursor:grabbing}
+body.order-dragging,body.order-dragging .order-list{touch-action:none;user-select:none;-webkit-user-select:none}
+#saveActOrder{margin-top:8px}#saveActOrder:disabled{opacity:.4}
+.order-status{display:block;margin-top:6px;color:var(--muted);font-size:10px}.order-status:empty{display:none}
+body.search-editing .quickbar-wrap{display:flex}body.search-editing .quickbar{display:flex!important}body.search-editing .top-inner{padding-bottom:0!important}
+body.search-editing .reader-search-shade{display:block}
+body.search-editing .drawer-scroll{overflow-y:hidden}
+.top,.quickbar-wrap{overflow-anchor:none}
+/* Safe-area padding protects the home indicator; the lower curve follows the screen inset. */
+@media(display-mode:standalone) and (max-width:700px){
+  .settings-panel{--settings-edge:10px;right:max(var(--settings-edge),env(safe-area-inset-right));width:calc(100vw - 2*var(--settings-edge));max-height:calc(100svh - var(--topH,72px) - 8px - max(14px,env(safe-area-inset-bottom)));border-radius:16px 16px 32px 32px}
+  .settings-panel[data-mode="search"]>.settings-search{border-radius:13px 13px 22px 22px}
+}
+@media(prefers-reduced-motion:reduce){.list-overflow-cue,.package-title>b::before{transition:none}}

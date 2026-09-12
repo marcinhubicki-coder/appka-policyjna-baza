@@ -1,14 +1,23 @@
 /* Shared data rules; no DOM dependencies so import and UI use the same semantics. */
 (function(root){
-  const KEY='police-law-packages-v1',DEFAULT_OFF=new Set(['bim','alk']);
+  const KEY='police-law-packages-v1',ORDER_KEY='police-law-act-order-v1',DEFAULT_OFF=new Set(['bim','alk']);
   let preferences={};
   try{const value=JSON.parse(root.localStorage?.getItem(KEY)||'{}');if(value&&typeof value==='object'&&!Array.isArray(value))preferences=value}catch(_){}
   function isEnabled(code){return typeof preferences[code]==='boolean'?preferences[code]:!DEFAULT_OFF.has(code)}
   function setEnabled(code,on){
-    const next={...preferences,[code]:!!on};
+    return setMany([code],on);
+  }
+  function setMany(codes,on){
+    const next={...preferences};for(const code of codes)next[code]=!!on;
     try{root.localStorage.setItem(KEY,JSON.stringify(next))}catch(_){return false}
     preferences=next;return true;
   }
+  let savedOrder=[];
+  try{const value=JSON.parse(root.localStorage?.getItem(ORDER_KEY)||'[]');if(Array.isArray(value))savedOrder=[...new Set(value.filter(code=>typeof code==='string'))]}catch(_){}
+  function order(codes){const available=new Set(codes);return [...savedOrder.filter(code=>available.has(code)),...codes.filter(code=>!savedOrder.includes(code))]}
+  function setOrder(codes){try{root.localStorage.setItem(ORDER_KEY,JSON.stringify(codes))}catch(_){return false}savedOrder=[...codes];return true}
+  // Peak speed near the middle, with a longer, very gentle landing.
+  function readingEase(t){t=Math.max(0,Math.min(1,t));return 70*t**4-224*t**5+280*t**6-160*t**7+35*t**8}
   const CUE_START=.3;
   function hiddenPills(rects,viewport){
     return rects.filter(rect=>rect.width>0&&rect.left+rect.width*CUE_START>viewport.right).length;
@@ -59,6 +68,6 @@
       root.__FAVORITES_MIGRATION={review:next.filter(item=>item.needsFragmentReview).length};
     }catch(error){root.__FAVORITES_MIGRATION={error:true}}
   }
-  root.__READER_CORE={hiddenPills,overflowCue,sections,migrateFavorites};
-  root.__LAW_PACKAGES={isEnabled,setEnabled};
+  root.__READER_CORE={hiddenPills,overflowCue,sections,migrateFavorites,readingEase};
+  root.__LAW_PACKAGES={isEnabled,setEnabled,setMany,order,setOrder};
 })(typeof window!=='undefined'?window:globalThis);

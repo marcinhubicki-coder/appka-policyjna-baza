@@ -20,6 +20,7 @@
       if(cue.textContent!==state.text)cue.textContent=state.text;
       cue.style.setProperty('--list-cue-amount',String(state.amount));cue.dataset.remaining=String(state.count);
       list.style.setProperty('--list-fade',end?'0px':'12px');
+      frame.classList.toggle('cue-at-end',end);
     }
     function queue(){if(!queued){queued=true;requestAnimationFrame(measure)}}
     const sizes=new ResizeObserver(queue);sizes.observe(list);sizes.observe(frame);

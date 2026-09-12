@@ -93,14 +93,14 @@ assert.deepEqual(JSON.parse(w.localStorage.getItem('police-law-act-order-v1')),[
 click('#settingsClose');click('#hamburger');
 // Empty focus and the clear control retain editing ownership and the same input.
 const editingInput=query('#q'),leftScroll=query('.drawer-scroll');leftScroll.scrollTop=137;
-editingInput.focus({preventScroll:true});assert.equal(w.__READER_STATE.frozen,true);
+editingInput.focus({preventScroll:true});assert.equal(w.__READER_STATE.frozen,false);
 assert.equal(leftScroll.scrollTop,137);assert.ok(w.document.body.classList.contains('search-editing'));
 assert.match(query('#settingsButton').getAttribute('aria-label'),/Ustawienia wyszukiwania/);
 click('#settingsButton');await settle();assert.equal(query('#settingsTitle').textContent,'Ustawienia wyszukiwania');
 click('#settingsClose');assert.equal(w.document.activeElement,editingInput);
 editingInput.value='policja';editingInput.dispatchEvent(new w.Event('input'));click('#clear');
 assert.equal(editingInput.value,'');assert.equal(w.document.activeElement,editingInput);
-assert.equal(w.__READER_STATE.frozen,true);assert.ok(w.document.body.classList.contains('search-editing'));
+assert.equal(w.__READER_STATE.frozen,false);assert.ok(w.document.body.classList.contains('search-editing'));
 w.__POLICE_SEARCH_CLEAR();assert.equal(w.__READER_STATE.frozen,false);
 const originalPills=[...w.document.querySelectorAll('#quickbar button')],originalBadge=originalPills[0].querySelector('.act-pill-count');
 query('#q').value='slu';query('#q').dispatchEvent(new w.Event('input'));

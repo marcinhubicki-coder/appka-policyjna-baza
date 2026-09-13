@@ -35,40 +35,49 @@ export function validResult(r) {
     Number.isInteger(r.correct) && r.correct >= 0 && Number.isInteger(r.wrong) && r.wrong >= 0 &&
     typeof r.date === 'string' && Number.isFinite(Date.parse(r.date));
 }
-export class Game {
-  constructor(words, category, duration, now = () => performance.now(), random = Math.random) {
-    this.pool = words.filter(w => category === 'all' || w.category === category);
-    if (!this.pool.length || !DURATIONS.includes(duration)) throw Error('Nieprawidłowy tryb gry.');
-    Object.assign(this, { category, duration, now, random, remaining: duration * 1000, lastTime: now(),
-      correct: 0, wrong: 0, question: 0, state: 'playing', queue: [], feedbackRemaining: 0 });
+
+// One clock/state machine for all five modes. No timers are owned by questions.
+export class Session {
+  constructor(source, duration, now = () => performance.now(), random = Math.random) {
+    if ((!Array.isArray(source) || !source.length) && typeof source !== 'function') throw Error('Brak zadań dla tego wyboru.');
+    if (!DURATIONS.includes(duration)) throw Error('Nieprawidłowy czas gry.');
+    Object.assign(this, { source, pool: Array.isArray(source) ? source : [], duration, now, random,
+      remaining: duration * 1000, lastTime: now(), correct: 0, wrong: 0, question: 0,
+      state: 'playing', queue: [], feedbackRemaining: 0, exposureRemaining: 0 });
     this.next();
   }
   tick() {
-    if (this.state === 'paused' || this.state === 'ended') return;
-    const time = this.now();
-    const elapsed = Math.max(0, time - this.lastTime);
+    if (['paused', 'ended', 'feedback-wrong'].includes(this.state)) return;
+    const time = this.now(), elapsed = Math.max(0, time - this.lastTime);
     this.lastTime = time;
     this.remaining = Math.max(0, this.remaining - elapsed);
     if (this.remaining === 0) { this.state = 'ended'; return; }
-    if (this.state.startsWith('feedback')) {
+    if (this.state === 'exposing') {
+      this.exposureRemaining = Math.max(0, this.exposureRemaining - elapsed);
+      if (!this.exposureRemaining) this.state = 'playing';
+    } else if (this.state === 'feedback-correct') {
       this.feedbackRemaining -= elapsed;
       if (this.feedbackRemaining <= 0) this.next();
     }
   }
   next() {
     if (this.state === 'paused' || this.state === 'ended') return;
-    if (!this.queue.length) {
-      this.queue = shuffle(this.pool, this.random);
-      if (this.queue.length > 1 && this.queue[0] === this.current) [this.queue[0], this.queue[1]] = [this.queue[1], this.queue[0]];
+    if (typeof this.source === 'function') this.current = this.source();
+    else {
+      if (!this.queue.length) {
+        this.queue = shuffle(this.pool, this.random);
+        if (this.queue.length > 1 && this.queue[0] === this.current) [this.queue[0], this.queue[1]] = [this.queue[1], this.queue[0]];
+      }
+      this.current = this.queue.shift();
     }
-    this.current = this.queue.shift();
     this.options = shuffle(this.current.options, this.random);
     this.question++;
-    this.state = 'playing';
+    this.exposureRemaining = this.current.exposureMs || 0;
+    this.state = this.exposureRemaining ? 'exposing' : 'playing';
     this.selected = null;
+    this.lastTime = this.now();
   }
   answer(option) {
-    // Account for time at the input boundary before accepting an answer.
     if (this.state !== 'playing') return false;
     this.tick();
     if (this.state !== 'playing' || !this.options.includes(option)) return false;
@@ -76,7 +85,7 @@ export class Game {
     const correct = option === this.current.answer;
     this[correct ? 'correct' : 'wrong']++;
     this.state = correct ? 'feedback-correct' : 'feedback-wrong';
-    this.feedbackRemaining = correct ? 700 : 1100;
+    this.feedbackRemaining = correct ? 700 : 0;
     return true;
   }
   skipFeedback() {
@@ -98,4 +107,11 @@ export class Game {
     this.lastTime = this.now();
   }
   end() { this.tick(); this.state = 'ended'; }
+}
+// Keep the original spelling API and its approved dataset validation.
+export class Game extends Session {
+  constructor(words, category, duration, now, random) {
+    super(words.filter(w => category === 'all' || w.category === category), duration, now, random);
+    this.category = category;
+  }
 }

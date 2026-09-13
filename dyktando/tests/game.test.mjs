@@ -42,10 +42,15 @@ test('deadline rejects late answers and finishes during feedback', () => {
   const late = new Game(words, 'all', 60, () => time); time += 60000;
   assert.equal(late.answer(late.current.answer), false); assert.equal(late.correct, 0);
 });
-test('wrong auto-next delay and active timer', () => {
+test('wrong answer freezes the clock until Next, including a pause while learning', () => {
   let time=0; const game=new Game(words,'all',180,()=>time);
-  game.answer(game.options.find(o=>o!==game.current.answer)); time=1099; game.tick(); assert.equal(game.question,1);
-  time=1100; game.tick(); assert.equal(game.question,2); assert.equal(game.remaining,178900);
+  time=1000; game.answer(game.options.find(o=>o!==game.current.answer));
+  const remaining=game.remaining; time+=30000; game.tick();
+  assert.equal(game.state,'feedback-wrong'); assert.equal(game.question,1); assert.equal(game.remaining,remaining);
+  game.pause(); time+=15000; game.resume(); game.tick();
+  assert.equal(game.state,'feedback-wrong'); assert.equal(game.remaining,remaining);
+  game.skipFeedback(); assert.equal(game.question,2); time+=1000; game.tick();
+  assert.equal(game.remaining,remaining-1000);
 });
 test('safe settings and zero accuracy', () => {
   assert.equal(accuracy(0,0),0); assert.equal(accuracy(3,1),75);

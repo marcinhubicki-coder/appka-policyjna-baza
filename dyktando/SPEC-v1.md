@@ -28,8 +28,8 @@ Pozostać przy lekkiej architekturze Vanilla HTML/CSS/JS. Nie dodawać framework
 
 Najważniejszą referencją są mockupy przygotowane w rozmowie i zapisane w repo:
 
-- `assets/mockups/mala-nauka-v1-storyboard.png`
-- `assets/mockups/pwa-icon-concept.png`
+- `assets/mockups/mala-nauka-v1-storyboard.svg`
+- `assets/mockups/pwa-icon-concept.svg`
 
 Mockup jest kierunkiem, nie makietą pixel-perfect. Należy zachować jego charakter:
 

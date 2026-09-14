@@ -1,11 +1,13 @@
 // All URLs are relative: works at the Vercel root and under /dyktando/.
 const BASE=new URL('./',self.location.href);
 const PREFIX=`mala-nauka:${BASE.pathname}:`;
-const CACHE=PREFIX+'v1-20260913';
+const CACHE=PREFIX+'v1-20260914-art';
 const FLAGS=['pl','de','fr','it','ua','se','ch','jp','nl','be','ie','at','no','dk','fi','cz','ee','bd','id','ng'];
-const ASSETS=['./','index.html','app.css','app.js','game.mjs','modes.mjs','progress.mjs','manifest.webmanifest',
+const SCENES=['rose','clouds','car','vanity','king','falcon','bunny','mountains','frog','storm','doctor'];
+const ASSETS=['./','index.html','app.css','app.js','spelling-art.css','spelling-art.js','game.mjs','modes.mjs','progress.mjs','manifest.webmanifest',
  'data/english.mjs','data/reading.mjs','data/flags.mjs','assets/lion.svg',
  'assets/icon-192.png','assets/icon-512.png','assets/icon-maskable-512.png','assets/apple-touch-icon.png',
+ ...SCENES.map(name=>`assets/scenes/${name}.webp`),
  ...Array.from({length:8},(_,i)=>`data/words-0${i+1}.json`),...FLAGS.map(code=>`assets/flags/${code}.svg`)].map(path=>new URL(path,BASE).href);
 self.addEventListener('install',event=>{
  // Activate updates when existing sessions close; never replace code mid-round.

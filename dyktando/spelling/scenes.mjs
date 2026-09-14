@@ -13,6 +13,8 @@ export const SCENES = new Map([
 ]);
 
 const layoutMemory = new Map();
+const params = new URLSearchParams(globalThis.location?.search || '');
+const forcedLayout = ['full','split'].includes(params.get('layout')) ? params.get('layout') : '';
 
 export function sceneFor(masked){
   return SCENES.get(masked) || null;
@@ -20,6 +22,7 @@ export function sceneFor(masked){
 
 export function chooseLayout(masked, question, scene){
   const allowed = scene?.layouts?.length ? scene.layouts : ['split'];
+  if(forcedLayout && allowed.includes(forcedLayout)) return forcedLayout;
   const memoryKey = `${question}:${masked}`;
   if (!layoutMemory.has(memoryKey)) {
     const picked = allowed[Math.floor(Math.random()*allowed.length)] || 'split';

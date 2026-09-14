@@ -2,7 +2,7 @@
 // All URLs are relative so the app works both at the Vercel root and under /dyktando/.
 const BASE=new URL('./',self.location.href);
 const PREFIX=`mala-nauka:${BASE.pathname}:`;
-const APP_CACHE=PREFIX+'app-v4';
+const APP_CACHE=PREFIX+'app-v5';
 const SCENE_CACHE=PREFIX+'scenes-v1';
 const FLAGS=['pl','de','fr','it','ua','se','ch','jp','nl','be','ie','at','no','dk','fi','cz','ee','bd','id','ng'];
 
@@ -21,9 +21,11 @@ function isScene(url){
 }
 
 self.addEventListener('install',event=>{
- // Only the small, known-good shell is required for installation.
- // Missing optional illustrations can never block the PWA from installing.
- event.waitUntil(caches.open(APP_CACHE).then(cache=>cache.addAll(CORE)));
+ event.waitUntil((async()=>{
+  const cache=await caches.open(APP_CACHE);
+  await cache.addAll(CORE);
+  await self.skipWaiting();
+ })());
 });
 
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
@@ -38,7 +40,6 @@ self.addEventListener('fetch',event=>{
  if(event.request.method!=='GET'||url.origin!==BASE.origin||!url.pathname.startsWith(BASE.pathname))return;
 
  if(isScene(url)){
-  // Illustrations are optional and cached only after they are actually used.
   event.respondWith((async()=>{
    const cached=await caches.match(event.request,{cacheName:SCENE_CACHE});
    if(cached)return cached;
@@ -59,7 +60,6 @@ self.addEventListener('fetch',event=>{
  const canonical=new URL(url.pathname,BASE.origin).href;
  if(!CORE.includes(canonical))return;
 
- // Network-first keeps previews and small iterations fresh; cache remains an offline fallback.
  event.respondWith((async()=>{
   try{
    const response=await fetch(event.request);

@@ -1,29 +1,22 @@
-import { SCENES, sceneUrl } from './scenes.mjs';
+import { SCENES } from './scenes.mjs';
 
 const params = new URLSearchParams(globalThis.location?.search || '');
 const normalize = value => String(value || '').trim().toLocaleLowerCase('pl-PL');
 
+// This branch is a visual QA branch: asset-only is ON by default, including installed PWA.
+// Use ?assets=0 only when intentionally checking the whole spelling database.
 export const SPELLING_PREVIEW = Object.freeze({
-  assetsOnly: params.get('assets') === '1',
+  assetsOnly: params.get('assets') !== '0',
   word: normalize(params.get('word')),
   scene: normalize(params.get('scene')),
   layout: ['full','split'].includes(params.get('layout')) ? params.get('layout') : '',
 });
 
-const availableMasks = new Set();
-
-async function sceneExists(masked, scene){
-  try{
-    const response = await fetch(sceneUrl(scene), { method:'HEAD', cache:'no-store' });
-    if(response.ok) availableMasks.add(masked);
-  }catch{
-    // Preview-only probe. Missing/offline artwork simply stays unavailable.
-  }
-}
-
-if(SPELLING_PREVIEW.assetsOnly){
-  await Promise.all([...SCENES.entries()].map(([masked, scene]) => sceneExists(masked, scene)));
-}
+const availableMasks = new Set(
+  [...SCENES.entries()]
+    .filter(([,scene]) => Boolean(scene?.asset))
+    .map(([masked]) => masked)
+);
 
 export function filterSpellingPreview(words){
   let pool = Array.isArray(words) ? words : [];

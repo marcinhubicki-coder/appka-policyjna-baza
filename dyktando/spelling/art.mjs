@@ -6,6 +6,7 @@ const app=document.querySelector('#app');
 if(!app)throw new Error('Missing #app root');
 
 const questionMemory=new Map();
+const autoAdvanceButtons=new WeakSet();
 let scheduled=false;
 
 function currentQuestionNumber(){
@@ -43,6 +44,20 @@ function mountScene(scene){
     layer.classList.add('scene-missing');
   }
   app.prepend(layer);
+}
+
+function scheduleCorrectAutoAdvance(card){
+  if(!card.classList.contains('correct'))return;
+  const next=app.querySelector('[data-action="next"]');
+  if(!next)return;
+  next.hidden=true;
+  next.setAttribute('aria-hidden','true');
+  next.tabIndex=-1;
+  if(autoAdvanceButtons.has(next))return;
+  autoAdvanceButtons.add(next);
+  setTimeout(()=>{
+    if(next.isConnected&&app.dataset.view==='game'&&card.isConnected)next.click();
+  },1050);
 }
 
 function decorate(){
@@ -90,6 +105,7 @@ function decorate(){
   if(feedback){
     app.classList.add('spelling-has-feedback');
     app.querySelector('.spelling-hint')?.setAttribute('hidden','');
+    scheduleCorrectAutoAdvance(card);
   }else{
     app.classList.remove('spelling-has-feedback');
   }

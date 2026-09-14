@@ -2,12 +2,12 @@
 // All URLs are relative so the app works both at the Vercel root and under /dyktando/.
 const BASE=new URL('./',self.location.href);
 const PREFIX=`mala-nauka:${BASE.pathname}:`;
-const APP_CACHE=PREFIX+'app-v3';
+const APP_CACHE=PREFIX+'app-v4';
 const SCENE_CACHE=PREFIX+'scenes-v1';
 const FLAGS=['pl','de','fr','it','ua','se','ch','jp','nl','be','ie','at','no','dk','fi','cz','ee','bd','id','ng'];
 
 const CORE=[
- './','index.html','app.css','app.js','spelling-art.css','spelling-art.js',
+ './','index.html','app.css','app.js','spelling-art.css','spelling-mobile.css','spelling-art.js',
  'spelling/art.mjs','spelling/scenes.mjs','spelling/preview.mjs','spelling/hints.mjs','spelling/word-reveal.mjs',
  'game.mjs','modes.mjs','progress.mjs','manifest.webmanifest',
  'data/english.mjs','data/reading.mjs','data/flags.mjs','assets/lion.svg',

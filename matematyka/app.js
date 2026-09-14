@@ -104,6 +104,26 @@ function nextQuestion() {
   renderMultiply();
 }
 
+function answerGrid(q) {
+  return `
+    <div class="answer-grid" aria-label="Wybierz wynik">
+      ${q.answers.map((answer) => {
+        const isCorrectState = state.locked && answer === q.correct;
+        const classes = ['answer'];
+        if (isCorrectState) classes.push('correct');
+        return `
+          <button
+            class="${classes.join(' ')}"
+            type="button"
+            data-answer="${answer}"
+            ${state.locked ? 'disabled' : ''}
+          >${answer}</button>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
 function renderMultiply({ feedback = '', feedbackType = '' } = {}) {
   const q = state.question;
   const showExplainer = state.hadMistake;
@@ -117,35 +137,22 @@ function renderMultiply({ feedback = '', feedbackType = '' } = {}) {
           <p class="equation" aria-label="${q.a} razy ${q.b}">${q.a} × ${q.b}</p>
         </div>
 
-        <div class="answer-grid" aria-label="Wybierz wynik">
-          ${q.answers.map((answer) => {
-            const isWrong = state.wrongAnswers.has(answer);
-            const isCorrectState = state.locked && answer === q.correct;
-            const classes = ['answer'];
-            if (isWrong) classes.push('wrong');
-            if (isCorrectState) classes.push('correct');
-            return `
-              <button
-                class="${classes.join(' ')}"
-                type="button"
-                data-answer="${answer}"
-                ${state.locked || isWrong ? 'disabled' : ''}
-              >${answer}</button>
-            `;
-          }).join('')}
-        </div>
-
-        <p class="feedback ${feedbackType}" role="status">${feedback}</p>
-
-        ${showExplainer ? multiplicationExplainer(q.a, q.b) : ''}
+        ${showExplainer ? multiplicationExplainer(q.a, q.b) : `
+          ${answerGrid(q)}
+          <p class="feedback ${feedbackType}" role="status">${feedback}</p>
+        `}
       </div>
     </section>
   `;
 
   app.querySelector('#back')?.addEventListener('click', renderCategories);
+
   app.querySelectorAll('[data-answer]').forEach((button) => {
     button.addEventListener('click', () => chooseAnswer(Number(button.dataset.answer)));
   });
+
+  app.querySelector('[data-retry]')?.addEventListener('click', retryQuestion);
+  bindExplainerInteractions();
 }
 
 function chooseAnswer(answer) {
@@ -156,29 +163,34 @@ function chooseAnswer(answer) {
     state.locked = true;
     renderMultiply({ feedback: 'Dobrze!', feedbackType: 'good' });
 
-    // Nie renderujemy przycisku „Dalej”. Kolejne pytanie pojawia się automatycznie.
-    const delay = state.hadMistake ? 950 : 720;
+    // Poprawna odpowiedź prowadzi automatycznie dalej — bez przycisku „Dalej”.
     window.setTimeout(() => {
       if (state.screen === 'multiply') nextQuestion();
-    }, delay);
+    }, 720);
     return;
   }
 
   state.wrongAnswers.add(answer);
   state.hadMistake = true;
-  renderMultiply({ feedback: 'Spójrz, jak można to zobaczyć.', feedbackType: 'bad' });
+  renderMultiply();
+}
+
+function retryQuestion() {
+  state.hadMistake = false;
+  state.wrongAnswers = new Set();
+  renderMultiply();
 }
 
 function getExplainerMetrics(rows, columns) {
   const largestSide = Math.max(rows, columns);
 
   if (largestSide >= 9) {
-    return { cellWidth: 17, cellHeight: 10, gap: 2 };
+    return { cellWidth: 16, cellHeight: 18, gap: 2 };
   }
   if (largestSide >= 7) {
-    return { cellWidth: 20, cellHeight: 12, gap: 3 };
+    return { cellWidth: 19, cellHeight: 20, gap: 3 };
   }
-  return { cellWidth: 23, cellHeight: 14, gap: 3 };
+  return { cellWidth: 22, cellHeight: 23, gap: 3 };
 }
 
 function multiplicationExplainer(rows, columns) {
@@ -190,10 +202,11 @@ function multiplicationExplainer(rows, columns) {
       const classes = ['array-cell'];
       if (row === 0) classes.push('first-row');
       if (col === 0) classes.push('first-col');
-      const delay = row * 38 + col * 6;
+      const delay = row * 28 + col * 4;
       cells.push(`
         <span
           class="${classes.join(' ')}"
+          data-row="${row + 1}"
           style="width:${cellWidth}px;height:${cellHeight}px;animation-delay:${delay}ms"
           aria-hidden="true"
         ></span>
@@ -201,32 +214,110 @@ function multiplicationExplainer(rows, columns) {
     }
   }
 
-  const totals = Array.from({ length: rows }, (_, index) => {
-    const total = (index + 1) * columns;
-    const delay = index * 38 + columns * 6 + 20;
-    return `<span class="row-total" style="height:${cellHeight}px;animation-delay:${delay}ms">${total}</span>`;
+  const columnLabels = Array.from({ length: columns }, (_, index) => (
+    `<span class="axis-label col-label" data-col-label>${index + 1}</span>`
+  )).join('');
+
+  const rowLabels = Array.from({ length: rows }, (_, index) => (
+    `<span class="axis-label row-label" data-row-label="${index + 1}" style="height:${cellHeight}px">${index + 1}</span>`
+  )).join('');
+
+  const expressions = Array.from({ length: rows }, (_, index) => {
+    const step = index + 1;
+    const total = step * columns;
+    const previous = (step - 1) * columns;
+    const expression = step === 1 ? `${columns}` : `${previous} + ${columns} = ${total}`;
+    return `
+      <button
+        class="row-expression"
+        type="button"
+        data-explain-step="${step}"
+        aria-pressed="false"
+        style="height:${cellHeight}px"
+      >${expression}</button>
+    `;
   }).join('');
 
   return `
     <section class="explainer" aria-label="Wyjaśnienie mnożenia: ${rows} rzędów po ${columns}">
       <div class="explainer-copy">
         <span class="explainer-title">${rows} rzędów po ${columns}</span>
-        <span class="explainer-note">dodajemy po ${columns}</span>
       </div>
-      <div class="array-wrap">
+
+      <div class="explain-grid">
+        <div
+          class="column-labels"
+          style="grid-template-columns:repeat(${columns}, ${cellWidth}px);gap:${gap}px"
+          aria-label="Numery kolumn"
+        >${columnLabels}</div>
+
+        <div
+          class="row-labels"
+          style="grid-template-rows:repeat(${rows}, ${cellHeight}px);gap:${gap}px"
+          aria-label="Numery rzędów"
+        >${rowLabels}</div>
+
         <div
           class="array"
           style="grid-template-columns:repeat(${columns}, ${cellWidth}px);grid-template-rows:repeat(${rows}, ${cellHeight}px);gap:${gap}px"
           aria-hidden="true"
         >${cells.join('')}</div>
+
         <div
-          class="row-totals"
+          class="row-expressions"
           style="grid-template-rows:repeat(${rows}, ${cellHeight}px);gap:${gap}px"
-          aria-label="Sumy kolejnych rzędów"
-        >${totals}</div>
+          aria-label="Kolejne dodawanie"
+        >${expressions}</div>
       </div>
+
+      <button class="retry-button" type="button" data-retry>Spróbuj ponownie</button>
     </section>
   `;
+}
+
+function bindExplainerInteractions() {
+  const buttons = [...app.querySelectorAll('[data-explain-step]')];
+  if (!buttons.length) return;
+
+  let selectedStep = 0;
+
+  const paint = (step) => {
+    app.querySelectorAll('.array-cell').forEach((cell) => {
+      cell.classList.toggle('is-active', step > 0 && Number(cell.dataset.row) <= step);
+    });
+
+    app.querySelectorAll('[data-row-label]').forEach((label) => {
+      label.classList.toggle('is-active', step > 0 && Number(label.dataset.rowLabel) <= step);
+    });
+
+    app.querySelectorAll('[data-col-label]').forEach((label) => {
+      label.classList.toggle('is-active', step > 0);
+    });
+
+    buttons.forEach((button) => {
+      const isSelected = Number(button.dataset.explainStep) === selectedStep;
+      const isPreview = Number(button.dataset.explainStep) === step;
+      button.classList.toggle('is-active', isPreview);
+      button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    });
+  };
+
+  const restoreSelected = () => paint(selectedStep);
+
+  buttons.forEach((button) => {
+    const step = Number(button.dataset.explainStep);
+
+    button.addEventListener('pointerenter', () => paint(step));
+    button.addEventListener('pointerleave', restoreSelected);
+    button.addEventListener('focus', () => paint(step));
+    button.addEventListener('blur', restoreSelected);
+    button.addEventListener('click', () => {
+      selectedStep = selectedStep === step ? 0 : step;
+      paint(selectedStep);
+    });
+  });
+
+  paint(0);
 }
 
 renderCategories();

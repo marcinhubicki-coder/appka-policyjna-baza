@@ -1,7 +1,8 @@
 export const SCENES = new Map([
-  ['r_ża', { key:'rose', asset:'rose.svg', layouts:['full','split'] }],
-  ['kr_lik', { key:'bunny', asset:'bunny.svg', layouts:['full','split'] }],
-  ['g_ry', { key:'mountains', asset:'mountains.svg', layouts:['full','split'] }],
+  ['r_ża', { key:'rose', asset:'rose.webp', layouts:['full','split'] }],
+  ['kr_lik', { key:'bunny', asset:'bunny.webp', layouts:['full','split'] }],
+  ['g_ry', { key:'mountains', asset:'mountains.webp', layouts:['full','split'] }],
+  ['g_ra', { key:'mountains', asset:'mountains.webp', layouts:['full','split'] }],
   ['_mury', { key:'clouds', layouts:['full','split'] }],
   ['_aba', { key:'frog', layouts:['full','split'] }],
   ['samoch_d', { key:'car', layouts:['full','split'] }],

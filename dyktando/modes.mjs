@@ -2,6 +2,7 @@ import { CATEGORIES, DURATIONS, shuffle } from './game.mjs';
 import { ENGLISH } from './data/english.mjs';
 import { READING } from './data/reading.mjs';
 import { FLAGS } from './data/flags.mjs';
+import { filterSpellingPreview } from './spelling/preview.mjs';
 export const MODES = {
  spelling: {name:'Ortografia',icon:'abc',hint:'Złap właściwą literę',color:'pink',categories:[['all','Wszystkie słowa'],...CATEGORIES.map(c=>[c,c.replace('/', ' / ')])],levels:['Wszystkie','Łatwe','Średnie','Trudne']},
  math: {name:'Matematyka',icon:'1+2',hint:'Małe działania, wielkie odkrycia',color:'blue',categories:[['all','Mieszane'],['add','Dodawanie'],['subtract','Odejmowanie'],['multiply','Mnożenie'],['divide','Dzielenie']],levels:['Łatwe','Średnie','Trudne']},
@@ -36,7 +37,8 @@ export function mathQuestion(config, random = Math.random) {
  return {kind:'math',text:`${a} ${symbol} ${b} = ?`,answer:String(result),options,full:`${a} ${symbol} ${b} = ${result}`,prompt:'Wybierz wynik działania',difficulty:level};
 }
 export function createSource(mode, config, words, random = Math.random) {
- if(mode==='spelling') return words.filter(w=>(config.category==='all'||w.category===config.category)&&(!config.difficulty||w.difficulty===config.difficulty))
+ if(mode==='spelling') return filterSpellingPreview(words)
+  .filter(w=>(config.category==='all'||w.category===config.category)&&(!config.difficulty||w.difficulty===config.difficulty))
   .map(w=>({...w,kind:'spelling',text:w.masked,full:w.word,prompt:'Co pasuje w lukę?'}));
  if(mode==='math') return ()=>mathQuestion(config,random);
  if(mode==='english') {

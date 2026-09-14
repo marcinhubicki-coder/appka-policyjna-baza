@@ -2,7 +2,7 @@
 // All URLs are relative so the app works both at the Vercel root and under /dyktando/.
 const BASE=new URL('./',self.location.href);
 const PREFIX=`mala-nauka:${BASE.pathname}:`;
-const APP_CACHE=PREFIX+'app-v5';
+const APP_CACHE=PREFIX+'app-v6';
 const SCENE_CACHE=PREFIX+'scenes-v1';
 const FLAGS=['pl','de','fr','it','ua','se','ch','jp','nl','be','ie','at','no','dk','fi','cz','ee','bd','id','ng'];
 

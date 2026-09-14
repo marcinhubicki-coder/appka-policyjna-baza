@@ -169,22 +169,42 @@ function chooseAnswer(answer) {
   renderMultiply({ feedback: 'Spójrz, jak można to zobaczyć.', feedbackType: 'bad' });
 }
 
+function getExplainerMetrics(rows, columns) {
+  const largestSide = Math.max(rows, columns);
+
+  if (largestSide >= 9) {
+    return { cellWidth: 17, cellHeight: 10, gap: 2 };
+  }
+  if (largestSide >= 7) {
+    return { cellWidth: 20, cellHeight: 12, gap: 3 };
+  }
+  return { cellWidth: 23, cellHeight: 14, gap: 3 };
+}
+
 function multiplicationExplainer(rows, columns) {
+  const { cellWidth, cellHeight, gap } = getExplainerMetrics(rows, columns);
   const cells = [];
+
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < columns; col += 1) {
       const classes = ['array-cell'];
       if (row === 0) classes.push('first-row');
       if (col === 0) classes.push('first-col');
-      const delay = row * 55 + col * 10;
-      cells.push(`<span class="${classes.join(' ')}" style="animation-delay:${delay}ms" aria-hidden="true"></span>`);
+      const delay = row * 38 + col * 6;
+      cells.push(`
+        <span
+          class="${classes.join(' ')}"
+          style="width:${cellWidth}px;height:${cellHeight}px;animation-delay:${delay}ms"
+          aria-hidden="true"
+        ></span>
+      `);
     }
   }
 
   const totals = Array.from({ length: rows }, (_, index) => {
     const total = (index + 1) * columns;
-    const delay = index * 55 + columns * 10 + 30;
-    return `<span class="row-total" style="animation-delay:${delay}ms">${total}</span>`;
+    const delay = index * 38 + columns * 6 + 20;
+    return `<span class="row-total" style="height:${cellHeight}px;animation-delay:${delay}ms">${total}</span>`;
   }).join('');
 
   return `
@@ -196,12 +216,12 @@ function multiplicationExplainer(rows, columns) {
       <div class="array-wrap">
         <div
           class="array"
-          style="grid-template-columns: repeat(${columns}, minmax(0, 1fr)); grid-template-rows: repeat(${rows}, minmax(0, 1fr));"
+          style="grid-template-columns:repeat(${columns}, ${cellWidth}px);grid-template-rows:repeat(${rows}, ${cellHeight}px);gap:${gap}px"
           aria-hidden="true"
         >${cells.join('')}</div>
         <div
           class="row-totals"
-          style="grid-template-rows: repeat(${rows}, minmax(0, 1fr));"
+          style="grid-template-rows:repeat(${rows}, ${cellHeight}px);gap:${gap}px"
           aria-label="Sumy kolejnych rzędów"
         >${totals}</div>
       </div>

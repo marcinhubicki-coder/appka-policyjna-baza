@@ -1,0 +1,168 @@
+/* Mobile tuning layer for Ortografia v0.3. Kept separate so visual review can iterate without touching the shared app UI. */
+@media (max-width: 600px) {
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready {
+    --mobile-side: 16px;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 100svh;
+    height: 100svh;
+    max-height: 100svh;
+    overflow: hidden;
+    padding: max(8px, env(safe-area-inset-top)) var(--mobile-side) max(8px, env(safe-area-inset-bottom));
+    gap: clamp(5px, .8svh, 8px);
+    grid-template-rows: auto 5px auto auto minmax(64px, 1fr) auto auto auto;
+  }
+
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready::after {
+    height: 38%;
+    bottom: -6%;
+    background: radial-gradient(74% 64% at 50% 0, rgba(255,255,255,.46), rgba(243,240,255,.82) 57%, #f8f7ff 100%);
+  }
+
+  /* Hero is deliberately shorter on a real phone than in the concept mockups. */
+  [data-art-layout="split"] .spelling-scene { height: clamp(245px, 34svh, 330px); }
+  [data-art-layout="full"] .spelling-scene { height: clamp(315px, 46svh, 430px); opacity: .98; }
+
+  .spelling-scene img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 38%;
+    transform: none;
+    filter: saturate(.98) contrast(1.01) brightness(1.015);
+  }
+  [data-art-scene="bunny"] .spelling-scene img { object-position: center 30%; }
+  [data-art-scene="rose"] .spelling-scene img { object-position: center 38%; }
+  [data-art-scene="mountains"] .spelling-scene img { object-position: center 35%; }
+
+  .spelling-scene::before {
+    background: linear-gradient(180deg, rgba(246,250,255,.18) 0%, transparent 17%, transparent 76%, rgba(248,247,255,.30) 100%);
+  }
+  .spelling-scene::after {
+    height: clamp(66px, 10svh, 96px);
+    background: linear-gradient(180deg, transparent 0%, rgba(248,247,255,.20) 26%, rgba(248,247,255,.68) 70%, #f8f7ff 100%);
+  }
+  [data-art-layout="full"] .spelling-scene::after {
+    height: clamp(82px, 12svh, 116px);
+    background: linear-gradient(180deg, transparent 0%, rgba(248,247,255,.18) 25%, rgba(248,247,255,.69) 70%, #f8f7ff 100%);
+  }
+
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .game-bar {
+    min-height: 38px;
+  }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .game-bar .icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .timer { font-size: 15px; }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .time-block small { font-size: 9px; }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready progress { height: 5px; }
+
+  /* One line in split, two lines in full — same rounded display treatment. */
+  .spelling-title {
+    margin-top: 0;
+    letter-spacing: -1.25px;
+    line-height: .91;
+    text-wrap: balance;
+  }
+  [data-art-layout="split"] .spelling-title {
+    font-size: clamp(26px, 7vw, 31px);
+    white-space: nowrap;
+  }
+  [data-art-layout="full"] .spelling-title {
+    font-size: clamp(35px, 9.5vw, 43px);
+    max-width: 7.9em;
+  }
+  .spelling-title i {
+    width: 72px;
+    height: 6px;
+    margin-top: 6px;
+  }
+  .spelling-title i::after {
+    width: 17px;
+    height: 4px;
+    right: -13px;
+  }
+  [data-art-layout="full"] .spelling-title i {
+    width: 86px;
+    margin-top: 7px;
+  }
+
+  /* Kill the oversized vertical dead-zone seen on iPhone Safari. */
+  [data-art-layout="split"] .spelling-question-card {
+    margin-top: clamp(48px, 7svh, 70px) !important;
+  }
+  [data-art-layout="full"] .spelling-question-card {
+    margin-top: clamp(82px, 12svh, 118px) !important;
+  }
+  .spelling-question-card {
+    min-height: 62px !important;
+  }
+  .spelling-question-card .question-content {
+    min-height: 58px !important;
+  }
+
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .word {
+    font-size: clamp(38px, 10.7vw, 49px);
+    letter-spacing: -1.75px;
+    margin: 0;
+  }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .gap,
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .filled {
+    height: 1em;
+    width: calc(1em + (var(--slot-len,1) - 1) * .62em);
+  }
+  .bubble-glass { inset: .035em; }
+
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .answers {
+    gap: 10px;
+    margin: 0 2px;
+  }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .answer {
+    height: clamp(68px, 9.3svh, 80px);
+    min-height: 66px;
+    border-radius: 23px;
+    font-size: clamp(36px, 10.1vw, 45px) !important;
+  }
+
+  .spelling-hint {
+    width: min(82%, 320px);
+    min-height: 44px;
+    padding: 8px 14px;
+    gap: 8px;
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  .spelling-hint svg { width: 20px; height: 20px; }
+
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .feedback {
+    min-height: 0;
+    margin: 0;
+  }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .feedback:has(button) {
+    min-height: 44px;
+  }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .feedback .primary,
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .feedback .secondary {
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 380px) {
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready { --mobile-side: 13px; }
+  [data-art-layout="split"] .spelling-title { font-size: 25px; }
+  [data-art-layout="full"] .spelling-title { font-size: 34px; }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .word { font-size: 37px; }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .answer { min-height: 62px; height: 64px; }
+}
+
+@media (max-height: 700px) and (max-width: 600px) {
+  [data-art-layout="split"] .spelling-scene { height: 31svh; }
+  [data-art-layout="full"] .spelling-scene { height: 41svh; }
+  [data-art-layout="split"] .spelling-question-card { margin-top: 34px !important; }
+  [data-art-layout="full"] .spelling-question-card { margin-top: 58px !important; }
+  #app[data-view="game"][data-mode="spelling"].spelling-art-ready .answer { height: 62px; min-height: 60px; }
+  .spelling-hint { min-height: 40px; padding-block: 6px; }
+}

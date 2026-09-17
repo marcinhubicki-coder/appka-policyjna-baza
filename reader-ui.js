@@ -82,7 +82,7 @@
   }
   function releaseTail(){
     clearTimeout(releaseTimer);
-    if(tailResting||pillPointer||pillTouch||lastCue!==0||bar.clientWidth<=0||bar.querySelector('[data-count-moving]'))return;
+    if(tailResting||pillPointer||pillTouch||revealFrame||lastCue!==0||bar.clientWidth<=0||bar.querySelector('[data-count-moving]'))return;
     releaseTimer=setTimeout(()=>{if(!pillPointer&&!pillTouch&&lastCue===0)restTail(true)},0);
   }
   function measurePills(){
@@ -93,7 +93,7 @@
     if(tailResting&&!atRightEdge()&&performance.now()>=settlingUntil&&(rects.at(-1)?.right||0)>right+1.5)restTail(false);
     lastCue=cue.amount;
     if(cue.amount>.65)tailCanSnap=true;
-    if(!tailResting&&tailCanSnap&&cue.count===0&&cue.amount<1&&bar.scrollWidth>bar.clientWidth&&!bar.querySelector('[data-count-moving]')){restTail(true);return}
+    if(!tailResting&&!revealFrame&&tailCanSnap&&cue.count===0&&cue.amount<1&&bar.scrollWidth>bar.clientWidth&&!bar.querySelector('[data-count-moving]')){restTail(true);return}
     bar.style.setProperty('--pills-fade-left',Math.min(20,Math.max(0,bar.scrollLeft))+'px');
     bar.style.setProperty('--pills-fade-right',Math.min(20,Math.max(0,(rects.at(-1)?.right||0)-right))+'px');
     if(moreLabel.textContent!==cue.text)moreLabel.textContent=cue.text;

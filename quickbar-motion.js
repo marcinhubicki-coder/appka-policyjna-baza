@@ -4,6 +4,7 @@
   if(!bar||!results)return;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),badges=new Map();
   let scrollFrame=0,activeFrame=0,scrollTarget='',groups=[],highlighted='';
+  let revealRetryTimer=0,revealRetrySlot=null,revealRetryEnd=null;
   function stopBadge(state){clearTimeout(state.delay);clearTimeout(state.expand);state.animation?.cancel();state.animation=null;state.badge.removeAttribute('data-count-moving')}
   function exactBadge(state){state.badge.textContent=String(state.value);state.badge.style.setProperty('--hit-digits',String(String(state.value).length));state.badge.removeAttribute('data-count-moving');window.dispatchEvent(new CustomEvent('police-law-quickbar-motion'))}
   function rollBadge(state){
@@ -34,13 +35,42 @@
       },150);
     }
   }
+  function clearRevealRetry(){
+    clearTimeout(revealRetryTimer);revealRetryTimer=0;
+    if(revealRetrySlot&&revealRetryEnd)revealRetrySlot.removeEventListener('transitionend',revealRetryEnd);
+    revealRetrySlot=null;revealRetryEnd=null;
+  }
+  function revealActivePill(code){
+    clearRevealRetry();
+    const api=globalThis.__READER_QUICKBAR,pill=bar.querySelector('[data-act="'+CSS.escape(code||'')+'"]');
+    if(!api?.reveal||!pill||pill.hidden)return;
+    const wrap=bar.closest('.quickbar-wrap'),slot=wrap?.querySelector('.acts-more-slot'),r=pill.getBoundingClientRect(),box=bar.getBoundingClientRect();
+    const reopening=!!(wrap?.classList.contains('is-tail-resting')&&r.left<box.left);
+    api.reveal(code);
+    if(!reopening)return;
+    let retried=false;
+    const retry=()=>{
+      if(retried)return;retried=true;clearRevealRetry();
+      if(highlighted!==code||!globalThis.__POLICE_SEARCH_STATE?.active)return;
+      requestAnimationFrame(()=>globalThis.__READER_QUICKBAR?.reveal(code));
+    };
+    if(slot){
+      revealRetrySlot=slot;
+      revealRetryEnd=event=>{if(event.propertyName==='width')retry()};
+      slot.addEventListener('transitionend',revealRetryEnd);
+    }
+    revealRetryTimer=setTimeout(retry,reduced.matches?0:380);
+  }
   function highlight(code){
     const changed=highlighted!==code;highlighted=code;
     for(const pill of bar.querySelectorAll('button[data-act]')){
       const on=pill.dataset.act===code;if(pill.classList.contains('on')!==on)pill.classList.toggle('on',on);
       if(on&&pill.getAttribute('aria-current')!=='true')pill.setAttribute('aria-current','true');else if(!on&&pill.hasAttribute('aria-current'))pill.removeAttribute('aria-current');
     }
-    if(changed&&globalThis.__POLICE_SEARCH_STATE?.active)globalThis.__READER_QUICKBAR?.reveal(code);
+    if(changed){
+      clearRevealRetry();
+      if(globalThis.__POLICE_SEARCH_STATE?.active)revealActivePill(code);
+    }
   }
   function syncActive(){
     activeFrame=0;if(!globalThis.__POLICE_SEARCH_STATE?.active||scrollTarget)return;
@@ -70,7 +100,7 @@
   results.addEventListener('keydown',event=>{if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(event.key))stopScroll()});
   window.addEventListener('police-law-search-state',event=>{
     const detail=event.detail;stopScroll();updateBadges(detail);
-    if(!detail.active){groups=[];highlight(typeof ACT!=='undefined'?ACT?.[0]:'');return}
+    if(!detail.active){clearRevealRetry();groups=[];highlight(typeof ACT!=='undefined'?ACT?.[0]:'');return}
     if(!detail.pending){groups=[...results.querySelectorAll('.search-group')];queueActive()}
   });
 })();

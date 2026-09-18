@@ -279,7 +279,14 @@ function activateQuickbarAct(code){
   return true;
 }
 globalThis.__POLICE_QUICKBAR_ACT=activateQuickbarAct;
-document.addEventListener("pointerdown",event=>{if(!emptySearchQuickNav())return;const target=event.target.closest?.("#quickbar button[data-act],.quickbar-wrap .acts-more");if(target)event.preventDefault()},true);
+let emptySearchQuickbarInteraction=false,emptySearchQuickbarTimer=0;
+function beginEmptySearchQuickbarInteraction(event){
+  if(!emptySearchQuickNav()||!event.target.closest?.("#quickbar button[data-act],.quickbar-wrap .acts-more"))return;
+  emptySearchQuickbarInteraction=true;clearTimeout(emptySearchQuickbarTimer);
+  emptySearchQuickbarTimer=setTimeout(()=>{emptySearchQuickbarInteraction=false},900);
+}
+document.addEventListener("pointerdown",beginEmptySearchQuickbarInteraction,{capture:true,passive:true});
+document.addEventListener("touchstart",beginEmptySearchQuickbarInteraction,{capture:true,passive:true});
 function buildMenu(){quickbar.innerHTML="";actgrid.innerHTML="";for(const A of DATA){const m=META[A[0]]||[A[0],A[1],""];const qb=document.createElement("button");qb.dataset.act=A[0];const label=document.createElement("span"),badge=document.createElement("span");label.className="act-pill-label";label.textContent=m[0];badge.className="act-pill-count";badge.setAttribute("aria-hidden","true");qb.append(label,badge);qb.setAttribute("aria-label",`${m[0]} — ${m[1]}`);qb.onclick=()=>activateQuickbarAct(A[0]);quickbar.appendChild(qb);const b=document.createElement("button");b.className="act-jump";b.dataset.act=A[0];b.innerHTML=`<b>${esc(m[0])}</b>${esc(m[1])}<small>${A[3].length} artykułów/jednostek</small>`;b.onclick=()=>renderAct(A[0]);actgrid.appendChild(b)}}
 function searchItemMarkup(row,act){return `<a class="search-item" href="#${esc(row[0])}" data-a="${esc(act)}"><b>${esc(row[2])} · ${esc(row[3])}</b><small>${esc(row[4].map(unit=>unit[3]).join(" ").slice(0,190))}…</small></a>`}
 function remainingResultText(value){const tens=value%100,ones=value%10,words=value===1?"dalszy wynik":ones>=2&&ones<=4&&(tens<12||tens>14)?"dalsze wyniki":"dalszych wyników";return `+ ${value} ${words} w tej ustawie`}
@@ -291,7 +298,7 @@ function expandSearchGroup(button){const group=searchResultGroups.get(button.dat
 results.addEventListener("click",event=>{const button=event.target.closest("button[data-search-more]");if(!button)return;event.preventDefault();expandSearchGroup(button)});
 function beginSearchEditing(){document.body.classList.add('search-editing');globalThis.__READER_TOC_CLOSE?.(false)}
 q.addEventListener('focus',beginSearchEditing);
-q.addEventListener('blur',()=>{document.body.classList.remove('search-editing')});
+q.addEventListener('blur',()=>{if(emptySearchQuickbarInteraction)return;document.body.classList.remove('search-editing')});
 q.oninput=()=>{clearTimeout(timer);clearSearchReturn();if(norm(q.value.trim()).length<2){closeSearch();return}if(!searchState.active)captureSearchScope();emitSearchState(true,searchState.counts,true);timer=setTimeout(search,300)};q.addEventListener("focus",()=>{if(norm(q.value.trim()).length>=2&&!results.classList.contains("show")){clearSearchReturn();search()}});document.getElementById("clear").addEventListener('pointerdown',event=>event.preventDefault());document.getElementById("clear").onclick=()=>clearSearchInput(true);document.getElementById("home").onclick=e=>{e.preventDefault();clearSearchInput(false);document.getElementById("start").scrollIntoView({behavior:"auto"});history.replaceState(null,"","#start")};
 function search(){const s=norm(q.value.trim());if(s.length<2){closeSearch();return}if(!searchState.active)captureSearchScope();const terms=s.split(/\s+/),favorites=searchFavoritesOnly?favoriteSearchIds():null,byAct=new Map(DATA.map(A=>[A[0],[]]));for(const item of searchIndex){if(!packages.isEnabled(item.act)||searchExcluded.has(item.act)||(favorites&&!favorites.has(item.row[0])))continue;if(terms.every(term=>searchText(item).includes(term)))byAct.get(item.act)?.push(item.row)}const groups=DATA.map(A=>({act:A[0],rows:byAct.get(A[0])||[]})).filter(group=>group.rows.length);const counts=new Map(groups.map(group=>[group.act,group.rows.length]));searchResultGroups.clear();if(!groups.length){const allExcluded=DATA.every(A=>!packages.isEnabled(A[0])||searchExcluded.has(A[0]));results.innerHTML=`<div class="search-empty"><b>Brak wyników</b><small>${allExcluded?"Wszystkie ustawy są wyłączone z wyszukiwania.":searchFavoritesOnly?"Brak pasujących wyników w ulubionych.":"Spróbuj krótszego lub innego hasła."}</small></div>`}else{const perGroup=Math.max(4,Math.min(24,Math.floor(48/groups.length)));for(const group of groups){group.shown=Math.min(group.rows.length,perGroup);searchResultGroups.set(group.act,group)}results.innerHTML=groups.map(searchGroupMarkup).join("")}results.classList.add("show");emitSearchState(true,counts);bindSearchResultLinks()}
 globalThis.__POLICE_SEARCH_REFRESH=search;

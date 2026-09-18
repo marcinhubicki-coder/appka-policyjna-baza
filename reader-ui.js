@@ -32,7 +32,7 @@
   const wrap=document.createElement('div');wrap.className='quickbar-wrap';bar.before(wrap);wrap.append(bar);
   const more=button('','acts-more',openActPicker),moreLabel=document.createElement('span'),moreSlot=document.createElement('div');moreLabel.textContent='+';more.append(moreLabel);more.dataset.maxCount='+'+DATA.length;more.setAttribute('aria-label','Wybierz akt z pełnej listy');moreSlot.className='acts-more-slot';moreSlot.append(more);wrap.append(moreSlot);
   let pillsQueued=false,tailResting=false,releaseTimer=0,settleTimer=0,settlingUntil=0,lastLeft=0,lastCue=1,pillPointer=null,pillTouch=null,tailPull=0,tailAnchor=null,pillSuppressUntil=0;
-  let tailCanSnap=true,tailFrame=0,revealFrame=0,searchRevealGuard=false;
+  let tailCanSnap=true,tailFrame=0,revealFrame=0,autoPillMotion=false,autoPillCode='',autoPillTimer=0;
   const motionEase=t=>core.readingEase?.(t)??(t*t*(3-2*t));
   function finishTailScroll(){
     cancelAnimationFrame(tailFrame);const from=bar.scrollLeft,target=Math.max(0,bar.scrollWidth-wrap.clientWidth),began=performance.now();
@@ -47,6 +47,7 @@
     return matrix?(matrix.length===16?matrix[12]:matrix[4])||0:0;
   }
   function setPull(value){tailPull=value;wrap.style.setProperty('--tail-pull',value+'px')}
+  function cancelAutoPillMotion(){clearTimeout(autoPillTimer);autoPillTimer=0;cancelAnimationFrame(revealFrame);revealFrame=0;autoPillMotion=false;autoPillCode=''}
   function beginTail(point){
     const current=renderedPull();clearTimeout(releaseTimer);
     if(current<-.1){wrap.classList.add('is-tail-dragging');setPull(current);tailAnchor={x:point.x-120*Math.log(Math.max(.001,1+current/48)),y:point.y}}
@@ -76,13 +77,14 @@
     if(pulled||atRightEdge()){lastCue=0;restTail(true)}else releaseTail();
   }
   function restTail(on){
+    if(on&&autoPillMotion)return;
     if(tailResting===on)return;if(!on){tailCanSnap=false;cancelAnimationFrame(tailFrame)}tailResting=on;clearTimeout(releaseTimer);clearTimeout(settleTimer);
     settlingUntil=performance.now()+360;wrap.classList.toggle('is-tail-resting',on);if(on){more.style.setProperty('--cue-amount','0');more.disabled=true;more.tabIndex=-1;more.setAttribute('aria-hidden','true')}
     if(on){cancelAnimationFrame(revealFrame);finishTailScroll()}settleTimer=setTimeout(()=>{lastLeft=bar.scrollLeft;queuePills()},370);queuePills();
   }
   function releaseTail(){
     clearTimeout(releaseTimer);
-    if(tailResting||pillPointer||pillTouch||searchRevealGuard||revealFrame||lastCue!==0||bar.clientWidth<=0||bar.querySelector('[data-count-moving]'))return;
+    if(tailResting||pillPointer||pillTouch||autoPillMotion||revealFrame||lastCue!==0||bar.clientWidth<=0||bar.querySelector('[data-count-moving]'))return;
     releaseTimer=setTimeout(()=>{if(!pillPointer&&!pillTouch&&lastCue===0)restTail(true)},0);
   }
   function measurePills(){
@@ -92,9 +94,8 @@
     const right=viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0),cue=atRightEdge()||(tailResting&&performance.now()<settlingUntil)?{text:'+',amount:0,count:0}:core.overflowCue(rects,{right});
     if(tailResting&&!atRightEdge()&&performance.now()>=settlingUntil&&(rects.at(-1)?.right||0)>right+1.5)restTail(false);
     lastCue=cue.amount;
-    if(searchRevealGuard&&cue.count>0)searchRevealGuard=false;
     if(cue.amount>.65)tailCanSnap=true;
-    if(!tailResting&&!searchRevealGuard&&!revealFrame&&tailCanSnap&&cue.count===0&&cue.amount<1&&bar.scrollWidth>bar.clientWidth&&!bar.querySelector('[data-count-moving]')){restTail(true);return}
+    if(!tailResting&&!autoPillMotion&&!revealFrame&&tailCanSnap&&cue.count===0&&cue.amount<1&&bar.scrollWidth>bar.clientWidth&&!bar.querySelector('[data-count-moving]')){restTail(true);return}
     bar.style.setProperty('--pills-fade-left',Math.min(20,Math.max(0,bar.scrollLeft))+'px');
     bar.style.setProperty('--pills-fade-right',Math.min(20,Math.max(0,(rects.at(-1)?.right||0)-right))+'px');
     if(moreLabel.textContent!==cue.text)moreLabel.textContent=cue.text;
@@ -104,48 +105,66 @@
   }
   function queuePills(){if(pillsQueued)return;pillsQueued=true;requestAnimationFrame(()=>{pillsQueued=false;measurePills()})}
   function revealPill(code){
-    const pill=bar.querySelector('[data-act="'+CSS.escape(code||'')+'"]');if(!pill||pill.hidden||pillPointer||pillTouch)return;
-    const r=pill.getBoundingClientRect(),box=bar.getBoundingClientRect();if(!box.width)return;
-    const movingLeft=r.left<box.left,searchDriven=!!globalThis.__POLICE_SEARCH_STATE?.active;
-    const visiblePills=[...bar.querySelectorAll('button[data-act]')].filter(node=>!node.hidden),last=pill===visiblePills.at(-1);
-    if(searchDriven&&!movingLeft)searchRevealGuard=false;
-    if(r.left>=box.left&&r.right<=box.right){if(last&&atRightEdge())restTail(true);return}
-    cancelAnimationFrame(revealFrame);
-    if(movingLeft){
-      if(searchDriven)searchRevealGuard=true;
-      if(tailResting){restTail(false);return}
-      restTail(false);
-    }
-    const from=bar.scrollLeft;
-    let target=Math.max(0,Math.min(bar.scrollWidth-bar.clientWidth,from+(movingLeft?r.left-box.left:r.right-box.right)));
-    if(movingLeft&&searchDriven){
-      const tail=visiblePills.at(-1),tr=tail?.getBoundingClientRect(),right=box.right-parseFloat(getComputedStyle(bar).paddingRight||0);
-      if(tr?.width){
-        const revealShift=from-target,thresholdShift=Math.max(0,right-(tr.left+tr.width*.3)+2);
-        if(thresholdShift>revealShift)target=Math.max(0,from-thresholdShift);
+    const pill=bar.querySelector('[data-act="'+CSS.escape(code||'')+'"]');if(!pill||pill.hidden)return;
+    if(pillPointer||pillTouch){clearTimeout(autoPillTimer);autoPillTimer=setTimeout(()=>revealPill(code),40);return}
+    const firstBox=bar.getBoundingClientRect(),firstRect=pill.getBoundingClientRect();if(!firstBox.width)return;
+    const visible=[...bar.querySelectorAll('button[data-act]')].filter(node=>!node.hidden),last=pill===visible.at(-1);
+    const movingLeft=firstRect.left<firstBox.left,forceCue=movingLeft&&(tailResting||atRightEdge());
+    if(firstRect.left>=firstBox.left&&firstRect.right<=firstBox.right){cancelAutoPillMotion();if(last&&atRightEdge())restTail(true);return}
+    clearTimeout(autoPillTimer);cancelAnimationFrame(revealFrame);revealFrame=0;autoPillMotion=true;autoPillCode=code;
+    const wasResting=tailResting;
+    if(movingLeft)restTail(false);
+    const finish=()=>{
+      if(autoPillCode!==code)return;
+      autoPillMotion=false;autoPillCode='';autoPillTimer=0;revealFrame=0;queuePills();
+      if(last&&atRightEdge())restTail(true);
+    };
+    const run=(attempt=0)=>{
+      if(!autoPillMotion||autoPillCode!==code)return;
+      const targetPill=bar.querySelector('[data-act="'+CSS.escape(code||'')+'"]');if(!targetPill||targetPill.hidden){finish();return}
+      const box=bar.getBoundingClientRect(),r=targetPill.getBoundingClientRect(),nodes=[...bar.querySelectorAll('button[data-act]')].filter(node=>!node.hidden);
+      if(!box.width){finish();return}
+      const tail=nodes.at(-1),tr=tail?.getBoundingClientRect(),right=box.right-parseFloat(getComputedStyle(bar).paddingRight||0);
+      const rects=nodes.map(node=>{const x=node.getBoundingClientRect();return{left:x.left,right:x.right,width:x.width}}),cue=core.overflowCue(rects,{right});
+      const leftNeed=Math.max(0,box.left-r.left+2),rightNeed=Math.max(0,r.right-box.right+2);
+      const cueNeed=forceCue&&cue.count===0&&tr?.width?Math.max(0,right-(tr.left+tr.width*.3)+4):0;
+      const from=bar.scrollLeft;
+      let to=from;
+      if(leftNeed>0||cueNeed>0)to=Math.max(0,from-Math.max(leftNeed,cueNeed));
+      else if(rightNeed>0)to=Math.min(bar.scrollWidth-bar.clientWidth,from+rightNeed);
+      const needsMove=Math.abs(to-from)>.5,needsCue=forceCue&&cue.count===0,needsReveal=r.left<box.left-1||r.right>box.right+1;
+      if(!needsMove&&!needsCue&&!needsReveal){finish();return}
+      if(!needsMove&&attempt>=2){finish();return}
+      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,began=performance.now();
+      if(reduced){bar.scrollLeft=to;queuePills();requestAnimationFrame(()=>run(attempt+1));return}
+      function tick(now){
+        if(!autoPillMotion||autoPillCode!==code){revealFrame=0;return}
+        const t=Math.min(1,(now-began)/320);bar.scrollLeft=from+(to-from)*motionEase(t);queuePills();
+        if(t<1)revealFrame=requestAnimationFrame(tick);
+        else{revealFrame=0;requestAnimationFrame(()=>run(attempt+1))}
       }
-    }
-    const began=performance.now();
-    function tick(now){const t=matchMedia('(prefers-reduced-motion: reduce)').matches?1:Math.min(1,(now-began)/360);bar.scrollLeft=from+(target-from)*motionEase(t);queuePills();if(t<1)revealFrame=requestAnimationFrame(tick);else{revealFrame=0;queuePills();if(last)restTail(true)}}
-    revealFrame=requestAnimationFrame(tick);
+      revealFrame=requestAnimationFrame(tick);
+    };
+    if(movingLeft&&wasResting&&!matchMedia('(prefers-reduced-motion: reduce)').matches)autoPillTimer=setTimeout(()=>{autoPillTimer=0;run()},370);
+    else revealFrame=requestAnimationFrame(()=>{revealFrame=0;run()});
   }
   globalThis.__READER_QUICKBAR={reveal:revealPill};
   const pillSizes=new ResizeObserver(queuePills);
   function observePills(){pillSizes.disconnect();pillSizes.observe(bar);bar.querySelectorAll('button[data-act]').forEach(pill=>pillSizes.observe(pill));queuePills()}
   bar.addEventListener('scroll',()=>{if(tailResting&&performance.now()>settlingUntil&&bar.scrollLeft<lastLeft-.5)restTail(false);lastLeft=bar.scrollLeft;queuePills();releaseTail()},{passive:true});
   bar.addEventListener('scrollend',releaseTail,{passive:true});
-  bar.addEventListener('pointerdown',event=>{searchRevealGuard=false;cancelAnimationFrame(revealFrame);pillPointer={x:event.clientX,y:event.clientY};beginTail(pillPointer)},{passive:true});
+  bar.addEventListener('pointerdown',event=>{cancelAutoPillMotion();pillPointer={x:event.clientX,y:event.clientY};beginTail(pillPointer)},{passive:true});
   bar.addEventListener('pointermove',event=>{if(!pillTouch)dragTail(event,{x:event.clientX,y:event.clientY},pillPointer)},{passive:false});
   function releasePointer(){if(!pillPointer)return;pillPointer=null;finishTail()}
   window.addEventListener('pointerup',releasePointer,{passive:true});window.addEventListener('pointercancel',releasePointer,{passive:true});
   // Native touch scrolling cancels Pointer Events before the finger is lifted.
-  bar.addEventListener('touchstart',event=>{searchRevealGuard=false;const touch=event.touches[0];if(touch){pillTouch={x:touch.clientX,y:touch.clientY};beginTail(pillTouch)}},{passive:true});
+  bar.addEventListener('touchstart',event=>{cancelAutoPillMotion();const touch=event.touches[0];if(touch){pillTouch={x:touch.clientX,y:touch.clientY};beginTail(pillTouch)}},{passive:true});
   bar.addEventListener('touchmove',event=>{const touch=event.touches[0];if(touch)dragTail(event,{x:touch.clientX,y:touch.clientY},pillTouch)},{passive:false});
   window.addEventListener('touchend',event=>{if(!event.touches.length&&pillTouch){pillTouch=null;finishTail()}},{passive:true});
   window.addEventListener('touchcancel',()=>{if(pillTouch){pillTouch=null;finishTail()}},{passive:true});
   bar.addEventListener('click',event=>{if(event.detail!==0&&Date.now()<pillSuppressUntil){event.preventDefault();event.stopImmediatePropagation()}},true);
-  bar.addEventListener('wheel',event=>{searchRevealGuard=false;cancelAnimationFrame(revealFrame);if(event.deltaX<0||(event.shiftKey&&event.deltaY<0))restTail(false)},{passive:true});
-  bar.addEventListener('keydown',event=>{if(['ArrowLeft','Home'].includes(event.key)){searchRevealGuard=false;restTail(false)}});
+  bar.addEventListener('wheel',event=>{cancelAutoPillMotion();if(event.deltaX<0||(event.shiftKey&&event.deltaY<0))restTail(false)},{passive:true});
+  bar.addEventListener('keydown',event=>{if(['ArrowLeft','Home'].includes(event.key)){cancelAutoPillMotion();restTail(false)}});
   window.addEventListener('police-law-quickbar-motion',queuePills);
   new MutationObserver(observePills).observe(bar,{childList:true});observePills();
   function openActPicker(){
@@ -259,7 +278,7 @@
     const old=document.getElementById('collapseToc');if(old){old.textContent='Otwórz spis';old.setAttribute('aria-controls','readerToc');old.onclick=openToc}
   }
   function clearState(){document.getElementById('clear').hidden=!document.getElementById('q').value}
-  document.getElementById('q').addEventListener('focus',()=>{if(tocOpen)closeToc(false)});document.getElementById('q').addEventListener('input',clearState);window.addEventListener('police-law-search-state',event=>{if(!event.detail?.active)searchRevealGuard=false;queuePills();clearState()});
+  document.getElementById('q').addEventListener('focus',()=>{if(tocOpen)closeToc(false)});document.getElementById('q').addEventListener('input',clearState);window.addEventListener('police-law-search-state',event=>{if(!event.detail?.active)cancelAutoPillMotion();queuePills();clearState()});
   window.addEventListener('police-law-rendered',onRendered);window.addEventListener('police-law-articles-rendered',()=>installArticleTools());window.addEventListener('police-law-favorites-change',()=>requestAnimationFrame(()=>installArticleTools()));window.addEventListener('police-law-packages-change',()=>{renderPackages();queuePills()});
   window.addEventListener('resize',()=>{if(tocOpen)closeToc();queuePills()},{passive:true});clearState();
 })();

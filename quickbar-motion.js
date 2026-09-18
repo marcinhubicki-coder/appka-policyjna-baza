@@ -4,7 +4,6 @@
   if(!bar||!results)return;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),badges=new Map();
   let scrollFrame=0,activeFrame=0,scrollTarget='',groups=[],highlighted='';
-  let revealRetryTimer=0,revealRetrySlot=null,revealRetryEnd=null,revealPushFrame=0;
   function stopBadge(state){clearTimeout(state.delay);clearTimeout(state.expand);state.animation?.cancel();state.animation=null;state.badge.removeAttribute('data-count-moving')}
   function exactBadge(state){state.badge.textContent=String(state.value);state.badge.style.setProperty('--hit-digits',String(String(state.value).length));state.badge.removeAttribute('data-count-moving');window.dispatchEvent(new CustomEvent('police-law-quickbar-motion'))}
   function rollBadge(state){
@@ -35,65 +34,14 @@
       },150);
     }
   }
-  function clearRevealRetry(){
-    clearTimeout(revealRetryTimer);revealRetryTimer=0;cancelAnimationFrame(revealPushFrame);revealPushFrame=0;
-    if(revealRetrySlot&&revealRetryEnd)revealRetrySlot.removeEventListener('transitionend',revealRetryEnd);
-    revealRetrySlot=null;revealRetryEnd=null;
-  }
-  function pushRevealPastCue(code){
-    const pill=bar.querySelector('[data-act="'+CSS.escape(code||'')+'"]');
-    if(!pill||pill.hidden||highlighted!==code||!globalThis.__POLICE_SEARCH_STATE?.active)return;
-    const box=bar.getBoundingClientRect(),r=pill.getBoundingClientRect(),visible=[...bar.querySelectorAll('button[data-act]')].filter(node=>!node.hidden),tail=visible.at(-1),tr=tail?.getBoundingClientRect();
-    if(!box.width)return;
-    const right=box.right-parseFloat(getComputedStyle(bar).paddingRight||0);
-    // Move far enough to fully expose the active pill and to put the last pill beyond
-    // the 30% overflow threshold used by reader-core. The extra 4px keeps Safari out
-    // of the fractional-pixel dead zone around that threshold.
-    const revealShift=Math.max(0,box.left-r.left+2),cueShift=tr?.width?Math.max(0,right-(tr.left+tr.width*.3)+4):0;
-    const shift=Math.max(revealShift,cueShift),from=bar.scrollLeft,to=Math.max(0,from-shift);
-    if(from-to<.5){window.dispatchEvent(new CustomEvent('police-law-quickbar-motion'));return}
-    if(reduced.matches){bar.scrollLeft=to;window.dispatchEvent(new CustomEvent('police-law-quickbar-motion'));return}
-    const started=performance.now();
-    function step(now){
-      if(highlighted!==code||!globalThis.__POLICE_SEARCH_STATE?.active){revealPushFrame=0;return}
-      const t=Math.min(1,(now-started)/300),ease=1-Math.pow(1-t,3);bar.scrollLeft=from+(to-from)*ease;
-      if(t<1)revealPushFrame=requestAnimationFrame(step);else{revealPushFrame=0;window.dispatchEvent(new CustomEvent('police-law-quickbar-motion'))}
-    }
-    revealPushFrame=requestAnimationFrame(step);
-  }
-  function revealActivePill(code){
-    clearRevealRetry();
-    const api=globalThis.__READER_QUICKBAR,pill=bar.querySelector('[data-act="'+CSS.escape(code||'')+'"]');
-    if(!api?.reveal||!pill||pill.hidden)return;
-    const wrap=bar.closest('.quickbar-wrap'),slot=wrap?.querySelector('.acts-more-slot'),r=pill.getBoundingClientRect(),box=bar.getBoundingClientRect();
-    const reopening=!!(wrap?.classList.contains('is-tail-resting')&&r.left<box.left);
-    api.reveal(code);
-    if(!reopening)return;
-    let retried=false;
-    const retry=()=>{
-      if(retried)return;retried=true;
-      clearTimeout(revealRetryTimer);revealRetryTimer=0;
-      if(revealRetrySlot&&revealRetryEnd)revealRetrySlot.removeEventListener('transitionend',revealRetryEnd);
-      revealRetrySlot=null;revealRetryEnd=null;
-      requestAnimationFrame(()=>pushRevealPastCue(code));
-    };
-    if(slot){
-      revealRetrySlot=slot;
-      revealRetryEnd=event=>{if(event.propertyName==='width')retry()};
-      slot.addEventListener('transitionend',revealRetryEnd);
-    }
-    revealRetryTimer=setTimeout(retry,reduced.matches?0:380);
-  }
   function highlight(code){
     const changed=highlighted!==code;highlighted=code;
     for(const pill of bar.querySelectorAll('button[data-act]')){
       const on=pill.dataset.act===code;if(pill.classList.contains('on')!==on)pill.classList.toggle('on',on);
       if(on&&pill.getAttribute('aria-current')!=='true')pill.setAttribute('aria-current','true');else if(!on&&pill.hasAttribute('aria-current'))pill.removeAttribute('aria-current');
     }
-    if(changed){
-      clearRevealRetry();
-      if(globalThis.__POLICE_SEARCH_STATE?.active)revealActivePill(code);
-    }
+    if(changed&&globalThis.__POLICE_SEARCH_STATE?.active)globalThis.__READER_QUICKBAR?.reveal(code);
+    return changed;
   }
   function syncActive(){
     activeFrame=0;if(!globalThis.__POLICE_SEARCH_STATE?.active||scrollTarget)return;
@@ -107,7 +55,7 @@
   function stopScroll(){if(scrollFrame)cancelAnimationFrame(scrollFrame);scrollFrame=0;scrollTarget='';queueActive()}
   function goToAct(code){
     const group=groups.find(node=>node.dataset.searchAct===code);if(!group)return false;
-    stopScroll();scrollTarget=code;highlight(code);
+    stopScroll();scrollTarget=code;const changed=highlight(code);if(!changed)globalThis.__READER_QUICKBAR?.reveal(code);
     const from=results.scrollTop,to=Math.max(0,Math.min(results.scrollHeight-results.clientHeight,from+group.getBoundingClientRect().top-results.getBoundingClientRect().top-1));
     if(reduced.matches||Math.abs(to-from)<1){results.scrollTop=to;scrollTarget='';return true}
     const started=performance.now();
@@ -123,7 +71,7 @@
   results.addEventListener('keydown',event=>{if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(event.key))stopScroll()});
   window.addEventListener('police-law-search-state',event=>{
     const detail=event.detail;stopScroll();updateBadges(detail);
-    if(!detail.active){clearRevealRetry();groups=[];highlight(typeof ACT!=='undefined'?ACT?.[0]:'');return}
+    if(!detail.active){groups=[];highlight(typeof ACT!=='undefined'?ACT?.[0]:'');return}
     if(!detail.pending){groups=[...results.querySelectorAll('.search-group')];queueActive()}
   });
 })();

@@ -174,7 +174,8 @@
       if(!pill||pill.hidden)continue;
       const item=button('','act-picker-item',()=>{
         const code=act[0];closeModal();const pill=bar.querySelector('[data-act="'+CSS.escape(code)+'"]');
-        pill?.click();if(pill){const r=pill.getBoundingClientRect(),box=bar.getBoundingClientRect();bar.scrollTo({left:bar.scrollLeft+r.left-box.left-(box.width-r.width)/2,behavior:'auto'})}queuePills();
+        if(!globalThis.__POLICE_QUICKBAR_ACT?.(code))pill?.click();
+        if(pill&&document.body.matches('.search-active,.search-editing')){const r=pill.getBoundingClientRect(),box=bar.getBoundingClientRect();bar.scrollTo({left:bar.scrollLeft+r.left-box.left-(box.width-r.width)/2,behavior:'auto'})}queuePills();
       });
       item.setAttribute('aria-current',String(ACT?.[0]===act[0]));
       const short=document.createElement('b');short.textContent=meta[0];const copy=document.createElement('span');copy.textContent=meta[1];

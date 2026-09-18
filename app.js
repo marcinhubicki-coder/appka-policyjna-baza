@@ -270,7 +270,17 @@ function canonicalLegalId(id){for(const act of DATA){const meta=act[4];if(meta?.
 function gotoLegalId(id,{smooth=false,alignTop=true}={}){id=canonicalLegalId(id);const existing=document.getElementById(id);if(existing){history.replaceState(null,"","#"+id);jump(id,smooth,alignTop);return true}const code=idMap.get(id);if(!code)return false;renderAct(code,id,false);jump(id,smooth,alignTop);return true}
 globalThis.__POLICE_GOTO_ID=gotoLegalId;
 globalThis.__POLICE_STREAM_STOP=stopStream;
-function buildMenu(){quickbar.innerHTML="";actgrid.innerHTML="";for(const A of DATA){const m=META[A[0]]||[A[0],A[1],""];const qb=document.createElement("button");qb.dataset.act=A[0];const label=document.createElement("span"),badge=document.createElement("span");label.className="act-pill-label";label.textContent=m[0];badge.className="act-pill-count";badge.setAttribute("aria-hidden","true");qb.append(label,badge);qb.setAttribute("aria-label",`${m[0]} — ${m[1]}`);qb.onclick=()=>{if(searchState.active){gotoSearchAct(A[0]);return}if(ACT?.[0]!==A[0])renderAct(A[0])};quickbar.appendChild(qb);const b=document.createElement("button");b.className="act-jump";b.dataset.act=A[0];b.innerHTML=`<b>${esc(m[0])}</b>${esc(m[1])}<small>${A[3].length} artykułów/jednostek</small>`;b.onclick=()=>renderAct(A[0]);actgrid.appendChild(b)}}
+function emptySearchQuickNav(){return !searchState.active&&!q.value.trim()&&document.body.classList.contains("search-editing")}
+function activateQuickbarAct(code){
+  if(searchState.active)return gotoSearchAct(code);
+  const leavingSearch=emptySearchQuickNav();
+  if(leavingSearch)clearSearchInput(false);
+  if(ACT?.[0]!==code)renderAct(code);
+  return true;
+}
+globalThis.__POLICE_QUICKBAR_ACT=activateQuickbarAct;
+document.addEventListener("pointerdown",event=>{if(!emptySearchQuickNav())return;const target=event.target.closest?.("#quickbar button[data-act],.quickbar-wrap .acts-more");if(target)event.preventDefault()},true);
+function buildMenu(){quickbar.innerHTML="";actgrid.innerHTML="";for(const A of DATA){const m=META[A[0]]||[A[0],A[1],""];const qb=document.createElement("button");qb.dataset.act=A[0];const label=document.createElement("span"),badge=document.createElement("span");label.className="act-pill-label";label.textContent=m[0];badge.className="act-pill-count";badge.setAttribute("aria-hidden","true");qb.append(label,badge);qb.setAttribute("aria-label",`${m[0]} — ${m[1]}`);qb.onclick=()=>activateQuickbarAct(A[0]);quickbar.appendChild(qb);const b=document.createElement("button");b.className="act-jump";b.dataset.act=A[0];b.innerHTML=`<b>${esc(m[0])}</b>${esc(m[1])}<small>${A[3].length} artykułów/jednostek</small>`;b.onclick=()=>renderAct(A[0]);actgrid.appendChild(b)}}
 function searchItemMarkup(row,act){return `<a class="search-item" href="#${esc(row[0])}" data-a="${esc(act)}"><b>${esc(row[2])} · ${esc(row[3])}</b><small>${esc(row[4].map(unit=>unit[3]).join(" ").slice(0,190))}…</small></a>`}
 function remainingResultText(value){const tens=value%100,ones=value%10,words=value===1?"dalszy wynik":ones>=2&&ones<=4&&(tens<12||tens>14)?"dalsze wyniki":"dalszych wyników";return `+ ${value} ${words} w tej ustawie`}
 function searchMoreMarkup(group){const remaining=group.rows.length-group.shown;return remaining?`<button class="search-group-more" type="button" data-search-more="${esc(group.act)}" aria-label="Pokaż kolejne wyniki w tej ustawie">${remainingResultText(remaining)}</button>`:""}

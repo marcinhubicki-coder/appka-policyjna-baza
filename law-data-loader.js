@@ -58,12 +58,16 @@
     if(!discoveryPromise)discoveryPromise=gunzipJson(manifest.discovery,{packId:"discovery",kind:"discovery"}).then(value=>discovery=value);
     return discoveryPromise;
   }
+  async function loadAct(code){
+    if(dataCache.has(code))return dataCache.get(code);
+    const info=manifest.acts?.[code];if(!info?.data)throw new Error("Brak danych aktu: "+code);
+    const promise=gunzipJson(info.data,{packId:packForAct(code)||code,kind:"data:"+code}).catch(error=>{dataCache.delete(code);throw error});
+    dataCache.set(code,promise);
+    const value=await promise;dataCache.set(code,value);return value;
+  }
   async function loadData(packId){
-    if(dataCache.has(packId))return dataCache.get(packId);
     const pack=packInfo(packId);if(!pack)throw new Error("Nieznany pakiet: "+packId);
-    const promise=gunzipJson(pack.data,{packId,kind:"data"}).catch(error=>{dataCache.delete(packId);throw error});
-    dataCache.set(packId,promise);
-    const value=await promise;dataCache.set(packId,value);return value;
+    return Promise.all(pack.acts.map(loadAct));
   }
   async function loadSearch(packId){
     if(searchCache.has(packId))return searchCache.get(packId);
@@ -74,11 +78,12 @@
   }
   async function ensureActData(code){
     const packId=packForAct(code);if(!packId)throw new Error("Brak pakietu dla "+code);
-    return{packId,data:await loadData(packId)};
+    return{packId,data:await loadAct(code)};
   }
+  function releaseAct(code){return dataCache.delete(code)}
   function releaseData(packId){
-    if(packInfo(packId)?.mandatory)return false;
-    return dataCache.delete(packId);
+    const pack=packInfo(packId);if(!pack)return false;
+    let changed=false;for(const code of pack.acts)changed=dataCache.delete(code)||changed;return changed;
   }
   function releaseSearch(packId){
     if(packInfo(packId)?.mandatory)return false;
@@ -90,7 +95,8 @@
       runtimeVersion:manifest.runtimeVersion,
       routerLoaded:!!router,
       discoveryLoaded:!!discovery,
-      dataPacks:[...dataCache.entries()].filter(([,value])=>!value?.then).map(([id])=>id),
+      dataActs:[...dataCache.entries()].filter(([,value])=>!value?.then).map(([id])=>id),
+      dataPacks:[...new Set([...dataCache.entries()].filter(([,value])=>!value?.then).map(([code])=>packForAct(code)).filter(Boolean))],
       searchPacks:[...searchCache.entries()].filter(([,value])=>!value?.then).map(([id])=>id),
       enabledPacks:enabledPackIds(),
       metrics:Object.fromEntries(metrics)
@@ -99,8 +105,8 @@
   root.__LAW_DATA={
     manifest,
     supported:typeof DecompressionStream==="function"&&typeof fetch==="function",
-    loadRouter,loadDiscovery,loadData,loadSearch,ensureActData,
+    loadRouter,loadDiscovery,loadAct,loadData,loadSearch,ensureActData,
     packForAct,packInfo,enabledPackIds,
-    releaseData,releaseSearch,snapshot
+    releaseAct,releaseData,releaseSearch,snapshot
   };
 })(typeof window!=="undefined"?window:globalThis);

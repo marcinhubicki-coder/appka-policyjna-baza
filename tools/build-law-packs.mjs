@@ -8,6 +8,7 @@ import { loadLegalData } from "./legal-content.mjs";
 const ROOT=process.cwd();
 const PACK_DIR=path.join(ROOT,"packs");
 const ACT_DIR=path.join(ROOT,"acts");
+const DOC_DIR=path.join(ROOT,"documents");
 const REPORT_DIR=path.join(ROOT,"reports");
 
 function loadConfig(){
@@ -40,11 +41,8 @@ function stableObjectEntries(object){
   return Object.fromEntries(Object.entries(object).sort(([a],[b])=>a.localeCompare(b)));
 }
 
-fs.rmSync(PACK_DIR,{recursive:true,force:true});
-fs.rmSync(ACT_DIR,{recursive:true,force:true});
-fs.mkdirSync(PACK_DIR,{recursive:true});
-fs.mkdirSync(ACT_DIR,{recursive:true});
-fs.mkdirSync(REPORT_DIR,{recursive:true});
+for(const dir of [PACK_DIR,ACT_DIR,DOC_DIR])fs.rmSync(dir,{recursive:true,force:true});
+for(const dir of [PACK_DIR,ACT_DIR,DOC_DIR,REPORT_DIR])fs.mkdirSync(dir,{recursive:true});
 
 const config=loadConfig();
 const data=loadLegalData(path.join(ROOT,"data.js"));
@@ -58,31 +56,28 @@ const missingData=[...knownActs].filter(code=>!sourceActs.has(code));
 if(missingConfig.length)throw new Error("Brak konfiguracji aktów: "+missingConfig.join(", "));
 if(missingData.length)console.warn("Akty skonfigurowane bez danych: "+missingData.join(", "));
 
+const isDocument=act=>config.acts[act[0]]?.kind==="document";
+const lawActs=data.filter(act=>!isDocument(act));
+const documentActs=data.filter(isDocument);
+
 const packDefinitions=Object.entries(config.packs)
   .filter(([,pack])=>!pack.future)
   .sort(([,a],[,b])=>(a.order||0)-(b.order||0));
 const packs={};
 for(const [packId,pack] of packDefinitions){
-  const acts=data.filter(act=>config.acts[act[0]].pack===packId);
+  const acts=lawActs.filter(act=>config.acts[act[0]].pack===packId);
   packs[packId]={...pack,acts};
 }
-for(const act of data){
+for(const act of lawActs){
   const packId=config.acts[act[0]].pack;
   if(!packs[packId])throw new Error(`Akt ${act[0]} wskazuje nieistniejący pakiet ${packId}`);
 }
 
-const router={
-  version:2,
-  sourceHash,
-  acts:[],
-  articles:[],
-  ids:[],
-  actArticles:{},
-  migrations:{}
-};
+const router={version:3,sourceHash,acts:[],articles:[],ids:[],actArticles:{},migrations:{}};
 const discovery=[];
 const seenIds=new Set();
-for(const act of data){
+
+for(const act of lawActs){
   const code=act[0],meta=config.acts[code],packId=meta.pack;
   router.acts.push([code,packId,meta.short,meta.name,meta.citation,act[3].length]);
   router.actArticles[code]=act[3].map(row=>row[0]);
@@ -97,7 +92,7 @@ for(const act of data){
   for(const row of act[3]){
     const unitIds=row[4].map((unit,index)=>unit[0]||`${row[0]}@@${index}`);
     router.articles.push([row[0],code,packId,row[2],row[3],unitIds]);
-    discovery.push([row[0],discoveryText(row)]);
+    if(meta.searchable!==false)discovery.push([row[0],discoveryText(row)]);
     if(seenIds.has(row[0]))throw new Error("Powtórzone ID: "+row[0]);
     seenIds.add(row[0]);router.ids.push([row[0],code,packId]);
     for(const unit of row[4]){
@@ -115,9 +110,14 @@ const routerBytes=gzipJson(router,path.join(ROOT,"law-router.json.gz"));
 const discoveryBytes=gzipJson(discovery,path.join(ROOT,"law-discovery.json.gz"));
 
 const actData={};
-for(const act of data){
+for(const act of lawActs){
   const code=act[0],file=`acts/${code}.data.json.gz`,bytes=gzipJson(act,path.join(ROOT,file));
   actData[code]={file,bytes};
+}
+const documentData={};
+for(const act of documentActs){
+  const code=act[0],file=`documents/${code}.data.json.gz`,bytes=gzipJson(act,path.join(ROOT,file));
+  documentData[code]={file,bytes};
 }
 
 const manifestPacks={};
@@ -127,11 +127,14 @@ for(const [packId,pack] of Object.entries(packs)){
   const search=[];
   let articles=0,units=0,dataBytes=0;
   for(const act of acts){
+    const meta=config.acts[act[0]];
     dataBytes+=actData[act[0]].bytes;
     for(const row of act[3]){
       articles++;units+=row[4].length;
-      const preview=tidy(row[4].map(unit=>unit[3]).join(" ")).slice(0,190);
-      search.push([row[0],act[0],articleSearchText(row),preview]);
+      if(meta.searchable!==false){
+        const preview=tidy(row[4].map(unit=>unit[3]).join(" ")).slice(0,190);
+        search.push([row[0],act[0],articleSearchText(row),preview]);
+      }
     }
   }
   const searchFile=`packs/${packId}.search.json.gz`;
@@ -143,7 +146,7 @@ for(const [packId,pack] of Object.entries(packs)){
     order:pack.order||0,
     acts:codes,
     search:searchFile,
-    counts:{acts:acts.length,articles,units},
+    counts:{acts:acts.length,articles,units,searchable:search.length},
     bytes:{data:dataBytes,search:searchBytes}
   };
   totals.acts+=acts.length;totals.articles+=articles;totals.units+=units;
@@ -151,7 +154,7 @@ for(const [packId,pack] of Object.entries(packs)){
 }
 
 const manifest={
-  version:2,
+  version:3,
   sourceHash,
   runtimeVersion,
   router:"law-router.json.gz",
@@ -159,22 +162,42 @@ const manifest={
   discovery:"law-discovery.json.gz",
   discoveryBytes,
   packs:stableObjectEntries(manifestPacks),
-  acts:stableObjectEntries(Object.fromEntries(data.map(act=>{
+  acts:stableObjectEntries(Object.fromEntries(lawActs.map(act=>{
     const code=act[0],meta=config.acts[code];
-    return [code,{...meta,articles:act[3].length,data:actData[code].file,dataBytes:actData[code].bytes}];
+    return [code,{...meta,kind:meta.kind||"law",articles:act[3].length,data:actData[code].file,dataBytes:actData[code].bytes}];
   })))
 };
 fs.writeFileSync(path.join(ROOT,"law-manifest.js"),
   `globalThis.__LAW_MANIFEST=Object.freeze(${JSON.stringify(manifest)});\n`);
 
+const documentManifest={
+  version:1,
+  sourceHash,
+  runtimeVersion,
+  groups:config.documents?.groups||[],
+  acts:stableObjectEntries(Object.fromEntries(documentActs.map(act=>{
+    const code=act[0],meta=config.acts[code];
+    return [code,{...meta,kind:"document",rows:act[3].length,data:documentData[code].file,dataBytes:documentData[code].bytes}];
+  })))
+};
+fs.writeFileSync(path.join(ROOT,"document-manifest.js"),
+  `globalThis.__DOCUMENT_MANIFEST=Object.freeze(${JSON.stringify(documentManifest)});\n`);
+
+const documentTotals={
+  acts:documentActs.length,
+  rows:documentActs.reduce((n,act)=>n+act[3].length,0),
+  units:documentActs.reduce((n,act)=>n+act[3].reduce((sum,row)=>sum+row[4].length,0),0),
+  compressedBytes:Object.values(documentData).reduce((n,item)=>n+item.bytes,0)
+};
 const stats={
-  version:2,
+  version:3,
   sourceHash,
   runtimeVersion,
   sourceBytes:sourceBuffer.length,
   routerCompressedBytes:routerBytes,
   discoveryCompressedBytes:discoveryBytes,
   totals,
+  documents:documentTotals,
   packs:Object.fromEntries(Object.entries(manifestPacks).map(([id,pack])=>[id,{counts:pack.counts,bytes:pack.bytes,acts:pack.acts}]))
 };
 fs.writeFileSync(path.join(REPORT_DIR,"offline-pack-stats.json"),JSON.stringify(stats,null,2)+"\n");

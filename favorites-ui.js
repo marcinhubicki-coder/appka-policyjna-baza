@@ -43,10 +43,11 @@
   function addFavorite(id){const items=[...read()],row=rowFor(id),act=actForId(id);if(!row||!act||items.some(item=>item.id===id))return;closeArticlePopover();closeSwipe(true);items.unshift({id,act:act[0],num:row[2],topic:row[3]||'',dataRevision:act[4]?.revision});save(items);syncLegacy()}
   function closeScopePopover(){const pop=document.querySelector('.favorites-scope-popover');if(pop){pop.remove();globalThis.__READER_POPOVER?.close(pop)}}
   function closeArticlePopover(){const pop=document.querySelector('.favorite-article-popover');if(pop){pop.remove();globalThis.__READER_POPOVER?.close(pop)}}
-  function setAllActs(next,code,targetId=null){
+  async function setAllActs(next,code,targetId=null){
     closeScopePopover();closeArticlePopover();
     if(next){
       const items=read();
+      await globalThis.__POLICE_ENSURE_ACTS?.(items.map(item=>item.act));
       singleActCode=code||ACT?.[0]||singleActCode;
       const current=[...view.querySelectorAll('article.legal-unit')].find(article=>{const rect=article.getBoundingClientRect(),top=(document.querySelector('.top')?.getBoundingClientRect().bottom||0)+8;return rect.top<=top&&rect.bottom>top});
       allActiveId=targetId||(current&&items.some(item=>item.id===current.id)?current.id:'');

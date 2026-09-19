@@ -248,9 +248,11 @@ async function load(){
       });
       return;
     }catch(error){
-      console.warn("Offline packs unavailable; falling back to legacy data.",error);
-      prebuiltSearchMode=false;
+      console.warn("Offline packs unavailable; restarting in legacy mode.",error);
       PERF.update({},{packFallback:true,packFallbackReason:error?.message||String(error)});
+      const url=new URL(location.href);url.searchParams.set("legacy","1");location.replace(url.href);
+      await new Promise(()=>{});
+      return;
     }
   }
   const decodeStarted=PERF.now(),raw=await gunzipB64((window.__POLICE_B64||[]).join(""));

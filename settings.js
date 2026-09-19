@@ -33,10 +33,11 @@
       ['Wczytany widok',`${state.streamRenderedArticles||0}/${state.streamTotalArticles||state.lastActArticles||0} art. · partia ${duration(m.lastChunkRenderMs)}`],
       ['Menu artykułów',m.lastDrawerBuildMs==null?'przy pierwszym otwarciu':`${actLabel(state.lastDrawerAct)} · ${state.lastDrawerArticles||0} art. · ${duration(m.lastDrawerBuildMs)}`],
       ['Spis artykułów',m.lastTocBuildMs==null?'przy pierwszym rozwinięciu':`${actLabel(state.lastTocAct)} · ${duration(m.lastTocBuildMs)}`],
-      ['Wyszukiwarka',m.searchReadyMs==null?'przygotowywanie indeksów':`gotowa · ${duration(m.searchWorkMs)} pracy · ${state.searchItems||0} art.`]
+      ['Wyszukiwarka',m.searchReadyMs==null?'indeksy jeszcze nieużywane':state.searchMode==='prebuilt'?`gotowy indeks · ${state.searchItems||0} art. · wczytanie ${duration(m.searchLoadMs??m.searchWorkMs)}`:`gotowa · ${duration(m.searchWorkMs)} pracy · ${state.searchItems||0} art.`]
     ];
     if(Number.isFinite(m.lastSearchMs))rows.push(['Ostatnie wyszukiwanie',`${duration(m.lastSearchMs)} · ${state.lastSearchHits||0} aktywnych + ${state.lastDiscoveryHits||0} poza listą`]);
-    if(state.loadedDataPacks?.length)rows.push(['Treść w RAM',state.loadedDataPacks.map(packLabel).join(', ')]);
+    if(state.loadedDataActs?.length)rows.push(['Akty w RAM',state.loadedDataActs.map(actLabel).join(', ')]);
+    else if(state.loadedDataPacks?.length)rows.push(['Treść w RAM',state.loadedDataPacks.map(packLabel).join(', ')]);
     if(state.loadedSearchPacks?.length)rows.push(['Indeksy w RAM',state.loadedSearchPacks.map(packLabel).join(', ')]);
     if(offlineLawBytes)rows.push(['Biblioteka prawa offline',bytes(offlineLawBytes)]);
     if(dataSize)rows.push(['Wczytane w tej sesji',`${dataSize} · ${dataSource}`]);

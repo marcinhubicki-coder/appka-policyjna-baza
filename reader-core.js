@@ -3,7 +3,8 @@
   const KEY='police-law-packages-v1',ORDER_KEY='police-law-act-order-v1',DEFAULT_OFF=new Set(['bim','alk']);
   let preferences={};
   try{const value=JSON.parse(root.localStorage?.getItem(KEY)||'{}');if(value&&typeof value==='object'&&!Array.isArray(value))preferences=value}catch(_){}
-  function isEnabled(code){return typeof preferences[code]==='boolean'?preferences[code]:!DEFAULT_OFF.has(code)}
+  function defaultEnabled(code){const configured=root.__LAW_CONFIG?.acts?.[code]?.defaultEnabled;return typeof configured==='boolean'?configured:!DEFAULT_OFF.has(code)}
+  function isEnabled(code){return typeof preferences[code]==='boolean'?preferences[code]:defaultEnabled(code)}
   function setEnabled(code,on){
     return setMany([code],on);
   }

@@ -1,4 +1,5 @@
-import { performance } from "node:perf_hooks";\nimport fs from "node:fs";
+import { performance } from "node:perf_hooks";
+import fs from "node:fs";
 import { loadLegalData } from "./legal-content.mjs";
 
 const data=loadLegalData("data.js");

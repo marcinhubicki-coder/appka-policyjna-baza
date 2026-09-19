@@ -16,5 +16,5 @@ assert.match(app,/Także w pozostałej bazie/,"Brak wyników katalogowych poza a
 assert.match(app,/__POLICE_RUN_BENCHMARK/,"Brak benchmarku urządzenia");
 const sw=fs.readFileSync("sw.js","utf8");
 assert.match(sw,/LAW_ASSETS/,"Service worker nie zna paczek prawa");
-assert.match(sw,/law-catalog\.json\.gz/,"Katalog nie jest gwarantowany offline");
+assert.match(sw,/LAW_MANIFEST\.catalog/,"Katalog nie jest gwarantowany offline");
 console.log(JSON.stringify({status:"ok",runtime:"offline-packs-v1"},null,2));

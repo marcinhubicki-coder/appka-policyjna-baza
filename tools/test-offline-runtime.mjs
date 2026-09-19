@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 
-for(const file of ["app.js","reader-core.js","reader-settings.js","settings.js","law-config.js","law-data-loader.js","sw.js"]){
+for(const file of ["app.js","reader-core.js","reader-settings.js","settings.js","favorites-ui.js","nav.js","law-config.js","law-data-loader.js","sw.js"]){
   const source=fs.readFileSync(file,"utf8");
   new vm.Script(source,{filename:file});
 }

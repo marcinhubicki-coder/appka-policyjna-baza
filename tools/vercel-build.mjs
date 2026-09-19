@@ -5,6 +5,7 @@ fs.mkdirSync("reports",{recursive:true});
 const steps=[
   ["build-law-packs","tools/build-law-packs.mjs"],
   ["test-offline-packs","tools/test-offline-packs.mjs"],
+  ["test-offline-runtime","tools/test-offline-runtime.mjs"],
   ["benchmark-law-packs","tools/benchmark-law-packs.mjs"]
 ];
 const log=[];

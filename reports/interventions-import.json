@@ -1,12 +1,12 @@
 {
-  "asOf": "2026-09-19",
+  "asOf": "2026-09-20",
   "acts": [
     {
       "code": "nark",
       "articles": 143,
       "versionFrom": "2026-08-27",
       "versionTo": null,
-      "sha256": "e254ce73a2831403ae6dc703d02fab97850f812d3943513783c332e72ec829d0",
+      "sha256": "060a9ff78ddb50ddf344ae3578173f505357d79d5200fe420828d4499498558a",
       "official": "https://eli.gov.pl/eli/DU/2023/1939/ogl"
     },
     {
@@ -14,7 +14,7 @@
       "articles": 43,
       "versionFrom": "2026-02-27",
       "versionTo": null,
-      "sha256": "490ad8ded9c010a1e5c198e56a7066decff7fa731715ba89ad423fd1653d2c93",
+      "sha256": "1d29916576b94742d0ed0ca3fe70a58bf87877f2d0eb4da9c7761bc585446877",
       "official": "https://eli.gov.pl/eli/DU/2024/1673/ogl"
     },
     {
@@ -22,7 +22,7 @@
       "articles": 74,
       "versionFrom": "2024-06-21",
       "versionTo": "2028-05-18",
-      "sha256": "20d5fa4819fffdf0c56f9838ba90765592e44f024364e11aa8c4e33aba87296b",
+      "sha256": "12500573e3eb7b15bdb07de8b17262542e9c755a0b4a2230205c985b7cbf1065",
       "official": "https://eli.gov.pl/eli/DU/2024/917/ogl"
     },
     {
@@ -30,8 +30,48 @@
       "articles": 57,
       "versionFrom": "2026-09-16",
       "versionTo": null,
-      "sha256": "cf4122eabf86c6dce14051b01fcfccd757244b34b836403c0faf51caecd7d769",
+      "sha256": "b504f658b9d4d47b2e774a20966822149ac902f8468a2ae37f50b7facc798673",
       "official": "https://eli.gov.pl/eli/DU/2026/1214/ogl"
+    },
+    {
+      "code": "kier",
+      "articles": 194,
+      "versionFrom": "2026-09-03",
+      "versionTo": "2028-05-18",
+      "sha256": "336230a3a849d9b31a1920186220c741d272c22ddfb9cef679aa67ae72444c7e",
+      "official": "https://eli.gov.pl/eli/DU/2025/1226/ogl"
+    },
+    {
+      "code": "krd",
+      "articles": 28,
+      "versionFrom": "2026-03-03",
+      "versionTo": null,
+      "sha256": "65d9bef2bd30561e5b4443b2782f8bc05b33e9adb30c7bb9a9373acf29a49205",
+      "official": "https://eli.gov.pl/eli/DU/2019/2141/ogl"
+    },
+    {
+      "code": "punkty",
+      "articles": 12,
+      "versionFrom": "2026-06-03",
+      "versionTo": null,
+      "sha256": "5a7bac294a149387229d3c3a841f45f9b1a35604506e93a5fb257de582baca16",
+      "official": "https://eli.gov.pl/eli/DU/2026/724/ogl"
+    },
+    {
+      "code": "bron",
+      "articles": 78,
+      "versionFrom": "2026-03-18",
+      "versionTo": "2028-05-18",
+      "sha256": "29bec41d3ca55657e15b5db3d5291cab95152f954ae1b184a36bd835ee18c754",
+      "official": "https://eli.gov.pl/eli/DU/2024/485/ogl"
+    },
+    {
+      "code": "ochrona",
+      "articles": 87,
+      "versionFrom": "2026-07-04",
+      "versionTo": null,
+      "sha256": "9808a9744358e546fb7a6a3a7bf76b7538e1d3eca1217a9e1bcb32c28993fb23",
+      "official": "https://eli.gov.pl/eli/DU/2025/532/ogl"
     }
   ]
 }

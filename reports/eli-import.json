@@ -42,6 +42,13 @@
       "rows": 41,
       "sha256": "548760b90f63347e1fb197dc930810e061b6ec3ec8ae5da428b0cadef1a42272",
       "official": "https://eli.gov.pl/eli/DU/2022/1389/ogl"
+    },
+    {
+      "code": "upraw",
+      "stage": "interventions",
+      "rows": 31,
+      "sha256": "421f966ade6d6fffa730514b520c20f2a523e8dde4e99740becaffeb471e0cce",
+      "official": "https://eli.gov.pl/eli/DU/2023/2535/ogl"
     }
   ]
 }

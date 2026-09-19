@@ -1,16 +1,16 @@
 {
   "version": 3,
-  "sourceHash": "b97bc42a482357c7",
-  "runtimeVersion": "2a4300586453a9d8",
-  "sourceBytes": 1676002,
-  "routerCompressedBytes": 268994,
-  "discoveryCompressedBytes": 729675,
+  "sourceHash": "7653c4aaa1329e88",
+  "runtimeVersion": "bb197a3184774cdb",
+  "sourceBytes": 1888574,
+  "routerCompressedBytes": 309131,
+  "discoveryCompressedBytes": 816899,
   "totals": {
-    "acts": 21,
-    "articles": 4599,
-    "units": 25351,
-    "dataCompressedBytes": 1271089,
-    "searchCompressedBytes": 1168607
+    "acts": 28,
+    "articles": 5034,
+    "units": 29159,
+    "dataCompressedBytes": 1436270,
+    "searchCompressedBytes": 1309791
   },
   "documents": {
     "acts": 3,
@@ -41,14 +41,14 @@
     },
     "interventions": {
       "counts": {
-        "acts": 9,
-        "articles": 1597,
-        "units": 10345,
-        "searchable": 1597
+        "acts": 10,
+        "articles": 1628,
+        "units": 10498,
+        "searchable": 1628
       },
       "bytes": {
-        "data": 486572,
-        "search": 432664
+        "data": 496552,
+        "search": 441211
       },
       "acts": [
         "cudz",
@@ -59,55 +59,76 @@
         "psych",
         "tyton",
         "nk",
-        "nakazy"
+        "nakazy",
+        "upraw"
       ]
     },
     "traffic": {
       "counts": {
-        "acts": 1,
-        "articles": 441,
-        "units": 3836,
-        "searchable": 441
+        "acts": 4,
+        "articles": 675,
+        "units": 6328,
+        "searchable": 675
       },
       "bytes": {
-        "data": 162076,
-        "search": 138322
+        "data": 261576,
+        "search": 222025
       },
       "acts": [
-        "prd"
+        "prd",
+        "kier",
+        "krd",
+        "punkty"
       ]
     },
     "public-order": {
       "counts": {
-        "acts": 2,
-        "articles": 144,
-        "units": 666,
-        "searchable": 144
+        "acts": 4,
+        "articles": 309,
+        "units": 1833,
+        "searchable": 309
       },
       "bytes": {
-        "data": 34612,
-        "search": 31655
+        "data": 91612,
+        "search": 82245
       },
       "acts": [
         "bim",
-        "zgrom"
+        "zgrom",
+        "bron",
+        "ochrona"
       ]
     },
     "kgp": {
       "counts": {
         "acts": 3,
         "articles": 118,
-        "units": 731,
+        "units": 721,
         "searchable": 118
       },
       "bytes": {
-        "data": 40894,
-        "search": 37929
+        "data": 38741,
+        "search": 35551
       },
       "acts": [
         "z768",
         "z360",
         "z805"
+      ]
+    },
+    "wroclaw": {
+      "counts": {
+        "acts": 1,
+        "articles": 5,
+        "units": 6,
+        "searchable": 5
+      },
+      "bytes": {
+        "data": 854,
+        "search": 722
+      },
+      "acts": [
+        "wroalk"
       ]
     }
   }

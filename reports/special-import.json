@@ -1,0 +1,15 @@
+{
+  "asOf": "2026-09-20",
+  "wroclaw": {
+    "base": "https://edzienniki.duw.pl/WDU_D/2025/3906/akt.pdf",
+    "baseSha256": "cd11f4fd3dd90c632869bd9433478daf5ec562b68412ebf3fce1a41d53be5662",
+    "amendment": "https://edzienniki.duw.pl/eli/POL_WOJ_DS/2025/4806/ogl/pol/pdf",
+    "amendmentSha256": "fc77ca3e34b17a647023a2db75214d909f370e33c876c744ff40f7ca6b5fd49a"
+  },
+  "z768": {
+    "source": "https://policja.pl/pol/kgp/biuro-prewencji/wydzial-prewencji/sluzba-patrolowa/7980,Zarzadzenie-nr-768-Komendanta-Glownego-Policji-z-dnia-14-sierpnia-2007-r-w-spraw.html",
+    "sha256": "24c4bb15630d117bb8eb9c5c794d2ad8842441a2c6945b1e3888c98d9cd54bee",
+    "versionFrom": "2026-06-12",
+    "sections": 45
+  }
+}

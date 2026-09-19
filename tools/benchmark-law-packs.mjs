@@ -1,4 +1,4 @@
-import { performance } from "node:perf_hooks";
+import { performance } from "node:perf_hooks";\nimport fs from "node:fs";
 import { loadLegalData } from "./legal-content.mjs";
 
 const data=loadLegalData("data.js");
@@ -23,4 +23,7 @@ for(const scale of [1,2,4]){
     hits:runSearch(ready)
   });
 }
-console.log(JSON.stringify({environment:"node-ci-trend-only",queries,results},null,2));
+const report={environment:"node-build-trend-only",queries,results};
+fs.mkdirSync("reports",{recursive:true});
+fs.writeFileSync("reports/offline-search-benchmark.json",JSON.stringify(report,null,2)+"\\n");
+console.log(JSON.stringify(report,null,2));

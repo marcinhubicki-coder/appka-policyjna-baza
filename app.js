@@ -223,7 +223,37 @@ function compactMarker(s){return String(s??"").trim().replace(/^ust\.\s*/i,"u. "
 function sectionHeading(row,actCode){const info=globalThis.__EDITORIAL?.sectionInfo?.(row,actCode);if(!info)return esc(row[1]);return `<span class="section-no">${esc(info.prefix)}</span>${info.title?`<span class="section-title${info.generated?" generated":""}">${esc(info.title)}</span>`:""}`}
 async function gunzipB64(b64){const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));const ds=new DecompressionStream("gzip");return new Response(new Blob([b]).stream().pipeThrough(ds)).text()}
 async function load(){
-  const loadStarted=PERF.now(),decodeStarted=PERF.now(),raw=await gunzipB64((window.__POLICE_B64||[]).join(""));
+  const loadStarted=PERF.now();
+  if(prebuiltSearchMode){
+    try{
+      const catalogStarted=PERF.now(),catalogValue=await lawData.loadCatalog();
+      setupCatalog(catalogValue);
+      const catalogReady=PERF.now();
+      const coreId=Object.entries(LAW_MANIFEST.packs||{}).find(([,pack])=>pack.mandatory)?.[0]||lawData.packForAct("uop");
+      const dataStarted=PERF.now(),coreActs=await lawData.loadData(coreId);
+      registerPackData(coreId,coreActs);
+      const completedAt=PERF.now();
+      PERF.update({
+        catalogLoadMs:catalogReady-catalogStarted,
+        dataDecodeMs:completedAt-dataStarted,
+        lookupBuildMs:completedAt-dataStarted,
+        dataLoadMs:completedAt-loadStarted
+      },{
+        acts:Object.keys(LAW_MANIFEST.acts||{}).length,
+        loadedActs:DATA.length,
+        articles:articleMap.size,
+        units:unitMap.size,
+        dataJsonChars:0,
+        searchMode:"prebuilt"
+      });
+      return;
+    }catch(error){
+      console.warn("Offline packs unavailable; falling back to legacy data.",error);
+      prebuiltSearchMode=false;
+      PERF.update({},{packFallback:true,packFallbackReason:error?.message||String(error)});
+    }
+  }
+  const decodeStarted=PERF.now(),raw=await gunzipB64((window.__POLICE_B64||[]).join(""));
   DATA=JSON.parse(raw);
   const ordered=packages.order?.(DATA.map(act=>act[0]))||DATA.map(act=>act[0]);DATA.sort((a,b)=>ordered.indexOf(a[0])-ordered.indexOf(b[0]));
   globalThis.__READER_CORE?.migrateFavorites(DATA);
@@ -233,30 +263,68 @@ async function load(){
   DATA.forEach(A=>A[3].forEach(R=>{articleMap.set(R[0],{act:A[0],r:R});idMap.set(R[0],A[0]);R[4].forEach((U,i)=>{const key=U[0]||`${R[0]}@@${i}`;if(!A[4]?.provider&&FIX[key])U[3]=FIX[key];U[3]=tidy(U[3]);if(U[0]){idMap.set(U[0],A[0]);unitMap.set(U[0],{act:A[0],article:R[0],u:U})}});if(packages.isEnabled(A[0]))searchIndex.push({act:A[0],row:R,text:null})}));
   const completedAt=PERF.now();
   saveSearchExcluded();syncSearchFilterIndicator();
-  PERF.update({dataDecodeMs:decodedAt-decodeStarted,lookupBuildMs:completedAt-lookupStarted,dataLoadMs:completedAt-loadStarted},{acts:DATA.length,articles:articleMap.size,units:unitMap.size,dataJsonChars:raw.length});
+  PERF.update({dataDecodeMs:decodedAt-decodeStarted,lookupBuildMs:completedAt-lookupStarted,dataLoadMs:completedAt-loadStarted},{acts:DATA.length,articles:articleMap.size,units:unitMap.size,dataJsonChars:raw.length,searchMode:"legacy"});
 }
 function rebuildSearchIndex(){
   searchIndex.length=0;searchWarmCursor=0;searchWarmWork=0;clearSearchReturn();
-  for(const A of DATA)if(packages.isEnabled(A[0]))for(const R of A[3])searchIndex.push({act:A[0],row:R,text:null});
-  PERF.update({searchWorkMs:0},{searchItems:searchIndex.length,enabledPackages:DATA.filter(A=>packages.isEnabled(A[0])).length});
-  scheduleSearchWarmup();if(searchState.active)search();
+  if(prebuiltSearchMode){
+    for(const rows of loadedSearchPacks.values())for(const entry of rows){
+      const id=entry[0],act=entry[1],text=entry[2],preview=entry[3]||"";
+      if(!packages.isEnabled(act))continue;
+      const row=articleMap.get(id)?.r||pseudoRowFromCatalog(articleCatalog(id),preview);
+      if(row)searchIndex.push({act,row,text});
+    }
+    PERF.update({searchWorkMs:0},{searchItems:searchIndex.length,enabledPackages:activePackIds().length,searchMode:"prebuilt"});
+  }else{
+    for(const A of DATA)if(packages.isEnabled(A[0]))for(const R of A[3])searchIndex.push({act:A[0],row:R,text:null});
+    PERF.update({searchWorkMs:0},{searchItems:searchIndex.length,enabledPackages:DATA.filter(A=>packages.isEnabled(A[0])).length,searchMode:"legacy"});
+    scheduleSearchWarmup();
+  }
+  if(searchState.active)search();
   paintSearchPills(searchState.active,searchState.counts);
   window.dispatchEvent(new CustomEvent("police-law-packages-change"));
 }
-globalThis.__POLICE_PACKAGES={
-  list:()=>DATA.map(A=>({code:A[0],name:META[A[0]]?.[1]||A[1],short:META[A[0]]?.[0]||A[0],enabled:packages.isEnabled(A[0]),articles:A[3].length})),
-  groups:()=>[
+function packageGroups(){
+  if(LAW_MANIFEST){
+    return Object.entries(LAW_CONFIG.packs||{})
+      .filter(([id,pack])=>!pack.future&&LAW_MANIFEST.packs?.[id])
+      .sort(([,a],[,b])=>(a.order||0)-(b.order||0))
+      .map(([id,pack])=>({id,name:pack.name,codes:[...(LAW_MANIFEST.packs[id]?.acts||[])],mandatory:!!pack.mandatory}));
+  }
+  return[
     {id:'basic',name:'Podstawowe',codes:['uop','kw','kpow','kk','kpk','spb']},
     {id:'traffic',name:'Ruch drogowy',codes:['prd','z30']},
     {id:'special',name:'Ustawy szczególne',codes:['cudz','nieletni','alk','bim']},
     {id:'orders',name:'Zarządzenia KGP',codes:DATA.map(act=>act[0]).filter(code=>code.startsWith('z')&&code!=='z30')}
-  ].map(group=>({...group,codes:group.codes.filter(code=>DATA.some(act=>act[0]===code))})).filter(group=>group.codes.length),
-  setEnabled(code,on){if(!DATA.some(A=>A[0]===code)||!packages.setEnabled?.(code,on))return false;rebuildSearchIndex();return true},
-  setGroup(codes,on){if(!codes.length||codes.some(code=>!DATA.some(act=>act[0]===code))||!packages.setMany?.(codes,on))return false;rebuildSearchIndex();return true},
+  ].map(group=>({...group,codes:group.codes.filter(code=>DATA.some(act=>act[0]===code))})).filter(group=>group.codes.length);
+}
+function packageList(){
+  return allActCodes().map(code=>{
+    const info=manifestActInfo(code),loaded=DATA.find(act=>act[0]===code),meta=META[code]||[code,loaded?.[1]||code,""];
+    return{code,name:meta[1],short:meta[0],enabled:packages.isEnabled(code),articles:info?.articles??loaded?.[3]?.length??0,pack:info?.pack||null};
+  });
+}
+globalThis.__POLICE_PACKAGES={
+  list:packageList,
+  groups:packageGroups,
+  async setEnabled(code,on){
+    if(!hasAct(code))return false;
+    if(!packages.setEnabled?.(code,on))return false;
+    if(prebuiltSearchMode)await syncPackActivation(lawData.packForAct(code));else rebuildSearchIndex();
+    return true;
+  },
+  async setGroup(codes,on){
+    if(!codes.length||codes.some(code=>!hasAct(code))||!packages.setMany?.(codes,on))return false;
+    if(prebuiltSearchMode){
+      const packsToSync=new Set(codes.map(code=>lawData.packForAct(code)).filter(Boolean));
+      for(const packId of packsToSync)await syncPackActivation(packId);
+    }else rebuildSearchIndex();
+    return true;
+  },
   setOrder(codes){
-    if(!Array.isArray(codes)||codes.length!==DATA.length||new Set(codes).size!==DATA.length||codes.some(code=>!DATA.some(act=>act[0]===code))||!packages.setOrder?.(codes))return false;
-    DATA.sort((a,b)=>codes.indexOf(a[0])-codes.indexOf(b[0]));
-    // Move the existing nodes only on an explicit saved reorder, never on navigation.
+    const available=allActCodes();
+    if(!Array.isArray(codes)||codes.length!==available.length||new Set(codes).size!==available.length||codes.some(code=>!hasAct(code))||!packages.setOrder?.(codes))return false;
+    sortLoadedData();
     for(const code of codes){for(const container of [quickbar,actgrid]){const node=container.querySelector('[data-act="'+CSS.escape(code)+'"]');if(node)container.append(node)}}
     clearSearchReturn();if(searchState.active)search();window.dispatchEvent(new CustomEvent('police-law-order-change'));return true;
   }

@@ -1,0 +1,37 @@
+{
+  "asOf": "2026-09-19",
+  "acts": [
+    {
+      "code": "nark",
+      "articles": 143,
+      "versionFrom": "2026-08-27",
+      "versionTo": null,
+      "sha256": "e254ce73a2831403ae6dc703d02fab97850f812d3943513783c332e72ec829d0",
+      "official": "https://eli.gov.pl/eli/DU/2023/1939/ogl"
+    },
+    {
+      "code": "przemoc",
+      "articles": 43,
+      "versionFrom": "2026-02-27",
+      "versionTo": null,
+      "sha256": "bcf3104e9c208856d1f1e0c0a1d8dd787dda42f479dd3d569b4bcc6227e0acb7",
+      "official": "https://eli.gov.pl/eli/DU/2024/1673/ogl"
+    },
+    {
+      "code": "psych",
+      "articles": 74,
+      "versionFrom": "2024-06-21",
+      "versionTo": "2028-05-18",
+      "sha256": "20d5fa4819fffdf0c56f9838ba90765592e44f024364e11aa8c4e33aba87296b",
+      "official": "https://eli.gov.pl/eli/DU/2024/917/ogl"
+    },
+    {
+      "code": "tyton",
+      "articles": 57,
+      "versionFrom": "2026-09-16",
+      "versionTo": null,
+      "sha256": "cf4122eabf86c6dce14051b01fcfccd757244b34b836403c0faf51caecd7d769",
+      "official": "https://eli.gov.pl/eli/DU/2026/1214/ogl"
+    }
+  ]
+}

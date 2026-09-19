@@ -1,0 +1,33 @@
+{
+  "asOf": "2026-09-19",
+  "acts": [
+    {
+      "code": "nark",
+      "name": "Ustawa o przeciwdziałaniu narkomanii",
+      "url": "https://www.inforlex.pl/dok/tresc,DZU.2023.263.0001939,USTAWA-z-dnia-29-lipca-2005-r-o-przeciwdzialaniu-narkomanii.html",
+      "official": "https://eli.gov.pl/eli/DU/2023/1939/ogl",
+      "expectedVersionFrom": "2026-08-27"
+    },
+    {
+      "code": "przemoc",
+      "name": "Ustawa o przeciwdziałaniu przemocy domowej",
+      "url": "https://www.inforlex.pl/dok/tresc,DZU.2024.320.0001673,USTAWA-z-dnia-29-lipca-2005-r-o-przeciwdzialaniu-przemocy-domowej-Preambula-uchylona.html",
+      "official": "https://eli.gov.pl/eli/DU/2024/1673/ogl",
+      "expectedVersionFrom": "2026-02-27"
+    },
+    {
+      "code": "psych",
+      "name": "Ustawa o ochronie zdrowia psychicznego",
+      "url": "https://www.inforlex.pl/dok/tresc,DZU.2024.173.0000917,o-ochronie-zdrowia-psychicznego.html",
+      "official": "https://eli.gov.pl/eli/DU/2024/917/ogl",
+      "expectedVersionFrom": "2024-06-21"
+    },
+    {
+      "code": "tyton",
+      "name": "Ustawa o ochronie zdrowia przed następstwami używania tytoniu i wyrobów tytoniowych",
+      "url": "https://www.inforlex.pl/dok/tresc,DZU.2026.259.0001214,o-ochronie-zdrowia-przed-nastepstwami-uzywania-tytoniu-i-wyrobow-tytoniowych.html",
+      "official": "https://eli.gov.pl/eli/DU/2026/1214/ogl",
+      "expectedVersionFrom": "2026-09-16"
+    }
+  ]
+}

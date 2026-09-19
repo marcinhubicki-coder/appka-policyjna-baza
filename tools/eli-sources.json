@@ -1,0 +1,138 @@
+{
+  "asOf": "2026-09-20",
+  "acts": [
+    {
+      "code": "nk",
+      "stage": "domestic-violence",
+      "name": "Rozporządzenie Rady Ministrów – procedura „Niebieskie Karty”",
+      "url": "https://eli.gov.pl/api/acts/DU/2023/1870/text.html",
+      "official": "https://eli.gov.pl/eli/DU/2023/1870/ogl",
+      "topLevel": "par",
+      "lastTop": "23",
+      "minRows": 23,
+      "checks": [
+        [
+          "nk-par-2",
+          [
+            "Wszczęcie procedury",
+            "Niebieska Karta"
+          ]
+        ],
+        [
+          "nk-par-7",
+          [
+            "5 dni roboczych",
+            "zespołu interdyscyplinarnego"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "nakazy",
+      "stage": "domestic-violence",
+      "name": "Rozporządzenie MSWiA – wydawanie przez policjanta nakazów i zakazów",
+      "url": "https://eli.gov.pl/api/acts/DU/2023/1613/text.html",
+      "official": "https://eli.gov.pl/eli/DU/2023/1613/ogl",
+      "topLevel": "par",
+      "lastTop": "8",
+      "minRows": 8,
+      "checks": [
+        [
+          "nakazy-par-3",
+          [
+            "ocenia zagrożenie",
+            "dziecka"
+          ]
+        ],
+        [
+          "nakazy-par-7",
+          [
+            "Przemoc domowa",
+            "dzielnicowego"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "protop",
+      "stage": "domestic-violence",
+      "name": "Rozporządzenie MSWiA – wzór protokołu czynności opuszczenia mieszkania",
+      "url": "https://eli.gov.pl/api/acts/DU/2023/1612/text.html",
+      "official": "https://eli.gov.pl/eli/DU/2023/1612/ogl",
+      "topLevel": "par",
+      "lastTop": "3",
+      "minRows": 3,
+      "checks": [
+        [
+          "protop-par-1",
+          [
+            "wzór protokołu",
+            "opuszczenia"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "zawdrzwi",
+      "stage": "domestic-violence",
+      "name": "Rozporządzenie MSWiA – zawiadomienie umieszczane na drzwiach",
+      "url": "https://eli.gov.pl/api/acts/DU/2023/1607/text.html",
+      "official": "https://eli.gov.pl/eli/DU/2023/1607/ogl",
+      "topLevel": "par",
+      "lastTop": "3",
+      "minRows": 3,
+      "checks": [
+        [
+          "zawdrzwi-par-1",
+          [
+            "wzór zawiadomienia"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "zawkoresp",
+      "stage": "domestic-violence",
+      "name": "Rozporządzenie MSWiA – zawiadomienie przy niemożności doręczenia korespondencji",
+      "url": "https://eli.gov.pl/api/acts/DU/2023/1614/text.html",
+      "official": "https://eli.gov.pl/eli/DU/2023/1614/ogl",
+      "topLevel": "par",
+      "lastTop": "3",
+      "minRows": 3,
+      "checks": [
+        [
+          "zawkoresp-par-1",
+          [
+            "wzór zawiadomienia"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "zgrom",
+      "stage": "public-order",
+      "name": "Ustawa – Prawo o zgromadzeniach",
+      "url": "https://eli.gov.pl/api/acts/DU/2022/1389/text.html",
+      "official": "https://eli.gov.pl/eli/DU/2022/1389/ogl",
+      "topLevel": "art",
+      "lastTop": "36",
+      "minRows": 40,
+      "checks": [
+        [
+          "zgrom-art-20",
+          [
+            "Funkcjonariusz Policji",
+            "rozwiązanie zgromadzenia"
+          ]
+        ],
+        [
+          "zgrom-art-28",
+          [
+            "funkcjonariusza kierującego działaniami Policji",
+            "porządku publicznego"
+          ]
+        ]
+      ]
+    }
+  ]
+}

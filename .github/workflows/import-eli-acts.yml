@@ -1,0 +1,56 @@
+name: Import official ELI acts
+
+on:
+  push:
+    branches:
+      - feat/offline-search-packs-v1
+    paths:
+      - tools/eli-sources.json
+      - tools/import-eli-acts.py
+      - law-config.js
+      - app.js
+      - .github/workflows/import-eli-acts.yml
+  workflow_dispatch:
+
+concurrency:
+  group: eli-law-import-feat-offline-search-packs-v1
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/offline-search-packs-v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install importer dependencies
+        run: python -m pip install --disable-pip-version-check beautifulsoup4 lxml
+      - name: Import official ELI acts
+        run: python tools/import-eli-acts.py
+      - name: Build and validate offline database
+        run: |
+          node tools/build-law-packs.mjs
+          node tools/test-offline-packs.mjs
+          node tools/test-offline-runtime.mjs
+          node tools/benchmark-law-packs.mjs
+      - name: Commit imported acts and generated packs
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data.js reports/eli-import.json law-manifest.js law-router.json.gz law-discovery.json.gz acts packs reports/offline-pack-stats.json reports/offline-search-benchmark.json
+          if git diff --cached --quiet; then
+            echo "ELI acts are current."
+          else
+            git commit -m "Import ELI domestic-violence and public-order acts"
+            git push origin HEAD:feat/offline-search-packs-v1
+          fi

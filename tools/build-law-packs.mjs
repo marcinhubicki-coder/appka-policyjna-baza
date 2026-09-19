@@ -46,6 +46,7 @@ const config=loadConfig();
 const data=loadLegalData(path.join(ROOT,"data.js"));
 const sourceBuffer=fs.readFileSync(path.join(ROOT,"data.js"));
 const sourceHash=sha256(sourceBuffer).slice(0,16);
+const runtimeVersion=(process.env.VERCEL_GIT_COMMIT_SHA||process.env.GITHUB_SHA||sourceHash).slice(0,16);
 const knownActs=new Set(Object.keys(config.acts));
 const sourceActs=new Set(data.map(act=>act[0]));
 const missingConfig=[...sourceActs].filter(code=>!knownActs.has(code));
@@ -66,8 +67,8 @@ for(const act of data){
   if(!packs[packId])throw new Error(`Akt ${act[0]} wskazuje nieistniejący pakiet ${packId}`);
 }
 
-const catalog={
-  version:1,
+const router={
+  version:2,
   sourceHash,
   acts:[],
   articles:[],
@@ -75,14 +76,15 @@ const catalog={
   actArticles:{},
   migrations:{}
 };
+const discovery=[];
 const seenIds=new Set();
 for(const act of data){
   const code=act[0],meta=config.acts[code],packId=meta.pack;
-  catalog.acts.push([code,packId,meta.short,meta.name,meta.citation,act[3].length]);
-  catalog.actArticles[code]=act[3].map(row=>row[0]);
+  router.acts.push([code,packId,meta.short,meta.name,meta.citation,act[3].length]);
+  router.actArticles[code]=act[3].map(row=>row[0]);
   const actMeta=act[4]||{};
   if(actMeta.revision||actMeta.idAliases||actMeta.partAliases){
-    catalog.migrations[code]={
+    router.migrations[code]={
       revision:actMeta.revision||null,
       idAliases:actMeta.idAliases||{},
       partAliases:actMeta.partAliases||{}
@@ -90,20 +92,23 @@ for(const act of data){
   }
   for(const row of act[3]){
     const unitIds=row[4].map((unit,index)=>unit[0]||`${row[0]}@@${index}`);
-    catalog.articles.push([row[0],code,packId,row[2],row[3],discoveryText(row),unitIds]);
+    router.articles.push([row[0],code,packId,row[2],row[3],unitIds]);
+    discovery.push([row[0],discoveryText(row)]);
     if(seenIds.has(row[0]))throw new Error("Powtórzone ID: "+row[0]);
-    seenIds.add(row[0]);catalog.ids.push([row[0],code,packId]);
+    seenIds.add(row[0]);router.ids.push([row[0],code,packId]);
     for(const unit of row[4]){
       if(!unit[0])continue;
       if(seenIds.has(unit[0]))throw new Error("Powtórzone ID: "+unit[0]);
-      seenIds.add(unit[0]);catalog.ids.push([unit[0],code,packId]);
+      seenIds.add(unit[0]);router.ids.push([unit[0],code,packId]);
     }
   }
 }
-catalog.acts.sort((a,b)=>a[0].localeCompare(b[0]));
-catalog.articles.sort((a,b)=>a[0].localeCompare(b[0]));
-catalog.ids.sort((a,b)=>a[0].localeCompare(b[0]));
-const catalogBytes=gzipJson(catalog,path.join(ROOT,"law-catalog.json.gz"));
+router.acts.sort((a,b)=>a[0].localeCompare(b[0]));
+router.articles.sort((a,b)=>a[0].localeCompare(b[0]));
+router.ids.sort((a,b)=>a[0].localeCompare(b[0]));
+discovery.sort((a,b)=>a[0].localeCompare(b[0]));
+const routerBytes=gzipJson(router,path.join(ROOT,"law-router.json.gz"));
+const discoveryBytes=gzipJson(discovery,path.join(ROOT,"law-discovery.json.gz"));
 
 const manifestPacks={};
 const totals={acts:0,articles:0,units:0,dataCompressedBytes:0,searchCompressedBytes:0};
@@ -138,10 +143,13 @@ for(const [packId,pack] of Object.entries(packs)){
 }
 
 const manifest={
-  version:1,
+  version:2,
   sourceHash,
-  catalog:"law-catalog.json.gz",
-  catalogBytes,
+  runtimeVersion,
+  router:"law-router.json.gz",
+  routerBytes,
+  discovery:"law-discovery.json.gz",
+  discoveryBytes,
   packs:stableObjectEntries(manifestPacks),
   acts:stableObjectEntries(Object.fromEntries(data.map(act=>{
     const code=act[0],meta=config.acts[code];
@@ -152,10 +160,12 @@ fs.writeFileSync(path.join(ROOT,"law-manifest.js"),
   `globalThis.__LAW_MANIFEST=Object.freeze(${JSON.stringify(manifest)});\n`);
 
 const stats={
-  version:1,
+  version:2,
   sourceHash,
+  runtimeVersion,
   sourceBytes:sourceBuffer.length,
-  catalogCompressedBytes:catalogBytes,
+  routerCompressedBytes:routerBytes,
+  discoveryCompressedBytes:discoveryBytes,
   totals,
   packs:Object.fromEntries(Object.entries(manifestPacks).map(([id,pack])=>[id,{counts:pack.counts,bytes:pack.bytes,acts:pack.acts}]))
 };

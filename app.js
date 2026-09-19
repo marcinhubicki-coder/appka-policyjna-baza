@@ -18,7 +18,7 @@ const LAW_CONFIG=globalThis.__LAW_CONFIG||{acts:{},packs:{}};
 const LAW_MANIFEST=globalThis.__LAW_MANIFEST||null;
 const lawData=globalThis.__LAW_DATA||null;
 const META={...LEGACY_META,...Object.fromEntries(Object.entries(LAW_CONFIG.acts||{}).map(([code,meta])=>[code,[meta.short||code,meta.name||code,meta.citation||""]]))};
-let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null,CATALOG=null;
+let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null,CATALOG=null,DISCOVERY=null;
 const loadedDataPacks=new Map(),loadedSearchPacks=new Map(),catalogArticleMap=new Map(),catalogActArticles=new Map();
 const packages=globalThis.__LAW_PACKAGES||{isEnabled:()=>true};
 const searchIndex=[],searchResultGroups=new Map(),SEARCH_FILTER_KEY="police-law-search-excluded-v1";
@@ -63,9 +63,16 @@ function setupCatalog(value){
   PERF.update({},{
     catalogArticles:value?.articles?.length||0,
     catalogIds:value?.ids?.length||0,
-    catalogBytes:LAW_MANIFEST?.catalogBytes||0,
+    routerBytes:LAW_MANIFEST?.routerBytes||0,
     totalActs:Object.keys(LAW_MANIFEST?.acts||{}).length||DATA.length
   });
+}
+let discoveryHydrationPromise=null;
+async function ensureDiscoveryReady(){
+  if(!prebuiltSearchMode||!lawData?.loadDiscovery)return[];
+  if(DISCOVERY)return DISCOVERY;
+  if(!discoveryHydrationPromise)discoveryHydrationPromise=lawData.loadDiscovery().then(value=>DISCOVERY=value).finally(()=>{discoveryHydrationPromise=null});
+  return discoveryHydrationPromise;
 }
 function rebuildLoadedMaps(){
   articleMap.clear();unitMap.clear();
@@ -181,10 +188,10 @@ async function runPerformanceBenchmark(){
   const before=lawData.snapshot(),packIds=Object.keys(LAW_MANIFEST.packs||{}),dataByPack=new Map(),searchByPack=new Map();
   try{
     for(const packId of packIds){dataByPack.set(packId,await lawData.loadData(packId));searchByPack.set(packId,await lawData.loadSearch(packId))}
-    const rawActs=[...dataByPack.values()].flat(),ready=[...searchByPack.values()].flat(),discovery=CATALOG?.articles||[],articleCount=ready.length,result=[];
+    const rawActs=[...dataByPack.values()].flat(),ready=[...searchByPack.values()].flat(),discovery=await ensureDiscoveryReady(),articleCount=ready.length,result=[];
     const buildRuntime=scale=>{const out=[];for(let n=0;n<scale;n++)for(const act of rawActs)for(const row of act[3])out.push(norm(row[2]+" "+row[3]+" "+row[4].map(unit=>tidy(unit[3])).join(" ")));return out.length};
     const scan=scale=>{let hits=0;for(let n=0;n<scale;n++)for(const query of queries){const terms=norm(query).split(/\s+/);for(const row of ready)if(terms.every(term=>row[2].includes(term)))hits++}return hits};
-    const scanDiscovery=scale=>{let hits=0;for(let n=0;n<scale;n++)for(const query of queries){const terms=norm(query).split(/\s+/);for(const row of discovery)if(terms.every(term=>(row[5]||"").includes(term)))hits++}return hits};
+    const scanDiscovery=scale=>{let hits=0;for(let n=0;n<scale;n++)for(const query of queries){const terms=norm(query).split(/\s+/);for(const row of discovery)if(terms.every(term=>(row[1]||"").includes(term)))hits++}return hits};
     for(const scale of[1,2,4]){
       const t0=PERF.now(),built=buildRuntime(scale),runtimeIndexMs=PERF.now()-t0,t1=PERF.now(),hits=scan(scale),searchMs=PERF.now()-t1,t2=PERF.now(),discoveryHits=scanDiscovery(scale),discoveryMs=PERF.now()-t2;
       result.push({scale,articles:articleCount*scale,built,runtimeIndexMs:Math.round(runtimeIndexMs*10)/10,prebuiltSearchMs:Math.round(searchMs*10)/10,discoveryMs:Math.round(discoveryMs*10)/10,hits,discoveryHits});
@@ -263,7 +270,7 @@ async function load(){
   const loadStarted=PERF.now();
   if(prebuiltSearchMode){
     try{
-      const catalogStarted=PERF.now(),catalogValue=await lawData.loadCatalog();
+      const catalogStarted=PERF.now(),catalogValue=await lawData.loadRouter();
       setupCatalog(catalogValue);
       const catalogReady=PERF.now();
       const coreId=Object.entries(LAW_MANIFEST.packs||{}).find(([,pack])=>pack.mandatory)?.[0]||lawData.packForAct("uop");
@@ -271,7 +278,7 @@ async function load(){
       registerPackData(coreId,coreActs);
       const completedAt=PERF.now();
       PERF.update({
-        catalogLoadMs:catalogReady-catalogStarted,
+        routerLoadMs:catalogReady-catalogStarted,
         dataDecodeMs:completedAt-dataStarted,
         lookupBuildMs:completedAt-dataStarted,
         dataLoadMs:completedAt-loadStarted
@@ -599,7 +606,7 @@ results.addEventListener("click",event=>{const button=event.target.closest("butt
 function beginSearchEditing(){document.body.classList.add('search-editing');globalThis.__READER_TOC_CLOSE?.(false)}
 q.addEventListener('focus',beginSearchEditing);
 q.addEventListener('blur',()=>{if(emptySearchQuickbarInteraction)return;document.body.classList.remove('search-editing')});
-q.oninput=()=>{clearTimeout(timer);clearSearchReturn();if(norm(q.value.trim()).length<2){closeSearch();return}if(!searchState.active)captureSearchScope();emitSearchState(true,searchState.counts,true);timer=setTimeout(search,300)};q.addEventListener("focus",()=>{if(norm(q.value.trim()).length>=2&&!results.classList.contains("show")){clearSearchReturn();search()}});document.getElementById("clear").addEventListener('pointerdown',event=>event.preventDefault());document.getElementById("clear").onclick=()=>clearSearchInput(true);document.getElementById("home").onclick=e=>{e.preventDefault();clearSearchInput(false);document.getElementById("start").scrollIntoView({behavior:"auto"});history.replaceState(null,"","#start")};
+q.oninput=()=>{clearTimeout(timer);clearSearchReturn();if(norm(q.value.trim()).length<2){closeSearch();return}if(!searchState.active)captureSearchScope();emitSearchState(true,searchState.counts,true);if(prebuiltSearchMode)ensureDiscoveryReady().catch(()=>{});timer=setTimeout(search,300)};q.addEventListener("focus",()=>{if(norm(q.value.trim()).length>=2&&!results.classList.contains("show")){clearSearchReturn();search()}});document.getElementById("clear").addEventListener('pointerdown',event=>event.preventDefault());document.getElementById("clear").onclick=()=>clearSearchInput(true);document.getElementById("home").onclick=e=>{e.preventDefault();clearSearchInput(false);document.getElementById("start").scrollIntoView({behavior:"auto"});history.replaceState(null,"","#start")};
 async function search(){
   const s=norm(q.value.trim());if(s.length<2){closeSearch();return}
   if(!searchState.active)captureSearchScope();
@@ -623,10 +630,14 @@ async function search(){
   }
   let discovery=[];
   if(prebuiltSearchMode&&CATALOG){
-    discovery=(CATALOG.articles||[]).filter(entry=>{
-      const id=entry[0],act=entry[1],text=entry[5]||"",outside=!packages.isEnabled(act)||searchExcluded.has(act);
+    const discoveryRows=await ensureDiscoveryReady();
+    if(norm(q.value.trim())!==s)return;
+    discovery=discoveryRows.map(row=>{
+      const entry=articleCatalog(row[0]);return entry?[entry,row[1]||""]:null;
+    }).filter(Boolean).filter(([entry,text])=>{
+      const id=entry[0],act=entry[1],outside=!packages.isEnabled(act)||searchExcluded.has(act);
       return outside&&(!favorites||favorites.has(id))&&terms.every(term=>text.includes(term));
-    });
+    }).map(([entry])=>entry);
   }
   if(!groups.length&&!discovery.length){
     const allExcluded=allActCodes().every(code=>!packages.isEnabled(code)||searchExcluded.has(code));

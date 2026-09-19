@@ -1,0 +1,67 @@
+name: Law data pipeline
+
+on:
+  push:
+    branches:
+      - feat/offline-search-packs-v1
+    paths:
+      - law-config.js
+      - tools/interventions-sources.json
+      - tools/eli-sources.json
+      - tools/import-inforlex.py
+      - tools/import-interventions.py
+      - tools/import-eli-acts.py
+      - tools/import-special-sources.py
+      - tools/build-law-packs.mjs
+      - tools/test-offline-packs.mjs
+      - tools/test-offline-runtime.mjs
+      - tools/benchmark-law-packs.mjs
+      - .github/workflows/law-pipeline.yml
+  workflow_dispatch:
+
+concurrency:
+  group: law-data-pipeline-feat-offline-search-packs-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  law-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/offline-search-packs-v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install importer dependencies
+        run: python -m pip install --disable-pip-version-check beautifulsoup4 lxml
+      - name: Import current consolidated laws
+        run: python tools/import-interventions.py
+      - name: Import official ELI acts
+        run: python tools/import-eli-acts.py
+      - name: Import official local and Police sources
+        run: python tools/import-special-sources.py
+      - name: Build and validate all offline layers
+        run: |
+          node tools/build-law-packs.mjs
+          node tools/test-offline-packs.mjs
+          node tools/test-offline-runtime.mjs
+          node tools/benchmark-law-packs.mjs
+      - name: Commit data and generated layers once
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data.js reports law-manifest.js document-manifest.js law-router.json.gz law-discovery.json.gz acts documents packs
+          if git diff --cached --quiet; then
+            echo "Law database is current."
+          else
+            git commit -m "Import and build current patrol law library"
+            git push origin HEAD:feat/offline-search-packs-v1
+          fi

@@ -1,0 +1,28 @@
+name: Check legal source freshness
+
+on:
+  schedule:
+    - cron: "15 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/offline-search-packs-v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check official and consolidated sources
+        run: python tools/check-law-sources.py
+      - name: Save freshness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-freshness
+          path: reports/source-freshness.json

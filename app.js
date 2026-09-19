@@ -42,7 +42,138 @@ const PERF=(()=>{
   return{state,now,update,snapshot};
 })();
 globalThis.__POLICE_PERF=PERF;
+function manifestActInfo(code){return LAW_MANIFEST?.acts?.[code]||LAW_CONFIG.acts?.[code]||null}
+function allActCodes(){
+  const codes=LAW_MANIFEST?Object.keys(LAW_MANIFEST.acts||{}):DATA.map(act=>act[0]);
+  return packages.order?.(codes)||codes;
+}
+function hasAct(code){return !!manifestActInfo(code)||DATA.some(act=>act[0]===code)}
+function articleCatalog(id){return catalogArticleMap.get(id)||null}
+function pseudoRowFromCatalog(entry,preview=""){
+  return entry?[entry[0],"",entry[3],entry[4],[[null,0,"",preview]]]:null;
+}
+function setupCatalog(value){
+  CATALOG=value;catalogArticleMap.clear();catalogActArticles.clear();
+  for(const row of value?.articles||[])catalogArticleMap.set(row[0],row);
+  for(const [code,ids] of Object.entries(value?.actArticles||{}))catalogActArticles.set(code,ids);
+  for(const [id,code] of value?.ids||[])idMap.set(id,code);
+  globalThis.__READER_CORE?.migrateFavoritesCatalog?.(value);
+  searchExcluded=new Set([...searchExcluded].filter(code=>hasAct(code)));
+  saveSearchExcluded();syncSearchFilterIndicator();
+  PERF.update({},{
+    catalogArticles:value?.articles?.length||0,
+    catalogIds:value?.ids?.length||0,
+    catalogBytes:LAW_MANIFEST?.catalogBytes||0,
+    totalActs:Object.keys(LAW_MANIFEST?.acts||{}).length||DATA.length
+  });
+}
+function rebuildLoadedMaps(){
+  articleMap.clear();unitMap.clear();
+  for(const A of DATA)for(const R of A[3]){
+    articleMap.set(R[0],{act:A[0],r:R});idMap.set(R[0],A[0]);
+    R[4].forEach((U,i)=>{
+      const key=U[0]||`${R[0]}@@${i}`;
+      if(!A[4]?.provider&&FIX[key])U[3]=FIX[key];
+      U[3]=tidy(U[3]);
+      if(U[0]){idMap.set(U[0],A[0]);unitMap.set(U[0],{act:A[0],article:R[0],u:U})}
+    });
+  }
+}
+function sortLoadedData(){
+  const order=allActCodes(),pos=new Map(order.map((code,index)=>[code,index]));
+  DATA.sort((a,b)=>(pos.get(a[0])??1e9)-(pos.get(b[0])??1e9));
+}
+function registerPackData(packId,acts){
+  loadedDataPacks.set(packId,acts);
+  DATA=[...loadedDataPacks.values()].flat();
+  sortLoadedData();rebuildLoadedMaps();
+  PERF.update({},{
+    loadedDataPacks:[...loadedDataPacks.keys()],
+    loadedActs:DATA.length,
+    articles:articleMap.size,
+    units:unitMap.size
+  });
+}
+function releasePackData(packId){
+  if(!loadedDataPacks.has(packId))return;
+  loadedDataPacks.delete(packId);lawData?.releaseData?.(packId);
+  DATA=[...loadedDataPacks.values()].flat();sortLoadedData();rebuildLoadedMaps();
+  PERF.update({},{
+    loadedDataPacks:[...loadedDataPacks.keys()],
+    loadedActs:DATA.length,
+    articles:articleMap.size,
+    units:unitMap.size
+  });
+}
+async function ensureActLoaded(code){
+  if(DATA.some(act=>act[0]===code))return true;
+  if(!lawData?.supported)return false;
+  const packId=lawData.packForAct(code);if(!packId)return false;
+  const acts=await lawData.loadData(packId);registerPackData(packId,acts);return DATA.some(act=>act[0]===code);
+}
+function activePackIds(){
+  if(!lawData)return[];
+  return lawData.enabledPackIds();
+}
+async function ensureEnabledSearchReady(force=false){
+  if(!prebuiltSearchMode)return;
+  if(searchHydrationPromise&&!force)return searchHydrationPromise;
+  const run=async()=>{
+    const wanted=new Set(activePackIds());
+    const started=PERF.now();
+    for(const packId of [...loadedSearchPacks.keys()]){
+      if(!wanted.has(packId)&&!lawData.packInfo(packId)?.mandatory){loadedSearchPacks.delete(packId);lawData.releaseSearch(packId)}
+    }
+    await Promise.all([...wanted].map(async packId=>{
+      if(loadedSearchPacks.has(packId))return;
+      loadedSearchPacks.set(packId,await lawData.loadSearch(packId));
+    }));
+    rebuildSearchIndex();
+    PERF.update({
+      searchReadyMs:PERF.now()-PERF.state.startedAt,
+      searchWorkMs:PERF.now()-started
+    },{
+      searchItems:searchIndex.length,
+      loadedSearchPacks:[...loadedSearchPacks.keys()],
+      enabledPackages:wanted.size,
+      searchMode:"prebuilt"
+    });
+  };
+  searchHydrationPromise=run().finally(()=>{searchHydrationPromise=null});
+  return searchHydrationPromise;
+}
+function packIsWanted(packId){
+  const info=lawData?.packInfo(packId);if(!info)return false;
+  return !!info.mandatory||info.acts.some(code=>packages.isEnabled(code));
+}
+async function syncPackActivation(packId){
+  if(!prebuiltSearchMode||!packId)return;
+  if(packIsWanted(packId)){
+    if(!loadedSearchPacks.has(packId))loadedSearchPacks.set(packId,await lawData.loadSearch(packId));
+  }else{
+    loadedSearchPacks.delete(packId);lawData.releaseSearch(packId);
+    if(ACT&&lawData.packForAct(ACT[0])===packId){
+      const fallback=allActCodes().find(code=>packages.isEnabled(code)&&lawData.packForAct(code)!==packId)||"uop";
+      await renderAct(fallback,null,false);
+    }
+    releasePackData(packId);
+  }
+  rebuildSearchIndex();
+}
 function captureDataResource(){
+  if(prebuiltSearchMode){
+    const snap=lawData?.snapshot?.()||{},stats=Object.values(snap.metrics||{});
+    const bytes=stats.reduce((sum,row)=>sum+(Number(row.bytes)||0),0);
+    PERF.update({},{
+      dataResourceBytes:bytes,
+      dataTransferBytes:bytes,
+      dataFromCache:navigator.serviceWorker?.controller?true:false,
+      packMetrics:snap.metrics||{},
+      loadedDataPacks:snap.dataPacks||[],
+      loadedSearchPacks:snap.searchPacks||[]
+    });
+    return;
+  }
   const entries=globalThis.performance?.getEntriesByType?.("resource")||[];
   const entry=[...entries].reverse().find(item=>{try{return new URL(item.name,location.href).pathname.endsWith("/data.js")}catch(_){return false}});
   if(!entry)return;

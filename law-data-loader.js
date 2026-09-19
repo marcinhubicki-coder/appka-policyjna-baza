@@ -1,5 +1,5 @@
 /* Offline-first law pack loader. Pack files are precached by the service worker,
- * but only selected search indexes and opened law data are decompressed into RAM.
+ * while startup routing, full-text discovery and opened law data are decompressed separately.
  */
 (function(root){
   const manifest=root.__LAW_MANIFEST;
@@ -7,13 +7,13 @@
 
   const packages=root.__LAW_PACKAGES||{isEnabled:()=>true};
   const dataCache=new Map(),searchCache=new Map(),metrics=new Map();
-  let catalogPromise=null,catalog=null;
+  let routerPromise=null,router=null,discoveryPromise=null,discovery=null;
 
   const now=()=>root.performance?.now?.()??Date.now();
   function emit(detail){
     root.dispatchEvent?.(new CustomEvent("police-law-pack-progress",{detail}));
   }
-  async function gunzipJson(url,{packId="catalog",kind="catalog"}={}){
+  async function gunzipJson(url,{packId="meta",kind="meta"}={}){
     const started=now();
     emit({packId,kind,stage:"fetch",progress:.08});
     const response=await fetch(url,{cache:"default"});
@@ -48,10 +48,15 @@
       .filter(([,pack])=>pack.mandatory||pack.acts.some(code=>packages.isEnabled?.(code)!==false))
       .map(([id])=>id);
   }
-  async function loadCatalog(){
-    if(catalog)return catalog;
-    if(!catalogPromise)catalogPromise=gunzipJson(manifest.catalog,{packId:"catalog",kind:"catalog"}).then(value=>catalog=value);
-    return catalogPromise;
+  async function loadRouter(){
+    if(router)return router;
+    if(!routerPromise)routerPromise=gunzipJson(manifest.router,{packId:"router",kind:"router"}).then(value=>router=value);
+    return routerPromise;
+  }
+  async function loadDiscovery(){
+    if(discovery)return discovery;
+    if(!discoveryPromise)discoveryPromise=gunzipJson(manifest.discovery,{packId:"discovery",kind:"discovery"}).then(value=>discovery=value);
+    return discoveryPromise;
   }
   async function loadData(packId){
     if(dataCache.has(packId))return dataCache.get(packId);
@@ -82,7 +87,9 @@
   function snapshot(){
     return{
       sourceHash:manifest.sourceHash,
-      catalogLoaded:!!catalog,
+      runtimeVersion:manifest.runtimeVersion,
+      routerLoaded:!!router,
+      discoveryLoaded:!!discovery,
       dataPacks:[...dataCache.entries()].filter(([,value])=>!value?.then).map(([id])=>id),
       searchPacks:[...searchCache.entries()].filter(([,value])=>!value?.then).map(([id])=>id),
       enabledPacks:enabledPackIds(),
@@ -92,7 +99,7 @@
   root.__LAW_DATA={
     manifest,
     supported:typeof DecompressionStream==="function"&&typeof fetch==="function",
-    loadCatalog,loadData,loadSearch,ensureActData,
+    loadRouter,loadDiscovery,loadData,loadSearch,ensureActData,
     packForAct,packInfo,enabledPackIds,
     releaseData,releaseSearch,snapshot
   };

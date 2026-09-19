@@ -61,6 +61,25 @@ def main():
             "versionTo":bundle["source"]["versionTo"],"sha256":hashlib.sha256(html).hexdigest(),
             "official":src["official"]})
         print(code,len(rows),actual,flush=True)
+    # Patrol-oriented smoke checks: catch a structurally valid import whose
+    # article boundaries or content were parsed incorrectly.
+    def article_text(code, article_id):
+        act=next((a for a in data if a[0]==code),None)
+        row=next((r for r in (act[3] if act else []) if r[0]==article_id),None)
+        if not row: raise RuntimeError(f"Brak oczekiwanego artykułu: {article_id}")
+        return " ".join(str(u[3]) for u in row[4]).lower()
+    checks=[
+        ("nark","nark-art-62",("środk","odurz")),
+        ("przemoc","przemoc-art-2",("przemoc","domow")),
+        ("psych","psych-art-21",("badani","psychiatr")),
+        ("psych","psych-art-23",("bez","zgod")),
+        ("tyton","tyton-art-5",("palen","zabran")),
+    ]
+    for code,article_id,terms in checks:
+        text=article_text(code,article_id)
+        missing=[term for term in terms if term not in text]
+        if missing: raise RuntimeError(f"{article_id}: brak fraz kontrolnych {missing}")
+
     ids=set()
     for act in data:
         for row in act[3]:

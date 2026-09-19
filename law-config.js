@@ -29,9 +29,10 @@
       ochrona:{short:"Ochrona",name:"Ustawa o ochronie osób i mienia",citation:"Dz.U. 2025 poz. 532",pack:"public-order",defaultEnabled:false,uiSubgroup:"security",uiSubgroupName:"Broń i ochrona"},
       bim:{short:"Imprezy",name:"Ustawa o bezpieczeństwie imprez masowych",citation:"Dz.U. 2023 poz. 616",pack:"public-order",defaultEnabled:false,uiSubgroup:"order",uiSubgroupName:"Porządek publiczny"},
       zgrom:{short:"Zgromadzenia",name:"Prawo o zgromadzeniach",citation:"Dz.U. 2022 poz. 1389",pack:"public-order",defaultEnabled:false,topLevel:"art",uiSubgroup:"order",uiSubgroupName:"Porządek publiczny"},
-      z768:{short:"Z. 768",name:"Zarządzenie KGP nr 768 — służba patrolowa",citation:"tekst bazowy MVP",pack:"kgp",defaultEnabled:true,uiSubgroup:"kgp",uiSubgroupName:"Służbowe / KGP"},
+      z768:{short:"Z. 768",name:"Zarządzenie KGP nr 768 — służba patrolowa",citation:"Dz. Urz. KGP Nr 15 poz. 119 · tekst ujedn. 12.06.2026",pack:"kgp",defaultEnabled:true,topLevel:"par",uiSubgroup:"kgp",uiSubgroupName:"Służbowe / KGP"},
       z360:{short:"Z. 360",name:"Zarządzenie KGP nr 360 — konwoje i doprowadzenia",citation:"publikacja Policji",pack:"kgp",defaultEnabled:true,uiSubgroup:"kgp",uiSubgroupName:"Służbowe / KGP"},
-      z805:{short:"Z. 805",name:"Zarządzenie KGP nr 805 — zasady etyki zawodowej",citation:"publikacja Policji",pack:"kgp",defaultEnabled:true,uiSubgroup:"kgp",uiSubgroupName:"Służbowe / KGP"}
+      z805:{short:"Z. 805",name:"Zarządzenie KGP nr 805 — zasady etyki zawodowej",citation:"publikacja Policji",pack:"kgp",defaultEnabled:true,uiSubgroup:"kgp",uiSubgroupName:"Służbowe / KGP"},
+      wroalk:{short:"Nocna sprzedaż",name:"Wrocław – ograniczenie nocnej sprzedaży alkoholu",citation:"Uchwała XXIII/435/25; zm. XXV/512/25",pack:"wroclaw",defaultEnabled:false,topLevel:"par",uiSubgroup:"wro-alcohol",uiSubgroupName:"Alkohol i porządek lokalny"}
     },
     packs:{
       core:{name:"Podstawowe",mandatory:true,order:10,subgroups:[
@@ -53,7 +54,7 @@
       kgp:{name:"Służbowe / KGP",mandatory:false,order:50,subgroups:[
         {id:"kgp",name:"Służba i procedury KGP",codes:["z768","z360","z805"]}
       ]},
-      wroclaw:{name:"Wrocław",mandatory:false,order:60,future:true,subgroups:[]}
+      wroclaw:{name:"Wrocław",mandatory:false,order:60,subgroups:[{id:"wro-alcohol",name:"Alkohol i porządek lokalny",codes:["wroalk"]}]}
     },
     documents:{
       name:"Dokumenty i wzory",

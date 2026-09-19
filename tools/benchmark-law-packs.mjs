@@ -1,12 +1,15 @@
 import { performance } from "node:perf_hooks";
 import fs from "node:fs";
+import vm from "node:vm";
 import { loadLegalData } from "./legal-content.mjs";
 
 const data=loadLegalData("data.js");
+const context={globalThis:{}};vm.runInNewContext(fs.readFileSync("law-config.js","utf8"),context,{filename:"law-config.js"});
+const config=context.globalThis.__LAW_CONFIG;
 const norm=value=>String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/ł/g,"l");
 const tidy=value=>String(value??"").replace(/\s+([,.;:])/g,"$1").replace(/[ \t]{2,}/g," ").trim();
 const rawRows=[];
-for(const act of data)for(const row of act[3])rawRows.push([row[0],act[0],row]);
+for(const act of data){const meta=config.acts?.[act[0]]||{};if(meta.kind==="document"||meta.searchable===false)continue;for(const row of act[3])rawRows.push([row[0],act[0],row])}
 const prebuilt=rawRows.map(([id,act,row])=>[id,act,norm(row[2]+" "+row[3]+" "+row[4].map(unit=>tidy(unit[3])).join(" "))]);
 const queries=["zatrzymanie","policjant","pojazd","nieletni","alkohol","przeszukanie","art 15","srodek przymusu"];
 const median=values=>[...values].sort((a,b)=>a-b)[Math.floor(values.length/2)];

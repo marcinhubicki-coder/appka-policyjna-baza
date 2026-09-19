@@ -128,7 +128,7 @@ async function ensureEnabledSearchReady(force=false){
       if(loadedSearchPacks.has(packId))return;
       loadedSearchPacks.set(packId,await lawData.loadSearch(packId));
     }));
-    rebuildSearchIndex();
+    rebuildSearchIndex(false);
     PERF.update({
       searchReadyMs:PERF.now()-PERF.state.startedAt,
       searchWorkMs:PERF.now()-started
@@ -265,7 +265,7 @@ async function load(){
   saveSearchExcluded();syncSearchFilterIndicator();
   PERF.update({dataDecodeMs:decodedAt-decodeStarted,lookupBuildMs:completedAt-lookupStarted,dataLoadMs:completedAt-loadStarted},{acts:DATA.length,articles:articleMap.size,units:unitMap.size,dataJsonChars:raw.length,searchMode:"legacy"});
 }
-function rebuildSearchIndex(){
+function rebuildSearchIndex(rerun=true){
   searchIndex.length=0;searchWarmCursor=0;searchWarmWork=0;clearSearchReturn();
   if(prebuiltSearchMode){
     for(const rows of loadedSearchPacks.values())for(const entry of rows){
@@ -280,7 +280,7 @@ function rebuildSearchIndex(){
     PERF.update({searchWorkMs:0},{searchItems:searchIndex.length,enabledPackages:DATA.filter(A=>packages.isEnabled(A[0])).length,searchMode:"legacy"});
     scheduleSearchWarmup();
   }
-  if(searchState.active)search();
+  if(rerun&&searchState.active)search();
   paintSearchPills(searchState.active,searchState.counts);
   window.dispatchEvent(new CustomEvent("police-law-packages-change"));
 }

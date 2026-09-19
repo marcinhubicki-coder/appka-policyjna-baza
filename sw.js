@@ -5,7 +5,8 @@ const CACHE_PREFIX='policyjna-baza-';
 const CACHE_NAME=CACHE_PREFIX+CACHE_VERSION;
 const LAW_ASSETS=LAW_MANIFEST?[
   './law-config.js','./law-manifest.js','./law-data-loader.js','./'+LAW_MANIFEST.router,'./'+LAW_MANIFEST.discovery,
-  ...Object.values(LAW_MANIFEST.packs||{}).flatMap(pack=>['./'+pack.data,'./'+pack.search])
+  ...Object.values(LAW_MANIFEST.acts||{}).map(act=>'./'+act.data),
+  ...Object.values(LAW_MANIFEST.packs||{}).map(pack=>'./'+pack.search)
 ]:[];
 const PRECACHE_URLS=Object.freeze([
   './index.html',

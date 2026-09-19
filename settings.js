@@ -23,7 +23,7 @@
     if(!performanceMetrics)return;
     const dataSize=bytes(state.dataResourceBytes),dataSource=state.dataFromCache?'cache offline':'sieć lub nowy cache',manifest=globalThis.__LAW_MANIFEST;
     const packLabel=id=>globalThis.__LAW_CONFIG?.packs?.[id]?.name||id;
-    const offlineLawBytes=manifest?(manifest.catalogBytes||0)+Object.values(manifest.packs||{}).reduce((sum,pack)=>sum+(pack.bytes?.data||0)+(pack.bytes?.search||0),0):0;
+    const offlineLawBytes=manifest?(manifest.routerBytes||manifest.catalogBytes||0)+(manifest.discoveryBytes||0)+Object.values(manifest.packs||{}).reduce((sum,pack)=>sum+(pack.bytes?.data||0)+(pack.bytes?.search||0),0):0;
     const rows=[
       ['Uruchomienie',duration(m.initialReadyMs)],
       ['Przygotowanie danych',duration(m.dataLoadMs)],

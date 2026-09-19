@@ -598,4 +598,11 @@ async function search(){
 }
 globalThis.__POLICE_SEARCH_REFRESH=search;
 window.addEventListener("police-law-favorites-change",()=>{if(searchState.active&&searchFavoritesOnly)search()});
-(async()=>{await load();buildMenu();paintSearchPills(false,new Map());const hash=canonicalLegalId(decodeURIComponent(location.hash.slice(1))),target=idMap.has(hash)?hash:null;document.body.classList.add('act-selected');renderAct(target?idMap.get(target):'uop',target,false);scheduleSearchWarmup()})();
+(async()=>{
+  await load();buildMenu();paintSearchPills(false,new Map());
+  const hash=canonicalLegalId(decodeURIComponent(location.hash.slice(1))),target=idMap.has(hash)?hash:null;
+  document.body.classList.add('act-selected');
+  await renderAct(target?idMap.get(target):'uop',target,false);
+  if(prebuiltSearchMode)ensureEnabledSearchReady().catch(error=>{console.warn("Nie udało się przygotować indeksów pakietów",error);PERF.update({},{searchError:error?.message||String(error)})});
+  else scheduleSearchWarmup();
+})();

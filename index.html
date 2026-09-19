@@ -47,10 +47,19 @@
 <div class="return" id="return"><button>← Wróć do odwołania</button></div>
 <div class="search-return" id="searchReturn"><button type="button">← Wróć do wyszukiwania</button></div>
 <script>globalThis.__POLICE_BOOT_AT=performance.now()</script>
-<script src="data.js"></script>
+<script src="law-config.js"></script>
+<script src="law-manifest.js"></script>
+<script>
+try{
+  const params=new URLSearchParams(location.search);
+  globalThis.__LAW_USE_LEGACY=params.get('legacy')==='1'||!globalThis.__LAW_MANIFEST||typeof DecompressionStream!=='function';
+}catch(_){globalThis.__LAW_USE_LEGACY=true}
+if(globalThis.__LAW_USE_LEGACY)document.write('<script src="data.js"><\\/script>');
+</script>
 <script src="linking-rules.js"></script>
 <script src="chapter-titles.js"></script>
 <script src="reader-core.js"></script>
+<script src="law-data-loader.js"></script>
 <script src="article-comments.js"></script>
 <script src="reader-state.js"></script>
 <script src="app.js"></script>

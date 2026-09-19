@@ -1,10 +1,10 @@
 try{importScripts('./law-manifest.js')}catch(_){}
 const LAW_MANIFEST=self.__LAW_MANIFEST||null;
-const CACHE_VERSION='2026-09-19.packs1-'+(LAW_MANIFEST?.sourceHash||'legacy');
+const CACHE_VERSION='packs2-'+(LAW_MANIFEST?.runtimeVersion||LAW_MANIFEST?.sourceHash||'legacy');
 const CACHE_PREFIX='policyjna-baza-';
 const CACHE_NAME=CACHE_PREFIX+CACHE_VERSION;
 const LAW_ASSETS=LAW_MANIFEST?[
-  './law-config.js','./law-manifest.js','./law-data-loader.js','./'+LAW_MANIFEST.catalog,
+  './law-config.js','./law-manifest.js','./law-data-loader.js','./'+LAW_MANIFEST.router,'./'+LAW_MANIFEST.discovery,
   ...Object.values(LAW_MANIFEST.packs||{}).flatMap(pack=>['./'+pack.data,'./'+pack.search])
 ]:[];
 const PRECACHE_URLS=Object.freeze([

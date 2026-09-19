@@ -12,7 +12,7 @@
     detail.textContent=description;
     icon.textContent=symbol;
   }
-  function onlineDescription(){return navigator.onLine?'Cała baza jest zapisana na tym urządzeniu':'Tryb offline — korzystasz z zapisanej bazy'}
+  function onlineDescription(){const manifest=globalThis.__LAW_MANIFEST,acts=Object.keys(manifest?.acts||{}).length,packs=Object.keys(manifest?.packs||{}).length,suffix=acts?` · ${acts} aktów / ${packs} pakietów`:'';return navigator.onLine?'Cała baza jest zapisana na tym urządzeniu'+suffix:'Tryb offline — korzystasz z zapisanej bazy'+suffix}
   function markReady(){pending=false;state('ready','Baza offline gotowa',onlineDescription(),'✓')}
   function markError(message){pending=false;state('error','Spróbuj ponownie',message,'!')}
   function askWorker(worker){

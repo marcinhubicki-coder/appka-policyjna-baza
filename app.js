@@ -459,7 +459,7 @@ function sourceCoverage(act){
   if(s.preamble?.length)html+='<p>'+s.preamble.map(esc).join(' ')+'</p>';
   return html+'</details>';
 }
-function renderAct(code,target=null,scroll=true){
+function renderLoadedAct(code,target=null,scroll=true){
   const renderStarted=PERF.now(),state=globalThis.__READER_STATE;
   if(ACT&&ACT[0]!==code)state?.remember(ACT[0]);
   const remembered=!target&&ACT&&ACT[0]!==code&&!document.body.matches('.favorites-filter-on,.favorites-all-acts')?state?.recall(code):null;
@@ -480,16 +480,31 @@ function renderAct(code,target=null,scroll=true){
   if(remembered)state.restorePlace(remembered);else if(target)jump(target,false);else if(scroll){const card=document.getElementById("actcard");if(globalThis.__READER_STATE)globalThis.__READER_STATE.toElement(card,{alignTop:true});else card.scrollIntoView({behavior:"auto",block:"start"})}
   requestAnimationFrame(()=>{const paintedAt=PERF.now(),metrics={lastActPaintMs:paintedAt-renderStarted};if(PERF.state.metrics.initialReadyMs==null)metrics.initialReadyMs=paintedAt-PERF.state.startedAt;PERF.update(metrics);captureDataResource()});
 }
-function canonicalLegalId(id){for(const act of DATA){const meta=act[4];if(meta?.idAliases?.[id])return meta.idAliases[id];if(meta?.partAliases?.[id])return meta.partAliases[id]}return id}
-function gotoLegalId(id,{smooth=false,alignTop=true}={}){id=canonicalLegalId(id);const existing=document.getElementById(id);if(existing){history.replaceState(null,"","#"+id);jump(id,smooth,alignTop);return true}const code=idMap.get(id);if(!code)return false;renderAct(code,id,false);jump(id,smooth,alignTop);return true}
+async function renderAct(code,target=null,scroll=true){
+  if(!hasAct(code))return false;
+  if(!await ensureActLoaded(code))return false;
+  renderLoadedAct(code,target,scroll);return true;
+}
+function canonicalLegalId(id){
+  if(CATALOG?.migrations)for(const meta of Object.values(CATALOG.migrations)){if(meta?.idAliases?.[id])return meta.idAliases[id];if(meta?.partAliases?.[id])return meta.partAliases[id]}
+  for(const act of DATA){const meta=act[4];if(meta?.idAliases?.[id])return meta.idAliases[id];if(meta?.partAliases?.[id])return meta.partAliases[id]}
+  return id;
+}
+async function gotoLegalId(id,{smooth=false,alignTop=true}={}){
+  id=canonicalLegalId(id);const existing=document.getElementById(id);
+  if(existing){history.replaceState(null,"","#"+id);jump(id,smooth,alignTop);return true}
+  const code=idMap.get(id);if(!code)return false;
+  if(!await renderAct(code,id,false))return false;
+  jump(id,smooth,alignTop);return true;
+}
 globalThis.__POLICE_GOTO_ID=gotoLegalId;
 globalThis.__POLICE_STREAM_STOP=stopStream;
 function emptySearchQuickNav(){return !searchState.active&&!q.value.trim()&&document.body.classList.contains("search-editing")}
-function activateQuickbarAct(code){
+async function activateQuickbarAct(code){
   if(searchState.active)return gotoSearchAct(code);
   const leavingSearch=emptySearchQuickNav();
   if(leavingSearch)clearSearchInput(false);
-  if(ACT?.[0]!==code)renderAct(code);
+  if(ACT?.[0]!==code)await renderAct(code);
   return true;
 }
 globalThis.__POLICE_QUICKBAR_ACT=activateQuickbarAct;
@@ -501,7 +516,17 @@ function beginEmptySearchQuickbarInteraction(event){
 }
 document.addEventListener("pointerdown",beginEmptySearchQuickbarInteraction,{capture:true,passive:true});
 document.addEventListener("touchstart",beginEmptySearchQuickbarInteraction,{capture:true,passive:true});
-function buildMenu(){quickbar.innerHTML="";actgrid.innerHTML="";for(const A of DATA){const m=META[A[0]]||[A[0],A[1],""];const qb=document.createElement("button");qb.dataset.act=A[0];const label=document.createElement("span"),badge=document.createElement("span");label.className="act-pill-label";label.textContent=m[0];badge.className="act-pill-count";badge.setAttribute("aria-hidden","true");qb.append(label,badge);qb.setAttribute("aria-label",`${m[0]} — ${m[1]}`);qb.onclick=()=>activateQuickbarAct(A[0]);quickbar.appendChild(qb);const b=document.createElement("button");b.className="act-jump";b.dataset.act=A[0];b.innerHTML=`<b>${esc(m[0])}</b>${esc(m[1])}<small>${A[3].length} artykułów/jednostek</small>`;b.onclick=()=>renderAct(A[0]);actgrid.appendChild(b)}}
+function buildMenu(){
+  quickbar.innerHTML="";actgrid.innerHTML="";
+  for(const code of allActCodes()){
+    const info=manifestActInfo(code),loaded=DATA.find(A=>A[0]===code),m=META[code]||[code,loaded?.[1]||code,""],articles=info?.articles??loaded?.[3]?.length??0;
+    const qb=document.createElement("button");qb.dataset.act=code;
+    const label=document.createElement("span"),badge=document.createElement("span");
+    label.className="act-pill-label";label.textContent=m[0];badge.className="act-pill-count";badge.setAttribute("aria-hidden","true");
+    qb.append(label,badge);qb.setAttribute("aria-label",`${m[0]} — ${m[1]}`);qb.onclick=()=>activateQuickbarAct(code);quickbar.appendChild(qb);
+    const b=document.createElement("button");b.className="act-jump";b.dataset.act=code;b.innerHTML=`<b>${esc(m[0])}</b>${esc(m[1])}<small>${articles} artykułów/jednostek</small>`;b.onclick=()=>renderAct(code);actgrid.appendChild(b);
+  }
+}
 function searchItemMarkup(row,act){return `<a class="search-item" href="#${esc(row[0])}" data-a="${esc(act)}"><b>${esc(row[2])} · ${esc(row[3])}</b><small>${esc(row[4].map(unit=>unit[3]).join(" ").slice(0,190))}…</small></a>`}
 function remainingResultText(value){const tens=value%100,ones=value%10,words=value===1?"dalszy wynik":ones>=2&&ones<=4&&(tens<12||tens>14)?"dalsze wyniki":"dalszych wyników";return `+ ${value} ${words} w tej ustawie`}
 function searchMoreMarkup(group){const remaining=group.rows.length-group.shown;return remaining?`<button class="search-group-more" type="button" data-search-more="${esc(group.act)}" aria-label="Pokaż kolejne wyniki w tej ustawie">${remainingResultText(remaining)}</button>`:""}

@@ -1,7 +1,7 @@
 (function(){
   const button=document.getElementById('settingsButton'),panel=document.getElementById('settingsPanel'),backdrop=document.getElementById('settingsBackdrop'),closeButton=document.getElementById('settingsClose');
   const title=document.getElementById('settingsTitle'),searchSettings=document.getElementById('searchSettings'),filterList=document.getElementById('searchActFilters'),enableAll=document.getElementById('searchEnableAll'),favoritesNotice=document.getElementById('searchFavoritesNotice'),favoritesToggle=document.getElementById('searchFavoritesToggle');
-  const performanceSummary=document.getElementById('performanceSummary'),performanceToggle=document.getElementById('performanceToggle'),performanceDetails=document.getElementById('performanceDetails'),performanceMetrics=document.getElementById('performanceMetrics');
+  const performanceSummary=document.getElementById('performanceSummary'),performanceToggle=document.getElementById('performanceToggle'),performanceDetails=document.getElementById('performanceDetails'),performanceMetrics=document.getElementById('performanceMetrics'),performanceBenchmark=document.getElementById('performanceBenchmark'),performanceBenchmarkStatus=document.getElementById('performanceBenchmarkStatus');
   const generalSections=[...document.querySelectorAll('.settings-general')];
   if(!button||!panel||!backdrop||!closeButton)return;
   let previousFocus=null,openedFromDrawer=false,openedFromSearch=false;
@@ -21,17 +21,26 @@
     const m=state.metrics||{},act=actLabel(state.lastAct),summary=m.initialReadyMs==null?'Kończę pomiar bieżącego uruchomienia…':`Start ${duration(m.initialReadyMs)} · ${act} ${duration(m.lastActRenderMs)}`;
     if(performanceSummary)performanceSummary.textContent=summary;
     if(!performanceMetrics)return;
-    const dataSize=bytes(state.dataResourceBytes),dataSource=state.dataFromCache?'pamięć urządzenia':'sieć lub nowy cache';
+    const dataSize=bytes(state.dataResourceBytes),dataSource=state.dataFromCache?'cache offline':'sieć lub nowy cache',manifest=globalThis.__LAW_MANIFEST;
+    const packLabel=id=>globalThis.__LAW_CONFIG?.packs?.[id]?.name||id;
+    const offlineLawBytes=manifest?(manifest.catalogBytes||0)+Object.values(manifest.packs||{}).reduce((sum,pack)=>sum+(pack.bytes?.data||0)+(pack.bytes?.search||0),0):0;
     const rows=[
       ['Uruchomienie',duration(m.initialReadyMs)],
       ['Przygotowanie danych',duration(m.dataLoadMs)],
+      ['Tryb wyszukiwarki',state.searchMode==='prebuilt'?'gotowy indeks (prebuilt)':'indeks budowany na urządzeniu'],
+      ['Biblioteka',state.catalogArticles?`${state.totalActs||state.acts||0} aktów · ${state.catalogArticles} artykułów`:`${state.acts||0} aktów · ${state.articles||0} artykułów`],
       ['Pierwszy widok ustawy',`${act} · ${state.lastActInitialArticles||state.lastActArticles||0}/${state.lastActArticles||0} art. · ${duration(m.lastActRenderMs)}`],
       ['Wczytany widok',`${state.streamRenderedArticles||0}/${state.streamTotalArticles||state.lastActArticles||0} art. · partia ${duration(m.lastChunkRenderMs)}`],
       ['Menu artykułów',m.lastDrawerBuildMs==null?'przy pierwszym otwarciu':`${actLabel(state.lastDrawerAct)} · ${state.lastDrawerArticles||0} art. · ${duration(m.lastDrawerBuildMs)}`],
       ['Spis artykułów',m.lastTocBuildMs==null?'przy pierwszym rozwinięciu':`${actLabel(state.lastTocAct)} · ${duration(m.lastTocBuildMs)}`],
-      ['Wyszukiwarka',m.searchReadyMs==null?'indeksowanie w tle':`gotowa · ${duration(m.searchWorkMs)} pracy`]
+      ['Wyszukiwarka',m.searchReadyMs==null?'przygotowywanie indeksów':`gotowa · ${duration(m.searchWorkMs)} pracy · ${state.searchItems||0} art.`]
     ];
-    if(dataSize)rows.push(['Plik danych',`${dataSize} · ${dataSource}`]);
+    if(Number.isFinite(m.lastSearchMs))rows.push(['Ostatnie wyszukiwanie',`${duration(m.lastSearchMs)} · ${state.lastSearchHits||0} aktywnych + ${state.lastDiscoveryHits||0} poza listą`]);
+    if(state.loadedDataPacks?.length)rows.push(['Treść w RAM',state.loadedDataPacks.map(packLabel).join(', ')]);
+    if(state.loadedSearchPacks?.length)rows.push(['Indeksy w RAM',state.loadedSearchPacks.map(packLabel).join(', ')]);
+    if(offlineLawBytes)rows.push(['Biblioteka prawa offline',bytes(offlineLawBytes)]);
+    if(dataSize)rows.push(['Wczytane w tej sesji',`${dataSize} · ${dataSource}`]);
+    if(state.benchmark?.results?.length)for(const row of state.benchmark.results)rows.push([`Benchmark ${row.scale}×`,row.prebuiltSearchMs!=null?`indeksowanie ${duration(row.runtimeIndexMs)} · gotowe szukanie ${duration(row.prebuiltSearchMs)}`:`indeksowanie ${duration(row.runtimeIndexMs)} · szukanie ${duration(row.searchMs)}`]);
     const fragment=document.createDocumentFragment();for(const[label,value]of rows){const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;row.append(dt,dd);fragment.append(row)}performanceMetrics.replaceChildren(fragment);
   }
   function renderSearchFilters(){
@@ -105,6 +114,15 @@
   enableAll?.addEventListener('click',()=>globalThis.__POLICE_SEARCH_FILTERS?.resetAll?.());
   favoritesToggle?.addEventListener('click',()=>{const api=globalThis.__POLICE_SEARCH_FILTERS;if(api?.favoritesOnly?.())api.disableFavorites?.();else api?.enableFavorites?.()});
   performanceToggle?.addEventListener('click',()=>{if(!performanceDetails)return;const show=performanceDetails.hidden;performanceDetails.hidden=!show;performanceToggle.setAttribute('aria-expanded',String(show));performanceToggle.textContent=show?'Ukryj pomiary':'Pokaż pomiary';if(show)renderPerformance()});
+  performanceBenchmark?.addEventListener('click',async()=>{
+    const run=globalThis.__POLICE_RUN_BENCHMARK;if(!run)return;
+    performanceBenchmark.disabled=true;if(performanceBenchmarkStatus)performanceBenchmarkStatus.textContent='Testuję bazę 1× / 2× / 4×… ekran może na chwilę zwolnić.';
+    try{
+      const report=await run();renderPerformance();const last=report?.results?.at?.(-1);
+      if(performanceBenchmarkStatus)performanceBenchmarkStatus.textContent=last?`Gotowe. 4×: indeksowanie ${duration(last.runtimeIndexMs)}, wyszukiwanie ${duration(last.prebuiltSearchMs??last.searchMs)}.`:'Test zakończony.';
+    }catch(error){if(performanceBenchmarkStatus)performanceBenchmarkStatus.textContent=error?.message||'Nie udało się wykonać testu.'}
+    finally{performanceBenchmark.disabled=false}
+  });
   for(const toggle of panel.querySelectorAll('[data-settings-expand]'))toggle.addEventListener('click',()=>{const content=document.getElementById(toggle.getAttribute('aria-controls'));if(!content)return;const show=content.hidden;content.hidden=!show;toggle.setAttribute('aria-expanded',String(show));toggle.textContent=show?toggle.dataset.hideLabel:toggle.dataset.showLabel;globalThis.__READER_SETTINGS?.refreshCues()});
   button.addEventListener('pointerdown',event=>{if(document.activeElement?.id==='q')event.preventDefault()});
   button.addEventListener('click',()=>document.body.classList.contains('settings-open')?close():open());

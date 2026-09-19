@@ -7,6 +7,7 @@ import { loadLegalData } from "./legal-content.mjs";
 
 const ROOT=process.cwd();
 const PACK_DIR=path.join(ROOT,"packs");
+const ACT_DIR=path.join(ROOT,"acts");
 const REPORT_DIR=path.join(ROOT,"reports");
 
 function loadConfig(){
@@ -39,7 +40,10 @@ function stableObjectEntries(object){
   return Object.fromEntries(Object.entries(object).sort(([a],[b])=>a.localeCompare(b)));
 }
 
+fs.rmSync(PACK_DIR,{recursive:true,force:true});
+fs.rmSync(ACT_DIR,{recursive:true,force:true});
 fs.mkdirSync(PACK_DIR,{recursive:true});
+fs.mkdirSync(ACT_DIR,{recursive:true});
 fs.mkdirSync(REPORT_DIR,{recursive:true});
 
 const config=loadConfig();
@@ -110,22 +114,27 @@ discovery.sort((a,b)=>a[0].localeCompare(b[0]));
 const routerBytes=gzipJson(router,path.join(ROOT,"law-router.json.gz"));
 const discoveryBytes=gzipJson(discovery,path.join(ROOT,"law-discovery.json.gz"));
 
+const actData={};
+for(const act of data){
+  const code=act[0],file=`acts/${code}.data.json.gz`,bytes=gzipJson(act,path.join(ROOT,file));
+  actData[code]={file,bytes};
+}
+
 const manifestPacks={};
 const totals={acts:0,articles:0,units:0,dataCompressedBytes:0,searchCompressedBytes:0};
 for(const [packId,pack] of Object.entries(packs)){
   const acts=pack.acts;
   const search=[];
-  let articles=0,units=0;
+  let articles=0,units=0,dataBytes=0;
   for(const act of acts){
+    dataBytes+=actData[act[0]].bytes;
     for(const row of act[3]){
       articles++;units+=row[4].length;
       const preview=tidy(row[4].map(unit=>unit[3]).join(" ")).slice(0,190);
       search.push([row[0],act[0],articleSearchText(row),preview]);
     }
   }
-  const dataFile=`packs/${packId}.data.json.gz`;
   const searchFile=`packs/${packId}.search.json.gz`;
-  const dataBytes=gzipJson(acts,path.join(ROOT,dataFile));
   const searchBytes=gzipJson(search,path.join(ROOT,searchFile));
   const codes=acts.map(act=>act[0]);
   manifestPacks[packId]={
@@ -133,7 +142,6 @@ for(const [packId,pack] of Object.entries(packs)){
     mandatory:!!pack.mandatory,
     order:pack.order||0,
     acts:codes,
-    data:dataFile,
     search:searchFile,
     counts:{acts:acts.length,articles,units},
     bytes:{data:dataBytes,search:searchBytes}
@@ -153,7 +161,7 @@ const manifest={
   packs:stableObjectEntries(manifestPacks),
   acts:stableObjectEntries(Object.fromEntries(data.map(act=>{
     const code=act[0],meta=config.acts[code];
-    return [code,{...meta,articles:act[3].length}];
+    return [code,{...meta,articles:act[3].length,data:actData[code].file,dataBytes:actData[code].bytes}];
   })))
 };
 fs.writeFileSync(path.join(ROOT,"law-manifest.js"),

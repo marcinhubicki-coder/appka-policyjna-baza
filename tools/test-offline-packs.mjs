@@ -14,6 +14,7 @@ const manifest=loadGlobal("law-manifest.js","__LAW_MANIFEST");
 const catalog=JSON.parse(zlib.gunzipSync(fs.readFileSync(manifest.catalog)));
 const source=loadLegalData("data.js");
 const norm=value=>String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/ł/g,"l");
+const tidy=value=>String(value??"").replace(/\s+([,.;:])/g,"$1").replace(/[ \t]{2,}/g," ").trim();
 const sourceCodes=source.map(act=>act[0]).sort();
 const packedCodes=[];
 const searchRows=[];

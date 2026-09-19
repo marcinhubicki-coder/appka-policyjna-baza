@@ -27,3 +27,4 @@ if(failed){
 }
 console.log(log.join("\n"));
 console.log(staticBuild.stdout||"");
+if(failed)process.exit(1);

@@ -91,7 +91,9 @@ function sortLoadedData(){
   DATA.sort((a,b)=>(pos.get(a[0])??1e9)-(pos.get(b[0])??1e9));
 }
 function registerPackData(packId,acts){
-  loadedDataPacks.set(packId,acts);
+  const current=loadedDataPacks.get(packId)||[],byCode=new Map(current.map(act=>[act[0],act]));
+  for(const act of acts)byCode.set(act[0],act);
+  loadedDataPacks.set(packId,[...byCode.values()]);
   DATA=[...loadedDataPacks.values()].flat();
   sortLoadedData();rebuildLoadedMaps();
   PERF.update({},{
@@ -116,7 +118,7 @@ async function ensureActLoaded(code){
   if(DATA.some(act=>act[0]===code))return true;
   if(!lawData?.supported)return false;
   const packId=lawData.packForAct(code);if(!packId)return false;
-  const acts=await lawData.loadData(packId);registerPackData(packId,acts);return DATA.some(act=>act[0]===code);
+  const act=await lawData.loadAct(code);registerPackData(packId,[act]);return DATA.some(item=>item[0]===code);
 }
 function activePackIds(){
   if(!lawData)return[];
@@ -199,8 +201,9 @@ async function runPerformanceBenchmark(){
     }
     const report={mode:"prebuilt",durationMs:Math.round((PERF.now()-started)*10)/10,results:result};PERF.update({},{benchmark:report});return report;
   }finally{
-    const keepData=new Set(before.dataPacks||[]),keepSearch=new Set(before.searchPacks||[]);
-    for(const packId of packIds){if(!keepData.has(packId))lawData.releaseData(packId);if(!keepSearch.has(packId))lawData.releaseSearch(packId)}
+    const keepActs=new Set(before.dataActs||[]),keepSearch=new Set(before.searchPacks||[]);
+    for(const code of Object.keys(LAW_MANIFEST.acts||{}))if(!keepActs.has(code))lawData.releaseAct(code);
+    for(const packId of packIds)if(!keepSearch.has(packId))lawData.releaseSearch(packId);
   }
 }
 globalThis.__POLICE_RUN_BENCHMARK=runPerformanceBenchmark;
@@ -266,27 +269,28 @@ function articleHeading(s){const value=String(s??"");const m=value.match(/^(Art\
 function compactMarker(s){return String(s??"").trim().replace(/^ust\.\s*/i,"u. ").replace(/^pkt\s*/i,"p. ").replace(/^lit\.\s*/i,"l. ")}
 function sectionHeading(row,actCode){const info=globalThis.__EDITORIAL?.sectionInfo?.(row,actCode);if(!info)return esc(row[1]);return `<span class="section-no">${esc(info.prefix)}</span>${info.title?`<span class="section-title${info.generated?" generated":""}">${esc(info.title)}</span>`:""}`}
 async function gunzipB64(b64){const b=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));const ds=new DecompressionStream("gzip");return new Response(new Blob([b]).stream().pipeThrough(ds)).text()}
-async function load(){
+async function load(initialCode="uop"){
   const loadStarted=PERF.now();
   if(prebuiltSearchMode){
     try{
-      const catalogStarted=PERF.now(),catalogValue=await lawData.loadRouter();
+      const code=hasAct(initialCode)?initialCode:"uop",packId=lawData.packForAct(code)||"core";
+      const routerStarted=PERF.now(),dataStarted=routerStarted;
+      const [catalogValue,initialAct]=await Promise.all([lawData.loadRouter(),lawData.loadAct(code)]);
+      const routerReady=PERF.now();
       setupCatalog(catalogValue);
-      const catalogReady=PERF.now();
-      const coreId=Object.entries(LAW_MANIFEST.packs||{}).find(([,pack])=>pack.mandatory)?.[0]||lawData.packForAct("uop");
-      const dataStarted=PERF.now(),coreActs=await lawData.loadData(coreId);
-      registerPackData(coreId,coreActs);
+      registerPackData(packId,[initialAct]);
       const completedAt=PERF.now();
       PERF.update({
-        routerLoadMs:catalogReady-catalogStarted,
+        routerLoadMs:routerReady-routerStarted,
         dataDecodeMs:completedAt-dataStarted,
-        lookupBuildMs:completedAt-dataStarted,
+        lookupBuildMs:completedAt-routerReady,
         dataLoadMs:completedAt-loadStarted
       },{
         acts:Object.keys(LAW_MANIFEST.acts||{}).length,
         loadedActs:DATA.length,
         articles:articleMap.size,
         units:unitMap.size,
+        startupAct:code,
         dataJsonChars:0,
         searchMode:"prebuilt"
       });
@@ -603,7 +607,7 @@ function bindSearchResultLinks(root=results){root.querySelectorAll("a.search-ite
 function nextSearchBatch(remaining){const normal=Math.min(10,remaining);return remaining-normal>0&&remaining-normal<5?remaining:normal}
 function expandSearchGroup(button){const group=searchResultGroups.get(button.dataset.searchMore);if(!group)return;const remaining=group.rows.length-group.shown,batch=nextSearchBatch(remaining);if(!batch){button.remove();return}const template=document.createElement("template");template.innerHTML=group.rows.slice(group.shown,group.shown+batch).map(row=>searchItemMarkup(row,group.act)).join("");button.before(template.content);group.shown+=batch;bindSearchResultLinks(button.closest(".search-group")||results);const left=group.rows.length-group.shown;if(left)button.textContent=remainingResultText(left);else button.remove()}
 results.addEventListener("click",event=>{const button=event.target.closest("button[data-search-more]");if(!button)return;event.preventDefault();expandSearchGroup(button)});
-function beginSearchEditing(){document.body.classList.add('search-editing');globalThis.__READER_TOC_CLOSE?.(false)}
+function beginSearchEditing(){document.body.classList.add('search-editing');globalThis.__READER_TOC_CLOSE?.(false);if(prebuiltSearchMode){ensureEnabledSearchReady().catch(()=>{});ensureDiscoveryReady().catch(()=>{})}}
 q.addEventListener('focus',beginSearchEditing);
 q.addEventListener('blur',()=>{if(emptySearchQuickbarInteraction)return;document.body.classList.remove('search-editing')});
 q.oninput=()=>{clearTimeout(timer);clearSearchReturn();if(norm(q.value.trim()).length<2){closeSearch();return}if(!searchState.active)captureSearchScope();emitSearchState(true,searchState.counts,true);if(prebuiltSearchMode)ensureDiscoveryReady().catch(()=>{});timer=setTimeout(search,300)};q.addEventListener("focus",()=>{if(norm(q.value.trim()).length>=2&&!results.classList.contains("show")){clearSearchReturn();search()}});document.getElementById("clear").addEventListener('pointerdown',event=>event.preventDefault());document.getElementById("clear").onclick=()=>clearSearchInput(true);document.getElementById("home").onclick=e=>{e.preventDefault();clearSearchInput(false);document.getElementById("start").scrollIntoView({behavior:"auto"});history.replaceState(null,"","#start")};
@@ -650,10 +654,13 @@ async function search(){
 globalThis.__POLICE_SEARCH_REFRESH=search;
 window.addEventListener("police-law-favorites-change",()=>{if(searchState.active&&searchFavoritesOnly)search()});
 (async()=>{
-  await load();buildMenu();paintSearchPills(false,new Map());
-  const hash=canonicalLegalId(decodeURIComponent(location.hash.slice(1))),target=idMap.has(hash)?hash:null;
+  const rawHash=decodeURIComponent(location.hash.slice(1)),hint=allActCodes().find(code=>rawHash===code||rawHash.startsWith(code+"-"))||"uop";
+  await load(hint);buildMenu();paintSearchPills(false,new Map());
+  const hash=canonicalLegalId(rawHash),target=idMap.has(hash)?hash:null;
   document.body.classList.add('act-selected');
-  await renderAct(target?idMap.get(target):'uop',target,false);
-  if(prebuiltSearchMode)ensureEnabledSearchReady().catch(error=>{console.warn("Nie udało się przygotować indeksów pakietów",error);PERF.update({},{searchError:error?.message||String(error)})});
-  else scheduleSearchWarmup();
+  await renderAct(target?idMap.get(target):hint,target,false);
+  if(prebuiltSearchMode){
+    const warm=()=>ensureEnabledSearchReady().catch(error=>{console.warn("Nie udało się przygotować indeksów pakietów",error);PERF.update({},{searchError:error?.message||String(error)})});
+    requestAnimationFrame(()=>{"requestIdleCallback"in window?requestIdleCallback(warm,{timeout:1400}):setTimeout(warm,120)});
+  }else scheduleSearchWarmup();
 })();

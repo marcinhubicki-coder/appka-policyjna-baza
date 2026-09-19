@@ -143,9 +143,11 @@ async function ensureEnabledSearchReady(force=false){
       loadedSearchPacks.set(packId,await lawData.loadSearch(packId));
     }));
     rebuildSearchIndex(false);
+    const searchLoadMs=PERF.now()-started;
     PERF.update({
       searchReadyMs:PERF.now()-PERF.state.startedAt,
-      searchWorkMs:PERF.now()-started
+      searchWorkMs:searchLoadMs,
+      searchLoadMs
     },{
       searchItems:searchIndex.length,
       loadedSearchPacks:[...loadedSearchPacks.keys()],
@@ -216,6 +218,7 @@ function captureDataResource(){
       dataTransferBytes:bytes,
       dataFromCache:navigator.serviceWorker?.controller?true:false,
       packMetrics:snap.metrics||{},
+      loadedDataActs:snap.dataActs||[],
       loadedDataPacks:snap.dataPacks||[],
       loadedSearchPacks:snap.searchPacks||[]
     });

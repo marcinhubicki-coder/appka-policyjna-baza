@@ -1,8 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "sourceHash": "8836207e42b81743",
+  "runtimeVersion": "63b60b7cfe11fd43",
   "sourceBytes": 1488570,
-  "catalogCompressedBytes": 906239,
+  "routerCompressedBytes": 237664,
+  "discoveryCompressedBytes": 648803,
   "totals": {
     "acts": 14,
     "articles": 4210,

@@ -1,6 +1,6 @@
 /* Shared data rules; no DOM dependencies so import and UI use the same semantics. */
 (function(root){
-  const KEY='police-law-packages-v1',ORDER_KEY='police-law-act-order-v1',DEFAULT_OFF=new Set(['bim','alk']);
+  const KEY='police-law-packages-v1',ORDER_KEY='police-law-act-order-v1',PIN_KEY='police-law-pinned-v1',DEFAULT_OFF=new Set(['bim','alk']);
   let preferences={};
   try{const value=JSON.parse(root.localStorage?.getItem(KEY)||'{}');if(value&&typeof value==='object'&&!Array.isArray(value))preferences=value}catch(_){}
   function defaultEnabled(code){const configured=root.__LAW_CONFIG?.acts?.[code]?.defaultEnabled;return typeof configured==='boolean'?configured:!DEFAULT_OFF.has(code)}
@@ -17,6 +17,13 @@
   try{const value=JSON.parse(root.localStorage?.getItem(ORDER_KEY)||'[]');if(Array.isArray(value))savedOrder=[...new Set(value.filter(code=>typeof code==='string'))]}catch(_){}
   function order(codes){const available=new Set(codes);return [...savedOrder.filter(code=>available.has(code)),...codes.filter(code=>!savedOrder.includes(code))]}
   function setOrder(codes){try{root.localStorage.setItem(ORDER_KEY,JSON.stringify(codes))}catch(_){return false}savedOrder=[...codes];return true}
+  let savedPins=null;try{const value=JSON.parse(root.localStorage?.getItem(PIN_KEY)||'null');if(Array.isArray(value))savedPins=[...new Set(value.filter(code=>typeof code==='string'))]}catch(_){}
+  function quickbarEligible(code){const meta=root.__LAW_CONFIG?.acts?.[code];return meta?.kind!=='document'&&meta?.quickbarEligible!==false}
+  function pinned(codes){const available=new Set(codes),base=savedPins??order(codes).filter(code=>quickbarEligible(code)&&isEnabled(code)).slice(0,9);return base.filter(code=>available.has(code)&&quickbarEligible(code))}
+  function isPinned(code,codes){return pinned(codes).includes(code)}
+  function savePins(next){try{root.localStorage.setItem(PIN_KEY,JSON.stringify(next))}catch(_){return false}savedPins=[...next];return true}
+  function setPinned(code,on,codes){if(!quickbarEligible(code))return false;const current=pinned(codes),has=current.includes(code);if(on&&!has)current.push(code);else if(!on&&has)current.splice(current.indexOf(code),1);return savePins(current)}
+  function setPinnedOrder(next,codes){const current=pinned(codes);if(next.length!==current.length||new Set(next).size!==next.length||next.some(code=>!current.includes(code)))return false;return savePins(next)}
   // Peak speed near the middle, with a longer, very gentle landing.
   function readingEase(t){t=Math.max(0,Math.min(1,t));return 70*t**4-224*t**5+280*t**6-160*t**7+35*t**8}
   const CUE_START=.3;
@@ -97,5 +104,5 @@
     }catch(error){root.__FAVORITES_MIGRATION={error:true}}
   }
   root.__READER_CORE={hiddenPills,overflowCue,sections,migrateFavorites,migrateFavoritesCatalog,readingEase};
-  root.__LAW_PACKAGES={isEnabled,setEnabled,setMany,order,setOrder};
+  root.__LAW_PACKAGES={isEnabled,setEnabled,setMany,order,setOrder,pinned,isPinned,setPinned,setPinnedOrder,quickbarEligible};
 })(typeof window!=='undefined'?window:globalThis);

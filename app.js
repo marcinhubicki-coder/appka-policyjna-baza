@@ -16,6 +16,7 @@ z805:["Z. 805","Zarządzenie KGP nr 805 — zasady etyki zawodowej","publikacja 
 };
 const LAW_CONFIG=globalThis.__LAW_CONFIG||{acts:{},packs:{}};
 const LAW_MANIFEST=globalThis.__LAW_MANIFEST||null;
+const DOCUMENT_MANIFEST=globalThis.__DOCUMENT_MANIFEST||null;
 const lawData=globalThis.__LAW_DATA||null;
 const META={...LEGACY_META,...Object.fromEntries(Object.entries(LAW_CONFIG.acts||{}).map(([code,meta])=>[code,[meta.short||code,meta.name||code,meta.citation||""]]))};
 let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null,CATALOG=null,DISCOVERY=null;
@@ -43,11 +44,10 @@ const PERF=(()=>{
   return{state,now,update,snapshot};
 })();
 globalThis.__POLICE_PERF=PERF;
-function manifestActInfo(code){return LAW_MANIFEST?.acts?.[code]||LAW_CONFIG.acts?.[code]||null}
-function allActCodes(){
-  const codes=LAW_MANIFEST?Object.keys(LAW_MANIFEST.acts||{}):DATA.map(act=>act[0]);
-  return packages.order?.(codes)||codes;
-}
+function manifestActInfo(code){return LAW_MANIFEST?.acts?.[code]||DOCUMENT_MANIFEST?.acts?.[code]||LAW_CONFIG.acts?.[code]||null}
+function allActCodes(){const codes=LAW_MANIFEST?Object.keys(LAW_MANIFEST.acts||{}):DATA.filter(act=>LAW_CONFIG.acts?.[act[0]]?.kind!=="document").map(act=>act[0]);return packages.order?.(codes)||codes}
+function allDocumentCodes(){return DOCUMENT_MANIFEST?Object.keys(DOCUMENT_MANIFEST.acts||{}):DATA.filter(act=>LAW_CONFIG.acts?.[act[0]]?.kind==="document").map(act=>act[0])}
+function isDocumentCode(code){return !!DOCUMENT_MANIFEST?.acts?.[code]||LAW_CONFIG.acts?.[code]?.kind==="document"}
 function hasAct(code){return !!manifestActInfo(code)||DATA.some(act=>act[0]===code)}
 function articleCatalog(id){return catalogArticleMap.get(id)||null}
 function pseudoRowFromCatalog(entry,preview=""){
@@ -373,50 +373,22 @@ function rebuildSearchIndex(rerun=true){
   window.dispatchEvent(new CustomEvent("police-law-packages-change"));
 }
 function packageGroups(){
-  if(LAW_MANIFEST){
-    return Object.entries(LAW_CONFIG.packs||{})
-      .filter(([id,pack])=>!pack.future&&LAW_MANIFEST.packs?.[id])
-      .sort(([,a],[,b])=>(a.order||0)-(b.order||0))
-      .map(([id,pack])=>({id,name:pack.name,codes:[...(LAW_MANIFEST.packs[id]?.acts||[])],mandatory:!!pack.mandatory}));
-  }
-  return[
-    {id:'basic',name:'Podstawowe',codes:['uop','kw','kpow','kk','kpk','spb']},
-    {id:'traffic',name:'Ruch drogowy',codes:['prd','z30']},
-    {id:'special',name:'Ustawy szczególne',codes:['cudz','nieletni','alk','bim']},
-    {id:'orders',name:'Zarządzenia KGP',codes:DATA.map(act=>act[0]).filter(code=>code.startsWith('z')&&code!=='z30')}
-  ].map(group=>({...group,codes:group.codes.filter(code=>DATA.some(act=>act[0]===code))})).filter(group=>group.codes.length);
+  const laws=new Set(allActCodes());
+  return Object.entries(LAW_CONFIG.packs||{}).filter(([id,pack])=>!pack.future&&LAW_MANIFEST?.packs?.[id]).sort(([,a],[,b])=>(a.order||0)-(b.order||0)).map(([id,pack])=>{
+    const codes=(LAW_MANIFEST.packs[id]?.acts||[]).filter(code=>laws.has(code)),used=new Set(),subgroups=(pack.subgroups||[]).map(group=>{const xs=(group.codes||[]).filter(code=>codes.includes(code));xs.forEach(code=>used.add(code));return{id:group.id,name:group.name,codes:xs}}).filter(group=>group.codes.length);
+    const rest=codes.filter(code=>!used.has(code));if(rest.length)subgroups.push({id:id+"-other",name:"Pozostałe",codes:rest});return{id,name:pack.name,codes,mandatory:!!pack.mandatory,subgroups};
+  }).filter(group=>group.codes.length);
 }
-function packageList(){
-  return allActCodes().map(code=>{
-    const info=manifestActInfo(code),loaded=DATA.find(act=>act[0]===code),meta=META[code]||[code,loaded?.[1]||code,""];
-    return{code,name:meta[1],short:meta[0],enabled:packages.isEnabled(code),articles:info?.articles??loaded?.[3]?.length??0,pack:info?.pack||null};
-  });
-}
-globalThis.__POLICE_PACKAGES={
-  list:packageList,
-  groups:packageGroups,
-  async setEnabled(code,on){
-    if(!hasAct(code))return false;
-    if(!packages.setEnabled?.(code,on))return false;
-    if(prebuiltSearchMode){await syncPackActivation(lawData.packForAct(code));if(searchState.active)await search()}else rebuildSearchIndex();
-    return true;
-  },
-  async setGroup(codes,on){
-    if(!codes.length||codes.some(code=>!hasAct(code))||!packages.setMany?.(codes,on))return false;
-    if(prebuiltSearchMode){
-      const packsToSync=new Set(codes.map(code=>lawData.packForAct(code)).filter(Boolean));
-      for(const packId of packsToSync)await syncPackActivation(packId);
-      if(searchState.active)await search();
-    }else rebuildSearchIndex();
-    return true;
-  },
-  setOrder(codes){
-    const available=allActCodes();
-    if(!Array.isArray(codes)||codes.length!==available.length||new Set(codes).size!==available.length||codes.some(code=>!hasAct(code))||!packages.setOrder?.(codes))return false;
-    sortLoadedData();
-    for(const code of codes){for(const container of [quickbar,actgrid]){const node=container.querySelector('[data-act="'+CSS.escape(code)+'"]');if(node)container.append(node)}}
-    clearSearchReturn();if(searchState.active)search();window.dispatchEvent(new CustomEvent('police-law-order-change'));return true;
-  }
+function packageList(){const laws=allActCodes(),pins=packages.pinned?.(laws)||laws;return laws.map(code=>{const info=manifestActInfo(code),loaded=DATA.find(act=>act[0]===code),meta=META[code]||[code,loaded?.[1]||code,""],cfg=LAW_CONFIG.acts?.[code]||{};return{code,name:meta[1],short:meta[0],enabled:packages.isEnabled(code),pinned:pins.includes(code),quickbarEligible:cfg.quickbarEligible!==false,articles:info?.articles??loaded?.[3]?.length??0,pack:info?.pack||null,subgroup:cfg.uiSubgroup||null,subgroupName:cfg.uiSubgroupName||null}})}
+function documentList(){return allDocumentCodes().map(code=>{const info=manifestActInfo(code),meta=META[code]||[code,code,""];return{code,name:meta[1],short:meta[0],rows:info?.rows||0,kind:"document"}})}
+function documentGroups(){const docs=new Set(allDocumentCodes()),used=new Set(),groups=(DOCUMENT_MANIFEST?.groups||LAW_CONFIG.documents?.groups||[]).map(group=>{const codes=(group.codes||[]).filter(code=>docs.has(code));codes.forEach(code=>used.add(code));return{id:group.id,name:group.name,codes}}).filter(group=>group.codes.length);const rest=[...docs].filter(code=>!used.has(code));if(rest.length)groups.push({id:"documents-other",name:"Pozostałe",codes:rest});return groups}
+function pinnedList(){const by=new Map(packageList().map(item=>[item.code,item]));return(packages.pinned?.(allActCodes())||[]).map(code=>by.get(code)).filter(Boolean)}
+globalThis.__POLICE_PACKAGES={list:packageList,groups:packageGroups,catalogGroups:packageGroups,documents:documentList,documentGroups,pinnedList,
+  async setEnabled(code,on){if(!allActCodes().includes(code))return false;if(!packages.setEnabled?.(code,on))return false;if(prebuiltSearchMode){await syncPackActivation(lawData.packForAct(code));if(searchState.active)await search()}else rebuildSearchIndex();return true},
+  async setGroup(codes,on){const laws=allActCodes();if(!codes.length||codes.some(code=>!laws.includes(code))||!packages.setMany?.(codes,on))return false;if(prebuiltSearchMode){const packsToSync=new Set(codes.map(code=>lawData.packForAct(code)).filter(Boolean));for(const packId of packsToSync)await syncPackActivation(packId);if(searchState.active)await search()}else rebuildSearchIndex();return true},
+  setPinned(code,on){const laws=allActCodes();if(!laws.includes(code)||!packages.setPinned?.(code,on,laws))return false;buildMenu();window.dispatchEvent(new CustomEvent("police-law-pins-change"));return true},
+  setPinnedOrder(codes){const laws=allActCodes(),current=packages.pinned?.(laws)||[];if(codes.length!==current.length||codes.some(code=>!current.includes(code))||!packages.setPinnedOrder?.(codes,laws))return false;const rest=packages.order?.(laws).filter(code=>!codes.includes(code))||laws.filter(code=>!codes.includes(code));packages.setOrder?.([...codes,...rest]);buildMenu();window.dispatchEvent(new CustomEvent("police-law-pins-change"));return true},
+  setOrder(codes){const available=allActCodes();if(!Array.isArray(codes)||codes.length!==available.length||new Set(codes).size!==available.length||codes.some(code=>!available.includes(code))||!packages.setOrder?.(codes))return false;sortLoadedData();buildMenu();clearSearchReturn();if(searchState.active)search();window.dispatchEvent(new CustomEvent("police-law-order-change"));return true}
 };
 function readerRows(){return globalThis.__POLICE_READER_ROWS?.(ACT)||ACT[3]}
 function refreshReader(target=null){
@@ -608,16 +580,13 @@ function beginEmptySearchQuickbarInteraction(event){
 document.addEventListener("pointerdown",beginEmptySearchQuickbarInteraction,{capture:true,passive:true});
 document.addEventListener("touchstart",beginEmptySearchQuickbarInteraction,{capture:true,passive:true});
 function buildMenu(){
-  quickbar.innerHTML="";actgrid.innerHTML="";
-  for(const code of allActCodes()){
-    const info=manifestActInfo(code),loaded=DATA.find(A=>A[0]===code),m=META[code]||[code,loaded?.[1]||code,""],articles=info?.articles??loaded?.[3]?.length??0;
-    const qb=document.createElement("button");qb.dataset.act=code;
-    const label=document.createElement("span"),badge=document.createElement("span");
-    label.className="act-pill-label";label.textContent=m[0];badge.className="act-pill-count";badge.setAttribute("aria-hidden","true");
-    qb.append(label,badge);qb.setAttribute("aria-label",`${m[0]} — ${m[1]}`);qb.onclick=()=>activateQuickbarAct(code);quickbar.appendChild(qb);
-    const b=document.createElement("button");b.className="act-jump";b.dataset.act=code;b.innerHTML=`<b>${esc(m[0])}</b>${esc(m[1])}<small>${articles} artykułów/jednostek</small>`;b.onclick=()=>renderAct(code);actgrid.appendChild(b);
-  }
+  quickbar.innerHTML="";actgrid.innerHTML="";const laws=allActCodes(),pins=new Set(packages.pinned?.(laws)||laws);
+  for(const code of laws){const info=manifestActInfo(code),loaded=DATA.find(A=>A[0]===code),m=META[code]||[code,loaded?.[1]||code,""],articles=info?.articles??loaded?.[3]?.length??0,cfg=LAW_CONFIG.acts?.[code]||{};
+    if(pins.has(code)&&cfg.quickbarEligible!==false){const qb=document.createElement("button");qb.dataset.act=code;const label=document.createElement("span"),badge=document.createElement("span");label.className="act-pill-label";label.textContent=m[0];badge.className="act-pill-count";badge.setAttribute("aria-hidden","true");qb.append(label,badge);qb.setAttribute("aria-label",`${m[0]} — ${m[1]}`);qb.onclick=()=>activateQuickbarAct(code);quickbar.appendChild(qb)}
+    const jump=document.createElement("button");jump.className="act-jump";jump.dataset.act=code;jump.innerHTML=`<b>${esc(m[0])}</b>${esc(m[1])}<small>${articles} artykułów/jednostek</small>`;jump.onclick=()=>renderAct(code);actgrid.appendChild(jump);
+  }window.dispatchEvent(new CustomEvent("police-law-menu-built"));
 }
+globalThis.__POLICE_REBUILD_MENU=buildMenu;
 function searchItemMarkup(row,act){return `<a class="search-item" href="#${esc(row[0])}" data-a="${esc(act)}"><b>${esc(row[2])} · ${esc(row[3])}</b><small>${esc(row[4].map(unit=>unit[3]).join(" ").slice(0,190))}…</small></a>`}
 function remainingResultText(value){const tens=value%100,ones=value%10,words=value===1?"dalszy wynik":ones>=2&&ones<=4&&(tens<12||tens>14)?"dalsze wyniki":"dalszych wyników";return `+ ${value} ${words} w tej ustawie`}
 function searchMoreMarkup(group){const remaining=group.rows.length-group.shown;return remaining?`<button class="search-group-more" type="button" data-search-more="${esc(group.act)}" aria-label="Pokaż kolejne wyniki w tej ustawie">${remainingResultText(remaining)}</button>`:""}

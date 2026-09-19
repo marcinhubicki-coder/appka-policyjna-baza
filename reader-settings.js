@@ -31,33 +31,29 @@
   const orderCue=watchList(orderList);watchList(document.getElementById('searchActFilters'));
   let packageSignature='';
   function renderPackages(){
-    const items=api.list(),groups=api.groups(),signature=groups.map(group=>group.id+':'+group.codes.join(',')).join('|');
+    const items=api.list(),groups=api.groups(),signature=groups.map(group=>group.id+':'+(group.subgroups||[]).map(s=>s.id+'='+s.codes.join(',')).join(';')).join('|');
     if(packageSignature!==signature){
       packageSignature=signature;packageList.replaceChildren();
       for(const group of groups){
         const section=node('details','law-package'),heading=node('summary','search-filter-row package-title'),label=node('b','',group.name),toggle=node('input'),children=node('div','package-acts');
-        section.dataset.package=group.id;toggle.type='checkbox';toggle.dataset.packageToggle=group.id;toggle.setAttribute('aria-label','Cały pakiet: '+group.name);
-        toggle.addEventListener('click',event=>event.stopPropagation());
+        section.dataset.package=group.id;toggle.type='checkbox';toggle.dataset.packageToggle=group.id;toggle.setAttribute('aria-label','Cały pakiet: '+group.name);toggle.addEventListener('click',event=>event.stopPropagation());
         toggle.onchange=async()=>{const on=group.codes.every(code=>api.list().find(item=>item.code===code)?.enabled);toggle.disabled=true;packageStatus.textContent='Przygotowuję pakiet…';try{if(!await api.setGroup(group.codes,!on))packageStatus.textContent='Nie udało się zapisać pakietu.';else packageStatus.textContent='Gotowe offline.'}catch(error){packageStatus.textContent=error?.message||'Nie udało się przygotować pakietu.'}finally{toggle.disabled=false;renderPackages()}};
         heading.append(label,toggle);section.append(heading,children);
-        for(const code of group.codes){
-          const item=items.find(item=>item.code===code);if(!item)continue;
-          const row=node('label','search-filter-row'),copy=node('span','search-filter-copy'),short=node('b','',item.short),name=node('small','',item.name),input=node('input');
-          input.type='checkbox';input.dataset.code=code;input.setAttribute('aria-label','Wyszukiwanie: '+item.name);copy.append(short,name);row.append(copy,input);children.append(row);
-          input.onchange=async()=>{input.disabled=true;packageStatus.textContent='Aktualizuję wyszukiwanie…';try{if(!await api.setEnabled(code,input.checked))packageStatus.textContent='Nie udało się zapisać wyboru.';else packageStatus.textContent='Gotowe offline.'}catch(error){packageStatus.textContent=error?.message||'Nie udało się przygotować pakietu.'}finally{input.disabled=false;renderPackages()}};
-        }
-        packageList.append(section);
+        const subgroups=group.subgroups?.length?group.subgroups:[{id:group.id,name:'',codes:group.codes}];
+        for(const subgroup of subgroups){
+          if(subgroup.name&&subgroups.length>1)children.append(node('div','package-subgroup-title',subgroup.name));
+          for(const code of subgroup.codes){const item=items.find(item=>item.code===code);if(!item)continue;const row=node('label','search-filter-row'),copy=node('span','search-filter-copy'),short=node('b','',item.short),name=node('small','',item.name),input=node('input');input.type='checkbox';input.dataset.code=code;input.setAttribute('aria-label','Wyszukiwanie: '+item.name);copy.append(short,name);row.append(copy,input);children.append(row);input.onchange=async()=>{input.disabled=true;packageStatus.textContent='Aktualizuję wyszukiwanie…';try{if(!await api.setEnabled(code,input.checked))packageStatus.textContent='Nie udało się zapisać wyboru.';else packageStatus.textContent='Gotowe offline.'}catch(error){packageStatus.textContent=error?.message||'Nie udało się przygotować pakietu.'}finally{input.disabled=false;renderPackages()}}}
+        }packageList.append(section);
       }
     }
-    const enabled=new Set(items.filter(item=>item.enabled).map(item=>item.code));
-    for(const input of packageList.querySelectorAll('input[data-code]'))input.checked=enabled.has(input.dataset.code);
+    const enabled=new Set(items.filter(item=>item.enabled).map(item=>item.code));for(const input of packageList.querySelectorAll('input[data-code]'))input.checked=enabled.has(input.dataset.code);
     for(const group of groups){const input=packageList.querySelector('[data-package-toggle="'+group.id+'"]');if(!input)continue;const count=group.codes.filter(code=>enabled.has(code)).length;input.checked=count===group.codes.length;input.indeterminate=count>0&&count<group.codes.length;input.setAttribute('aria-checked',input.indeterminate?'mixed':String(input.checked))}
   }
   let draft=[],initial=[],slots=[],tiles=new Map(),drag=null,pending=null,holdTimer=0,autoFrame=0,suppressUntil=0;
   const flips=new Map();
   function dirty(){save.disabled=!!drag||draft.join('|')===initial.join('|')}
   function renderOrder(){
-    if(drag)return;const items=api.list();if(items.map(item=>item.code).join('|')===initial.join('|')&&slots.length)return;
+    if(drag)return;const items=api.pinnedList?.()||api.list().filter(item=>item.pinned);if(items.map(item=>item.code).join('|')===initial.join('|')&&slots.length)return;
     draft=items.map(item=>item.code);initial=[...draft];slots=[];tiles.clear();orderList.replaceChildren();
     for(const [i,item] of items.entries()){
       const slot=node('div','order-slot'),number=node('span','order-number',i+1),tile=node('button','order-tile'),copy=node('span','order-copy'),short=node('b','',item.short),name=node('small','',item.name),grip=node('span','order-grip','⠿');
@@ -112,13 +108,13 @@
     else if(drag&&['ArrowUp','ArrowDown','Home','End'].includes(event.key)){event.preventDefault();const index=draft.indexOf(drag.code),next=event.key==='Home'?0:event.key==='End'?draft.length-1:index+(event.key==='ArrowUp'?-1:1);moveTo(next);tile.focus({preventScroll:true});tile.scrollIntoView({block:'nearest',behavior:'auto'})}
   });
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&drag){event.preventDefault();event.stopImmediatePropagation();finish(true)}},true);
-  save.onclick=()=>{if(drag)return;if(api.setOrder(draft)){initial=[...draft];status.textContent='Kolejność zapisana na tym urządzeniu.';dirty()}else status.textContent='Nie udało się zapisać kolejności. Spróbuj ponownie.'};
+  save.onclick=()=>{if(drag)return;const ok=api.setPinnedOrder?.(draft)??api.setOrder(draft);if(ok){initial=[...draft];status.textContent='Kolejność przypiętych aktów zapisana.';dirty()}else status.textContent='Nie udało się zapisać kolejności. Spróbuj ponownie.'};
   document.getElementById('settingsClose')?.addEventListener('click',()=>finish(true));
   document.getElementById('settingsBackdrop')?.addEventListener('click',()=>finish(true));
   window.addEventListener('police-law-settings-open',()=>{finish(true);initial=[];renderOrder();renderPackages();for(const list of [orderList,document.getElementById('searchActFilters')])cues.get(list)?.queue()});
   window.addEventListener('police-law-settings-close',()=>finish(true));
   window.addEventListener('police-law-rendered',()=>{renderPackages();renderOrder()});
-  window.addEventListener('police-law-packages-change',renderPackages);
+  window.addEventListener('police-law-packages-change',renderPackages);window.addEventListener('police-law-pins-change',()=>{initial=[];renderOrder();renderPackages()});
   window.addEventListener('police-law-pack-progress',event=>{
     if(!packageStatus)return;const d=event.detail||{},names=api.groups?.().find(group=>group.id===d.packId)?.name||d.packId;
     if(d.stage==='fetch')packageStatus.textContent='Otwieram pakiet „'+names+'”…';

@@ -43,3 +43,5 @@ body.search-editing .quickbar-wrap{display:flex}body.search-editing .quickbar{di
   .settings-panel[data-mode="search"]>.settings-search{border-radius:13px 13px 22px 22px}
 }
 @media(prefers-reduced-motion:reduce){.list-overflow-cue,.scroll-cue-frame,.package-title>b::before{transition:none}}
+
+.package-subgroup-title{padding:8px 7px 2px;color:var(--muted);font-size:9.5px;font-weight:750;text-transform:uppercase;letter-spacing:.02em}

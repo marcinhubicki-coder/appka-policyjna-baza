@@ -21,9 +21,9 @@
     const m=state.metrics||{},act=actLabel(state.lastAct),summary=m.initialReadyMs==null?'Kończę pomiar bieżącego uruchomienia…':`Start ${duration(m.initialReadyMs)} · ${act} ${duration(m.lastActRenderMs)}`;
     if(performanceSummary)performanceSummary.textContent=summary;
     if(!performanceMetrics)return;
-    const dataSize=bytes(state.dataResourceBytes),dataSource=state.dataFromCache?'cache offline':'sieć lub nowy cache',manifest=globalThis.__LAW_MANIFEST;
+    const dataSize=bytes(state.dataResourceBytes),dataSource=state.dataFromCache?'cache offline':'sieć lub nowy cache',manifest=globalThis.__LAW_MANIFEST,documentManifest=globalThis.__DOCUMENT_MANIFEST;
     const packLabel=id=>globalThis.__LAW_CONFIG?.packs?.[id]?.name||id;
-    const offlineLawBytes=manifest?(manifest.routerBytes||manifest.catalogBytes||0)+(manifest.discoveryBytes||0)+Object.values(manifest.packs||{}).reduce((sum,pack)=>sum+(pack.bytes?.data||0)+(pack.bytes?.search||0),0):0;
+    const offlineLawBytes=manifest?(manifest.routerBytes||manifest.catalogBytes||0)+(manifest.discoveryBytes||0)+Object.values(manifest.packs||{}).reduce((sum,pack)=>sum+(pack.bytes?.data||0)+(pack.bytes?.search||0),0):0;const offlineDocumentBytes=Object.values(documentManifest?.acts||{}).reduce((sum,item)=>sum+(item.dataBytes||0),0);
     const rows=[
       ['Uruchomienie',duration(m.initialReadyMs)],
       ['Przygotowanie danych',duration(m.dataLoadMs)],
@@ -39,7 +39,7 @@
     if(state.loadedDataActs?.length)rows.push(['Akty w RAM',state.loadedDataActs.map(actLabel).join(', ')]);
     else if(state.loadedDataPacks?.length)rows.push(['Treść w RAM',state.loadedDataPacks.map(packLabel).join(', ')]);
     if(state.loadedSearchPacks?.length)rows.push(['Indeksy w RAM',state.loadedSearchPacks.map(packLabel).join(', ')]);
-    if(offlineLawBytes)rows.push(['Biblioteka prawa offline',bytes(offlineLawBytes)]);
+    if(offlineLawBytes)rows.push(['Biblioteka prawa offline',bytes(offlineLawBytes)]);if(documentManifest)rows.push(['Dokumenty / wzory offline',`${Object.keys(documentManifest.acts||{}).length} pozycji · ${bytes(offlineDocumentBytes)||'0 KB'}`]);
     if(dataSize)rows.push(['Wczytane w tej sesji',`${dataSize} · ${dataSource}`]);
     if(state.benchmark?.results?.length)for(const row of state.benchmark.results)rows.push([`Benchmark ${row.scale}×`,row.prebuiltSearchMs!=null?`indeksowanie ${duration(row.runtimeIndexMs)} · gotowe szukanie ${duration(row.prebuiltSearchMs)}`:`indeksowanie ${duration(row.runtimeIndexMs)} · szukanie ${duration(row.searchMs)}`]);
     const fragment=document.createDocumentFragment();for(const[label,value]of rows){const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;row.append(dt,dd);fragment.append(row)}performanceMetrics.replaceChildren(fragment);

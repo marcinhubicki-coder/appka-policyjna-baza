@@ -47,7 +47,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A data.js reports/eli-import.json law-manifest.js law-router.json.gz law-discovery.json.gz acts packs reports/offline-pack-stats.json reports/offline-search-benchmark.json
+          git add -A data.js reports/eli-import.json law-manifest.js document-manifest.js law-router.json.gz law-discovery.json.gz acts documents packs reports/offline-pack-stats.json reports/offline-search-benchmark.json
           if git diff --cached --quiet; then
             echo "ELI acts are current."
           else

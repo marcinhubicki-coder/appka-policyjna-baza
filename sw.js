@@ -1,92 +1,11 @@
-try{importScripts('./law-manifest.js')}catch(_){}
-const LAW_MANIFEST=self.__LAW_MANIFEST||null;
-const CACHE_VERSION='packs2-'+(LAW_MANIFEST?.runtimeVersion||LAW_MANIFEST?.sourceHash||'legacy');
-const CACHE_PREFIX='policyjna-baza-';
-const CACHE_NAME=CACHE_PREFIX+CACHE_VERSION;
-const LAW_ASSETS=LAW_MANIFEST?[
-  './law-config.js','./law-manifest.js','./law-data-loader.js','./'+LAW_MANIFEST.router,'./'+LAW_MANIFEST.discovery,
-  ...Object.values(LAW_MANIFEST.acts||{}).map(act=>'./'+act.data),
-  ...Object.values(LAW_MANIFEST.packs||{}).map(pack=>'./'+pack.search)
-]:[];
-const PRECACHE_URLS=Object.freeze([
-  './index.html',
-  './manifest.webmanifest',
-  './icons/app-icon.svg',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/apple-touch-icon.png',
-  './app.css',
-  './nav.css',
-  './menu-hotfix.css',
-  './favorites-ui.css',
-  './data.js',
-  ...LAW_ASSETS,
-  './linking-rules.js',
-  './chapter-titles.js',
-  './app.js',
-  './reader-state.js',
-  './reader-display.js',
-  './reader-follow.js',
-  './reader-context.js',
-  './reader-display.css',
-  './reader-settings.js',
-  './reader-settings.css',
-  './reader-core.js',
-  './reader-ui.js',
-  './quickbar-motion.js',
-  './reader-ui.css',
-  './article-comments.js',
-  './uop-summaries.js',
-  './cleanup.js',
-  './nav.js',
-  './ux-fixes.js',
-  './menu-sync-fix.js',
-  './slider-preview-fix.js',
-  './toc-layout-fix.js',
-  './search-ux-v2.js',
-  './favorites-model.js',
-  './favorites-ui.js',
-  './favorites-transfer.js',
-  './settings.js',
-  './offline.js'
-]);
-
-async function cacheAll(){
-  const cache=await caches.open(CACHE_NAME);
-  for(const url of PRECACHE_URLS){
-    if(await cache.match(url,{ignoreSearch:true}))continue;
-    const response=await fetch(new Request(url,{cache:'reload'}));
-    if(!response.ok)throw new Error(`Nie można zapisać ${url} (${response.status})`);
-    await cache.put(url,response);
-  }
-}
-
+try{importScripts('./law-manifest.js','./document-manifest.js')}catch(_){}
+const LAW_MANIFEST=self.__LAW_MANIFEST||null,DOCUMENT_MANIFEST=self.__DOCUMENT_MANIFEST||null;
+const CACHE_VERSION='packs3-'+(LAW_MANIFEST?.runtimeVersion||LAW_MANIFEST?.sourceHash||'legacy')+'-'+(DOCUMENT_MANIFEST?.sourceHash||'nodocs');
+const CACHE_PREFIX='policyjna-baza-',CACHE_NAME=CACHE_PREFIX+CACHE_VERSION;
+const LAW_ASSETS=LAW_MANIFEST?['./law-config.js','./law-manifest.js','./document-manifest.js','./law-data-loader.js','./'+LAW_MANIFEST.router,'./'+LAW_MANIFEST.discovery,...Object.values(LAW_MANIFEST.acts||{}).map(act=>'./'+act.data),...Object.values(LAW_MANIFEST.packs||{}).map(pack=>'./'+pack.search),...Object.values(DOCUMENT_MANIFEST?.acts||{}).map(doc=>'./'+doc.data)]:[];
+const PRECACHE_URLS=Object.freeze(['./index.html','./manifest.webmanifest','./icons/app-icon.svg','./icons/icon-192.png','./icons/icon-512.png','./icons/apple-touch-icon.png','./app.css','./nav.css','./menu-hotfix.css','./favorites-ui.css','./data.js',...LAW_ASSETS,'./linking-rules.js','./chapter-titles.js','./app.js','./reader-state.js','./reader-display.js','./reader-follow.js','./reader-context.js','./reader-display.css','./reader-settings.js','./reader-settings.css','./reader-core.js','./reader-ui.js','./quickbar-motion.js','./reader-ui.css','./article-comments.js','./uop-summaries.js','./cleanup.js','./nav.js','./ux-fixes.js','./menu-sync-fix.js','./slider-preview-fix.js','./toc-layout-fix.js','./search-ux-v2.js','./favorites-model.js','./favorites-ui.js','./favorites-transfer.js','./settings.js','./offline.js']);
+async function cacheAll(){const cache=await caches.open(CACHE_NAME);for(const url of PRECACHE_URLS){if(await cache.match(url,{ignoreSearch:true}))continue;const response=await fetch(new Request(url,{cache:'reload'}));if(!response.ok)throw new Error(`Nie można zapisać ${url} (${response.status})`);await cache.put(url,response)}}
 self.addEventListener('install',event=>event.waitUntil(cacheAll().then(()=>self.skipWaiting())));
-self.addEventListener('activate',event=>event.waitUntil((async()=>{
-  const keys=await caches.keys();
-  await Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_NAME).map(key=>caches.delete(key)));
-  await self.clients.claim();
-})()));
-self.addEventListener('message',event=>{
-  if(event.data?.type!=='CACHE_ALL')return;
-  const port=event.ports?.[0];
-  event.waitUntil(cacheAll().then(()=>port?.postMessage({ok:true,version:CACHE_VERSION})).catch(error=>port?.postMessage({ok:false,error:error?.message||String(error)})));
-});
-self.addEventListener('fetch',event=>{
-  const request=event.request;
-  if(request.method!=='GET')return;
-  const url=new URL(request.url);
-  if(url.origin!==self.location.origin)return;
-  event.respondWith((async()=>{
-    const cache=await caches.open(CACHE_NAME);
-    if(request.mode==='navigate'){
-      const shell=await cache.match('./index.html');
-      if(shell)return shell;
-    }
-    const cached=await cache.match(request,{ignoreSearch:true});
-    if(cached)return cached;
-    const response=await fetch(request);
-    if(response.ok)await cache.put(request,response.clone());
-    return response;
-  })());
-});
+self.addEventListener('activate',event=>event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_NAME).map(key=>caches.delete(key)));await self.clients.claim()})()));
+self.addEventListener('message',event=>{if(event.data?.type!=='CACHE_ALL')return;const port=event.ports?.[0];event.waitUntil(cacheAll().then(()=>port?.postMessage({ok:true,version:CACHE_VERSION})).catch(error=>port?.postMessage({ok:false,error:error?.message||String(error)})))});
+self.addEventListener('fetch',event=>{const request=event.request;if(request.method!=='GET')return;const url=new URL(request.url);if(url.origin!==self.location.origin)return;event.respondWith((async()=>{const cache=await caches.open(CACHE_NAME);if(request.mode==='navigate'){const shell=await cache.match('./index.html');if(shell)return shell}const cached=await cache.match(request,{ignoreSearch:true});if(cached)return cached;const response=await fetch(request);if(response.ok)await cache.put(request,response.clone());return response})())});

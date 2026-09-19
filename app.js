@@ -115,6 +115,11 @@ function activePackIds(){
   if(!lawData)return[];
   return lawData.enabledPackIds();
 }
+globalThis.__POLICE_ENSURE_ACTS=async codes=>{
+  const unique=[...new Set((codes||[]).filter(hasAct))];
+  for(const code of unique)await ensureActLoaded(code);
+  return true;
+};
 async function ensureEnabledSearchReady(force=false){
   if(!prebuiltSearchMode)return;
   if(searchHydrationPromise&&!force)return searchHydrationPromise;

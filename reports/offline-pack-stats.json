@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "sourceHash": "8836207e42b81743",
+  "sourceBytes": 1488570,
+  "catalogCompressedBytes": 906239,
+  "totals": {
+    "acts": 14,
+    "articles": 4210,
+    "units": 22644,
+    "dataCompressedBytes": 1119439,
+    "searchCompressedBytes": 1040749
+  },
+  "packs": {
+    "core": {
+      "counts": {
+        "acts": 6,
+        "articles": 2299,
+        "units": 9773
+      },
+      "bytes": {
+        "data": 542926,
+        "search": 528037
+      },
+      "acts": [
+        "uop",
+        "kw",
+        "kk",
+        "kpk",
+        "kpow",
+        "spb"
+      ]
+    },
+    "interventions": {
+      "counts": {
+        "acts": 3,
+        "articles": 1249,
+        "units": 7765
+      },
+      "bytes": {
+        "data": 348235,
+        "search": 311784
+      },
+      "acts": [
+        "cudz",
+        "nieletni",
+        "alk"
+      ]
+    },
+    "traffic": {
+      "counts": {
+        "acts": 1,
+        "articles": 441,
+        "units": 3836
+      },
+      "bytes": {
+        "data": 162077,
+        "search": 138322
+      },
+      "acts": [
+        "prd"
+      ]
+    },
+    "public-order": {
+      "counts": {
+        "acts": 1,
+        "articles": 103,
+        "units": 539
+      },
+      "bytes": {
+        "data": 26654,
+        "search": 24677
+      },
+      "acts": [
+        "bim"
+      ]
+    },
+    "kgp": {
+      "counts": {
+        "acts": 3,
+        "articles": 118,
+        "units": 731
+      },
+      "bytes": {
+        "data": 39547,
+        "search": 37929
+      },
+      "acts": [
+        "z768",
+        "z360",
+        "z805"
+      ]
+    }
+  }
+}

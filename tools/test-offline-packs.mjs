@@ -36,7 +36,7 @@ assert.ok(catalog.ids.length>=articleCount+unitCount*0.5,"Katalog ID wygląda na
 assert.equal(Object.keys(config.acts).filter(code=>sourceCodes.includes(code)).length,sourceCodes.length);
 
 const sourceSearch=[];
-for(const act of source)for(const row of act[3])sourceSearch.push([row[0],act[0],norm(row[2]+" "+row[3]+" "+row[4].map(unit=>unit[3]).join(" "))]);
+for(const act of source)for(const row of act[3])sourceSearch.push([row[0],act[0],norm(row[2]+" "+row[3]+" "+row[4].map(unit=>tidy(unit[3])).join(" "))]);
 const byId=new Map(searchRows.map(row=>[row[0],row]));
 for(const row of sourceSearch){
   assert.equal(byId.get(row[0])?.[2],row[2],`Prebuilt search różni się dla ${row[0]}`);

@@ -1,33 +1,156 @@
 {
-  "asOf": "2026-09-19",
+  "asOf": "2026-09-20",
   "acts": [
     {
       "code": "nark",
       "name": "Ustawa o przeciwdziałaniu narkomanii",
       "url": "https://www.inforlex.pl/dok/tresc,DZU.2023.263.0001939,USTAWA-z-dnia-29-lipca-2005-r-o-przeciwdzialaniu-narkomanii.html",
       "official": "https://eli.gov.pl/eli/DU/2023/1939/ogl",
-      "expectedVersionFrom": "2026-08-27"
+      "expectedVersionFrom": "2026-08-27",
+      "checks": [
+        [
+          "nark-art-62",
+          [
+            "środk",
+            "odurz"
+          ]
+        ]
+      ]
     },
     {
       "code": "przemoc",
       "name": "Ustawa o przeciwdziałaniu przemocy domowej",
       "url": "https://www.inforlex.pl/dok/tresc,DZU.2024.320.0001673,USTAWA-z-dnia-29-lipca-2005-r-o-przeciwdzialaniu-przemocy-domowej-Preambula-uchylona.html",
       "official": "https://eli.gov.pl/eli/DU/2024/1673/ogl",
-      "expectedVersionFrom": "2026-02-27"
+      "expectedVersionFrom": "2026-02-27",
+      "checks": [
+        [
+          "przemoc-art-2",
+          [
+            "przemoc",
+            "domow"
+          ]
+        ]
+      ]
     },
     {
       "code": "psych",
       "name": "Ustawa o ochronie zdrowia psychicznego",
       "url": "https://www.inforlex.pl/dok/tresc,DZU.2024.173.0000917,o-ochronie-zdrowia-psychicznego.html",
       "official": "https://eli.gov.pl/eli/DU/2024/917/ogl",
-      "expectedVersionFrom": "2024-06-21"
+      "expectedVersionFrom": "2024-06-21",
+      "checks": [
+        [
+          "psych-art-21",
+          [
+            "badani",
+            "psychiatr"
+          ]
+        ],
+        [
+          "psych-art-23",
+          [
+            "bez",
+            "zgod"
+          ]
+        ]
+      ]
     },
     {
       "code": "tyton",
       "name": "Ustawa o ochronie zdrowia przed następstwami używania tytoniu i wyrobów tytoniowych",
       "url": "https://www.inforlex.pl/dok/tresc,DZU.2026.259.0001214,o-ochronie-zdrowia-przed-nastepstwami-uzywania-tytoniu-i-wyrobow-tytoniowych.html",
       "official": "https://eli.gov.pl/eli/DU/2026/1214/ogl",
-      "expectedVersionFrom": "2026-09-16"
+      "expectedVersionFrom": "2026-09-16",
+      "checks": [
+        [
+          "tyton-art-5",
+          [
+            "palen",
+            "zabran"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "kier",
+      "name": "Ustawa o kierujących pojazdami",
+      "url": "https://www.inforlex.pl/dok/tresc,DZU.2025.248.0001226,o-kierujacych-pojazdami.html",
+      "official": "https://eli.gov.pl/eli/DU/2025/1226/ogl",
+      "expectedVersionFrom": "2026-09-03",
+      "checks": [
+        [
+          "kier-art-3",
+          [
+            "kierując",
+            "pojazd"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "krd",
+      "name": "Rozporządzenie MSWiA w sprawie kontroli ruchu drogowego",
+      "url": "https://www.inforlex.pl/dok/tresc,DZU.2019.215.0002141,ROZPORZADZENIE-MINISTRA-SPRAW-WEWNETRZNYCH-I-ADMINISTRACJI-z-dnia-5-listopada-2019-r-w-sprawie-kontroli-ruchu-drogowego.html",
+      "official": "https://eli.gov.pl/eli/DU/2019/2141/ogl",
+      "expectedVersionFrom": "2026-03-03",
+      "topLevel": "par",
+      "checks": [
+        [
+          "krd-par-1",
+          [
+            "kontroli ruchu drogowego"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "punkty",
+      "name": "Rozporządzenie MSWiA w sprawie ewidencji kierujących pojazdami naruszających przepisy ruchu drogowego",
+      "url": "https://www.inforlex.pl/dok/tresc,DZU.2026.153.0000724,ROZPORZADZENIE-MINISTRA-SPRAW-WEWNETRZNYCH-I-ADMINISTRACJI-z-dnia-29-maja-2026-r-w-sprawie-ewidencji-kierujacych-pojazdami-naruszajacych-przepisy.html",
+      "official": "https://eli.gov.pl/eli/DU/2026/724/ogl",
+      "expectedVersionFrom": "2026-06-03",
+      "topLevel": "par",
+      "checks": [
+        [
+          "punkty-par-1",
+          [
+            "ewidenc"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "bron",
+      "name": "Ustawa o broni i amunicji",
+      "url": "https://www.inforlex.pl/dok/tresc,DZU.2024.093.0000485,ustawa-z-dnia-21-maja-1999-r-o-broni-i-amunicji.html",
+      "official": "https://eli.gov.pl/eli/DU/2024/485/ogl",
+      "expectedVersionFrom": "2026-03-18",
+      "checks": [
+        [
+          "bron-art-2",
+          [
+            "posiadanie",
+            "broni"
+          ]
+        ]
+      ]
+    },
+    {
+      "code": "ochrona",
+      "name": "Ustawa o ochronie osób i mienia",
+      "url": "https://www.inforlex.pl/dok/tresc,DZU.2025.114.0000532,USTAWA-z-dnia-22-sierpnia-1997-r-o-ochronie-osob-i-mienia.html",
+      "official": "https://eli.gov.pl/eli/DU/2025/532/ogl",
+      "expectedVersionFrom": "2026-07-04",
+      "checks": [
+        [
+          "ochrona-art-1",
+          [
+            "ochrony",
+            "mienia"
+          ]
+        ]
+      ]
     }
   ]
 }

@@ -40,7 +40,7 @@ def main():
     for src in config["acts"]:
         code=src["code"];html=fetch(src["url"])
         old_rows=by_code.get(code,[None,None,None,[]])[3]
-        bundle=MOD.import_act(code,html,src["url"],old_rows,as_of)
+        bundle=MOD.import_act(code,html,src["url"],old_rows,as_of,src.get("topLevel","art"))
         actual=bundle["source"]["versionFrom"]
         if actual!=src["expectedVersionFrom"]:
             raise RuntimeError(f"{code}: oczekiwano wersji od {src['expectedVersionFrom']}, źródło ma {actual}")
@@ -61,24 +61,17 @@ def main():
             "versionTo":bundle["source"]["versionTo"],"sha256":hashlib.sha256(html).hexdigest(),
             "official":src["official"]})
         print(code,len(rows),actual,flush=True)
-    # Patrol-oriented smoke checks: catch a structurally valid import whose
-    # article boundaries or content were parsed incorrectly.
+    # Source-specific smoke checks catch structurally valid but wrongly parsed imports.
     def article_text(code, article_id):
         act=next((a for a in data if a[0]==code),None)
         row=next((r for r in (act[3] if act else []) if r[0]==article_id),None)
-        if not row: raise RuntimeError(f"Brak oczekiwanego artykułu: {article_id}")
+        if not row: raise RuntimeError(f"Brak oczekiwanego przepisu: {article_id}")
         return " ".join(str(u[3]) for u in row[4]).lower()
-    checks=[
-        ("nark","nark-art-62",("środk","odurz")),
-        ("przemoc","przemoc-art-2",("przemoc","domow")),
-        ("psych","psych-art-21",("badani","psychiatr")),
-        ("psych","psych-art-23",("bez","zgod")),
-        ("tyton","tyton-art-5",("palen","zabran")),
-    ]
-    for code,article_id,terms in checks:
-        text=article_text(code,article_id)
-        missing=[term for term in terms if term not in text]
-        if missing: raise RuntimeError(f"{article_id}: brak fraz kontrolnych {missing}")
+    for src in config["acts"]:
+        for article_id,terms in src.get("checks",[]):
+            text=article_text(src["code"],article_id)
+            missing=[term for term in terms if term.lower() not in text]
+            if missing: raise RuntimeError(f"{article_id}: brak fraz kontrolnych {missing}")
 
     ids=set()
     for act in data:

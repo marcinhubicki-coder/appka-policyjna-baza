@@ -19,6 +19,7 @@ SUP = str.maketrans('0123456789', '⁰¹²³⁴⁵⁶⁷⁸⁹')
 PLAIN = str.maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹', '0123456789')
 NUMBER = r'[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+[a-z]*'
 ARTICLE = re.compile(r'^Art\.\s*(' + NUMBER + r')\.(?:\s*\[[^\]]*\])?\s*', re.I)
+PARAGRAPH = re.compile(r'^§\s*(' + NUMBER + r')\.(?:\s*\[[^\]]*\])?\s*', re.I)
 LEVELS = {'część': 0, 'księga': 0, 'dział': 1, 'rozdział': 2, 'oddział': 3}
 
 def clean(value):
@@ -36,7 +37,7 @@ def text_of(node):
             anchor.decompose()
     return clean(node.get_text())
 
-def import_act(code, html, url, old_rows, as_of):
+def import_act(code, html, url, old_rows, as_of, top_level='art'):
     soup = BeautifulSoup(html, 'lxml')
     page_text = clean(soup.get_text(' '))
     version = re.search(r'Wersja aktualna\s+od (\d{4}\.\d{2}\.\d{2})(?: do (\d{4}\.\d{2}\.\d{2}))?', page_text)
@@ -45,6 +46,9 @@ def import_act(code, html, url, old_rows, as_of):
     start, end = [x.replace('.', '-') if x else None for x in version.groups()]
     if start > as_of or (end and end < as_of):
         raise ValueError(f'{code}: source version {start}–{end} does not cover {as_of}')
+    top_re = PARAGRAPH if top_level == 'par' else ARTICLE
+    top_kind = 'par' if top_level == 'par' else 'art'
+    top_label = '§ ' if top_level == 'par' else 'Art. '
     rows, path, pending, preamble = [], [], None, []
     seen, all_ids, stats = set(), set(), {'articleFragments': 0, 'annexesExcluded': 0, 'paragraphs': 0}
     old = {row[0]: row for row in old_rows}
@@ -69,7 +73,7 @@ def import_act(code, html, url, old_rows, as_of):
                 text = text_of(paragraph)
             if not text:
                 continue
-            match = ARTICLE.match(text)
+            match = top_re.match(text)
             if not row and not match:
                 heading = re.match(r'^(CZĘŚĆ|KSIĘGA|DZIAŁ|ROZDZIAŁ|ODDZIAŁ)\b\s*(.*)$', text, re.I)
                 if heading:
@@ -96,15 +100,15 @@ def import_act(code, html, url, old_rows, as_of):
                     raise ValueError(f'{code}/{code_in_source}: unexpected material before article: {text[:100]}')
                 continue
             if match:
-                number = match[1];article_id = code+'-art-'+canonical(number)
+                number = match[1];article_id = code+'-'+top_kind+'-'+canonical(number)
                 if article_id in seen:
                     raise ValueError(f'duplicate article {article_id}')
                 seen.add(article_id);all_ids.add(article_id)
-                previous = old.get(article_id) or old_numbers.get('Art. '+number)
+                previous = old.get(article_id) or old_numbers.get(top_label+number)
                 # Publisher's bracketed summaries are editorial, not statute text.
                 # Preserve our reviewed navigation descriptions; create excerpts for new rows.
                 title = previous[3] if previous else ''
-                row = [article_id, path[-1]['prefix'] if path else '', 'Art. '+number, title, [], '', '', [], 'e', deepcopy(path), 'own' if previous else 'excerpt']
+                row = [article_id, path[-1]['prefix'] if path else '', top_label+number, title, [], '', '', [], 'e', deepcopy(path), 'own' if previous else 'excerpt']
                 rows.append(row);parent = article_id;point='';letter='';point_block=1
                 text = text[match.end():]
                 if not text:
@@ -170,7 +174,7 @@ def import_act(code, html, url, old_rows, as_of):
               'first':rows[0][2],'last':rows[-1][2],'articles':len(rows),
               'annexesIncluded':False,'annexesAvailable':stats['annexesExcluded'],
               'preamble':preamble,'editorialTitles':'Własne opisy; nowe pozycje: początek przepisu',
-              'stats':stats}
+              'stats':stats,'topLevel':top_level}
     return {'rows':rows,'futureRows':future,'source':source}
 
 def main():

@@ -133,6 +133,32 @@
           ]
         ]
       ]
+    },
+    {
+      "code": "upraw",
+      "stage": "interventions",
+      "name": "Rozporządzenie Rady Ministrów w sprawie postępowania przy wykonywaniu niektórych uprawnień policjantów",
+      "url": "https://eli.gov.pl/api/acts/DU/2023/2535/text.html",
+      "official": "https://eli.gov.pl/eli/DU/2023/2535/ogl",
+      "topLevel": "par",
+      "lastTop": "31",
+      "minRows": 31,
+      "checks": [
+        [
+          "upraw-par-4",
+          [
+            "tożsamość",
+            "legitymowanej"
+          ]
+        ],
+        [
+          "upraw-par-8",
+          [
+            "zatrzymywaniu",
+            "osoby"
+          ]
+        ]
+      ]
     }
   ]
 }

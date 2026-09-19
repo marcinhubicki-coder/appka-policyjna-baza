@@ -1,19 +1,7 @@
 name: Import intervention laws
 
 on:
-  push:
-    branches:
-      - feat/offline-search-packs-v1
-    paths:
-      - tools/interventions-sources.json
-      - tools/import-interventions.py
-      - tools/import-inforlex.py
-      - .github/workflows/import-interventions.yml
   workflow_dispatch:
-
-concurrency:
-  group: law-data-feat-offline-search-packs-v1
-  cancel-in-progress: false
 
 permissions:
   contents: write

@@ -1,20 +1,7 @@
 name: Import official ELI acts
 
 on:
-  push:
-    branches:
-      - feat/offline-search-packs-v1
-    paths:
-      - tools/eli-sources.json
-      - tools/import-eli-acts.py
-      - law-config.js
-      - app.js
-      - .github/workflows/import-eli-acts.yml
   workflow_dispatch:
-
-concurrency:
-  group: eli-law-import-feat-offline-search-packs-v1
-  cancel-in-progress: true
 
 permissions:
   contents: write

@@ -68,6 +68,33 @@
       root.__FAVORITES_MIGRATION={review:next.filter(item=>item.needsFragmentReview).length};
     }catch(error){root.__FAVORITES_MIGRATION={error:true}}
   }
-  root.__READER_CORE={hiddenPills,overflowCue,sections,migrateFavorites,readingEase};
+  function migrateFavoritesCatalog(catalog,storage=root.localStorage){
+    const key='police-law-bookmarks-v1',revision='2026-09-07',done='police-law-bookmarks-data-revision';
+    if(!catalog?.migrations||!Object.values(catalog.migrations).some(meta=>meta?.revision===revision))return;
+    try{
+      if(storage.getItem(done)===revision)return;
+      const raw=storage.getItem(key)||'[]',items=JSON.parse(raw);
+      if(!Array.isArray(items))throw Error('Nieprawidłowa lista ulubionych');
+      const articles=new Map((catalog.articles||[]).map(row=>[row[0],row]));
+      const next=items.map(item=>{
+        const meta=catalog.migrations[item.act];if(!meta)return item;
+        if(item.dataRevision===revision)return item;
+        const copy={...item,id:meta.idAliases?.[item.id]||item.id,dataRevision:revision};
+        const row=articles.get(copy.id);if(!row)return copy;
+        copy.num=row[3];copy.topic=row[4];
+        if(Array.isArray(item.parts)){
+          const valid=new Set(row[6]||[]);
+          const parts=item.parts.map(part=>Object.hasOwn(meta.partAliases||{},part)?meta.partAliases[part]:part);
+          if(parts.some(part=>!part||!valid.has(part))){copy.partsBeforeUpdate=[...item.parts];delete copy.parts;copy.needsFragmentReview=true}
+          else copy.parts=[...new Set(parts)];
+        }
+        return copy;
+      });
+      const backup=key+'-before-'+revision;if(storage.getItem(backup)===null)storage.setItem(backup,raw);
+      storage.setItem(key,JSON.stringify(next));storage.setItem(done,revision);
+      root.__FAVORITES_MIGRATION={review:next.filter(item=>item.needsFragmentReview).length};
+    }catch(error){root.__FAVORITES_MIGRATION={error:true}}
+  }
+  root.__READER_CORE={hiddenPills,overflowCue,sections,migrateFavorites,migrateFavoritesCatalog,readingEase};
   root.__LAW_PACKAGES={isEnabled,setEnabled,setMany,order,setOrder};
 })(typeof window!=='undefined'?window:globalThis);

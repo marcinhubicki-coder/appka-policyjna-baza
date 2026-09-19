@@ -71,14 +71,26 @@ const catalog={
   sourceHash,
   acts:[],
   articles:[],
-  ids:[]
+  ids:[],
+  actArticles:{},
+  migrations:{}
 };
 const seenIds=new Set();
 for(const act of data){
   const code=act[0],meta=config.acts[code],packId=meta.pack;
   catalog.acts.push([code,packId,meta.short,meta.name,meta.citation,act[3].length]);
+  catalog.actArticles[code]=act[3].map(row=>row[0]);
+  const actMeta=act[4]||{};
+  if(actMeta.revision||actMeta.idAliases||actMeta.partAliases){
+    catalog.migrations[code]={
+      revision:actMeta.revision||null,
+      idAliases:actMeta.idAliases||{},
+      partAliases:actMeta.partAliases||{}
+    };
+  }
   for(const row of act[3]){
-    catalog.articles.push([row[0],code,packId,row[2],row[3],discoveryText(row)]);
+    const unitIds=row[4].map((unit,index)=>unit[0]||`${row[0]}@@${index}`);
+    catalog.articles.push([row[0],code,packId,row[2],row[3],discoveryText(row),unitIds]);
     if(seenIds.has(row[0]))throw new Error("Powtórzone ID: "+row[0]);
     seenIds.add(row[0]);catalog.ids.push([row[0],code,packId]);
     for(const unit of row[4]){
@@ -102,7 +114,8 @@ for(const [packId,pack] of Object.entries(packs)){
   for(const act of acts){
     for(const row of act[3]){
       articles++;units+=row[4].length;
-      search.push([row[0],act[0],articleSearchText(row)]);
+      const preview=tidy(row[4].map(unit=>unit[3]).join(" ")).slice(0,190);
+      search.push([row[0],act[0],articleSearchText(row),preview]);
     }
   }
   const dataFile=`packs/${packId}.data.json.gz`;

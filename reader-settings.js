@@ -38,13 +38,13 @@
         const section=node('details','law-package'),heading=node('summary','search-filter-row package-title'),label=node('b','',group.name),toggle=node('input'),children=node('div','package-acts');
         section.dataset.package=group.id;toggle.type='checkbox';toggle.dataset.packageToggle=group.id;toggle.setAttribute('aria-label','Cały pakiet: '+group.name);
         toggle.addEventListener('click',event=>event.stopPropagation());
-        toggle.onchange=()=>{const on=group.codes.every(code=>api.list().find(item=>item.code===code)?.enabled);if(!api.setGroup(group.codes,!on))packageStatus.textContent='Nie udało się zapisać pakietu.';else packageStatus.textContent='';renderPackages()};
+        toggle.onchange=async()=>{const on=group.codes.every(code=>api.list().find(item=>item.code===code)?.enabled);toggle.disabled=true;packageStatus.textContent='Przygotowuję pakiet…';try{if(!await api.setGroup(group.codes,!on))packageStatus.textContent='Nie udało się zapisać pakietu.';else packageStatus.textContent='Gotowe offline.'}catch(error){packageStatus.textContent=error?.message||'Nie udało się przygotować pakietu.'}finally{toggle.disabled=false;renderPackages()}};
         heading.append(label,toggle);section.append(heading,children);
         for(const code of group.codes){
           const item=items.find(item=>item.code===code);if(!item)continue;
           const row=node('label','search-filter-row'),copy=node('span','search-filter-copy'),short=node('b','',item.short),name=node('small','',item.name),input=node('input');
           input.type='checkbox';input.dataset.code=code;input.setAttribute('aria-label','Wyszukiwanie: '+item.name);copy.append(short,name);row.append(copy,input);children.append(row);
-          input.onchange=()=>{if(!api.setEnabled(code,input.checked))packageStatus.textContent='Nie udało się zapisać wyboru.';else packageStatus.textContent='';renderPackages()};
+          input.onchange=async()=>{input.disabled=true;packageStatus.textContent='Aktualizuję wyszukiwanie…';try{if(!await api.setEnabled(code,input.checked))packageStatus.textContent='Nie udało się zapisać wyboru.';else packageStatus.textContent='Gotowe offline.'}catch(error){packageStatus.textContent=error?.message||'Nie udało się przygotować pakietu.'}finally{input.disabled=false;renderPackages()}};
         }
         packageList.append(section);
       }
@@ -119,6 +119,13 @@
   window.addEventListener('police-law-settings-close',()=>finish(true));
   window.addEventListener('police-law-rendered',()=>{renderPackages();renderOrder()});
   window.addEventListener('police-law-packages-change',renderPackages);
+  window.addEventListener('police-law-pack-progress',event=>{
+    if(!packageStatus)return;const d=event.detail||{},names=api.groups?.().find(group=>group.id===d.packId)?.name||d.packId;
+    if(d.stage==='fetch')packageStatus.textContent='Otwieram pakiet „'+names+'”…';
+    else if(d.stage==='decompress')packageStatus.textContent='Rozpakowuję „'+names+'”…';
+    else if(d.stage==='parse')packageStatus.textContent='Przygotowuję „'+names+'”…';
+    else if(d.stage==='ready')packageStatus.textContent='Gotowe offline.';
+  });
   globalThis.__READER_SETTINGS={renderPackages,refreshCues(){orderCue.queue();cues.get(document.getElementById('searchActFilters'))?.queue()}};
   renderPackages();renderOrder();
 })();

@@ -13,23 +13,23 @@
   "results": [
     {
       "scale": 1,
-      "articles": 5043,
-      "runtimeIndexMs": 87.47,
-      "prebuiltSearchMs": 27.31,
+      "articles": 5034,
+      "runtimeIndexMs": 82.73,
+      "prebuiltSearchMs": 26.81,
       "hits": 1996
     },
     {
       "scale": 2,
-      "articles": 10086,
-      "runtimeIndexMs": 173.39,
-      "prebuiltSearchMs": 54.16,
+      "articles": 10068,
+      "runtimeIndexMs": 165.59,
+      "prebuiltSearchMs": 53.27,
       "hits": 3992
     },
     {
       "scale": 4,
-      "articles": 20172,
-      "runtimeIndexMs": 335.31,
-      "prebuiltSearchMs": 107.33,
+      "articles": 20136,
+      "runtimeIndexMs": 319.12,
+      "prebuiltSearchMs": 106.69,
       "hits": 7984
     }
   ]

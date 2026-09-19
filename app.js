@@ -98,19 +98,25 @@ function registerPackData(packId,acts){
   DATA=[...loadedDataPacks.values()].flat();
   sortLoadedData();rebuildLoadedMaps();
   PERF.update({},{
+    loadedDataActs:DATA.map(act=>act[0]),
     loadedDataPacks:[...loadedDataPacks.keys()],
     loadedActs:DATA.length,
+    dataActCacheLimit:DATA_ACT_CACHE_LIMIT,
     articles:articleMap.size,
     units:unitMap.size
   });
 }
 function releasePackData(packId){
   if(!loadedDataPacks.has(packId))return;
+  const removedCodes=(loadedDataPacks.get(packId)||[]).map(act=>act[0]);
   loadedDataPacks.delete(packId);lawData?.releaseData?.(packId);
+  for(const code of removedCodes){const index=dataActLru.indexOf(code);if(index>=0)dataActLru.splice(index,1)}
   DATA=[...loadedDataPacks.values()].flat();sortLoadedData();rebuildLoadedMaps();
   PERF.update({},{
+    loadedDataActs:DATA.map(act=>act[0]),
     loadedDataPacks:[...loadedDataPacks.keys()],
     loadedActs:DATA.length,
+    dataActCacheLimit:DATA_ACT_CACHE_LIMIT,
     articles:articleMap.size,
     units:unitMap.size
   });
@@ -128,6 +134,7 @@ function releaseLoadedAct(code){
   const index=dataActLru.indexOf(code);if(index>=0)dataActLru.splice(index,1);
   DATA=[...loadedDataPacks.values()].flat();sortLoadedData();rebuildLoadedMaps();
   PERF.update({},{
+    loadedDataActs:DATA.map(act=>act[0]),
     loadedDataPacks:[...loadedDataPacks.keys()],
     loadedActs:DATA.length,
     dataActCacheLimit:DATA_ACT_CACHE_LIMIT,

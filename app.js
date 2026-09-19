@@ -1,4 +1,4 @@
-const META={
+const LEGACY_META={
 uop:["UoP","Ustawa o Policji","Dz.U. 2025 poz. 636"],
 kw:["KW","Kodeks wykroczeń","Dz.U. 2025 poz. 734"],
 kk:["KK","Kodeks karny","Dz.U. 2025 poz. 383"],
@@ -14,12 +14,18 @@ z768:["Z. 768","Zarządzenie KGP nr 768 — służba patrolowa","tekst bazowy MV
 z360:["Z. 360","Zarządzenie KGP nr 360 — konwoje i doprowadzenia","publikacja Policji"],
 z805:["Z. 805","Zarządzenie KGP nr 805 — zasady etyki zawodowej","publikacja Policji"]
 };
-let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null;
+const LAW_CONFIG=globalThis.__LAW_CONFIG||{acts:{},packs:{}};
+const LAW_MANIFEST=globalThis.__LAW_MANIFEST||null;
+const lawData=globalThis.__LAW_DATA||null;
+const META={...LEGACY_META,...Object.fromEntries(Object.entries(LAW_CONFIG.acts||{}).map(([code,meta])=>[code,[meta.short||code,meta.name||code,meta.citation||""]]))};
+let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null,CATALOG=null;
+const loadedDataPacks=new Map(),loadedSearchPacks=new Map(),catalogArticleMap=new Map(),catalogActArticles=new Map();
 const packages=globalThis.__LAW_PACKAGES||{isEnabled:()=>true};
 const searchIndex=[],searchResultGroups=new Map(),SEARCH_FILTER_KEY="police-law-search-excluded-v1";
 let searchWarmCursor=0,timer=null,searchWarmWork=0,searchWarmPending=false;
 let searchExcluded=readSearchExcluded(),searchFavoritesOnly=false,searchState={active:false,counts:new Map(),favoritesOnly:false};
 const idMap=new Map(),articleMap=new Map(),unitMap=new Map();
+let searchHydrationPromise=null,prebuiltSearchMode=!!(lawData&&lawData.supported);
 const q=document.getElementById("q"),results=document.getElementById("results"),quickbar=document.getElementById("quickbar"),actgrid=document.getElementById("actgrid"),actview=document.getElementById("actview"),ret=document.getElementById("return"),searchRet=document.getElementById("searchReturn");
 const STREAM_INITIAL_COST=34,STREAM_TARGET_BEFORE_COST=15,STREAM_TARGET_AFTER_COST=24,STREAM_BATCH_COST=42;
 let streamState=null,streamGeneration=0;

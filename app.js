@@ -163,7 +163,7 @@ async function syncPackActivation(packId){
     }
     releasePackData(packId);
   }
-  rebuildSearchIndex();
+  rebuildSearchIndex(false);
 }
 async function runPerformanceBenchmark(){
   const started=PERF.now(),queries=["zatrzymanie","policjant","pojazd","nieletni","alkohol","przeszukanie","art 15","srodek przymusu"];
@@ -348,7 +348,7 @@ globalThis.__POLICE_PACKAGES={
   async setEnabled(code,on){
     if(!hasAct(code))return false;
     if(!packages.setEnabled?.(code,on))return false;
-    if(prebuiltSearchMode)await syncPackActivation(lawData.packForAct(code));else rebuildSearchIndex();
+    if(prebuiltSearchMode){await syncPackActivation(lawData.packForAct(code));if(searchState.active)await search()}else rebuildSearchIndex();
     return true;
   },
   async setGroup(codes,on){
@@ -356,6 +356,7 @@ globalThis.__POLICE_PACKAGES={
     if(prebuiltSearchMode){
       const packsToSync=new Set(codes.map(code=>lawData.packForAct(code)).filter(Boolean));
       for(const packId of packsToSync)await syncPackActivation(packId);
+      if(searchState.active)await search();
     }else rebuildSearchIndex();
     return true;
   },

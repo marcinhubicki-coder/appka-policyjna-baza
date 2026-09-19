@@ -5,11 +5,11 @@ const data=loadLegalData("data.js");
 const norm=value=>String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/ł/g,"l");
 const rawRows=[];
 for(const act of data)for(const row of act[3])rawRows.push([row[0],act[0],row]);
-const prebuilt=rawRows.map(([id,act,row])=>[id,act,norm(row[2]+" "+row[3]+" "+row[4].map(unit=>unit[3]).join(" "))]);
+const prebuilt=rawRows.map(([id,act,row])=>[id,act,norm(row[2]+" "+row[3]+" "+row[4].map(unit=>tidy(unit[3])).join(" "))]);
 const queries=["zatrzymanie","policjant","pojazd","nieletni","alkohol","przeszukanie","art 15","srodek przymusu"];
 const median=values=>[...values].sort((a,b)=>a-b)[Math.floor(values.length/2)];
 function timed(fn,reps=7){const xs=[];for(let i=0;i<reps;i++){const t=performance.now();fn();xs.push(performance.now()-t)}return Math.round(median(xs)*100)/100}
-function buildRuntime(rows){return rows.map(([id,act,row])=>[id,act,norm(row[2]+" "+row[3]+" "+row[4].map(unit=>unit[3]).join(" "))])}
+function buildRuntime(rows){return rows.map(([id,act,row])=>[id,act,norm(row[2]+" "+row[3]+" "+row[4].map(unit=>tidy(unit[3])).join(" "))])}
 function runSearch(rows){let hits=0;for(const query of queries){const terms=norm(query).split(/\s+/);for(const row of rows)if(terms.every(term=>row[2].includes(term)))hits++}return hits}
 const results=[];
 for(const scale of [1,2,4]){

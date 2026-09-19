@@ -181,12 +181,13 @@ async function runPerformanceBenchmark(){
   const before=lawData.snapshot(),packIds=Object.keys(LAW_MANIFEST.packs||{}),dataByPack=new Map(),searchByPack=new Map();
   try{
     for(const packId of packIds){dataByPack.set(packId,await lawData.loadData(packId));searchByPack.set(packId,await lawData.loadSearch(packId))}
-    const rawActs=[...dataByPack.values()].flat(),ready=[...searchByPack.values()].flat(),articleCount=ready.length,result=[];
+    const rawActs=[...dataByPack.values()].flat(),ready=[...searchByPack.values()].flat(),discovery=CATALOG?.articles||[],articleCount=ready.length,result=[];
     const buildRuntime=scale=>{const out=[];for(let n=0;n<scale;n++)for(const act of rawActs)for(const row of act[3])out.push(norm(row[2]+" "+row[3]+" "+row[4].map(unit=>tidy(unit[3])).join(" ")));return out.length};
     const scan=scale=>{let hits=0;for(let n=0;n<scale;n++)for(const query of queries){const terms=norm(query).split(/\s+/);for(const row of ready)if(terms.every(term=>row[2].includes(term)))hits++}return hits};
+    const scanDiscovery=scale=>{let hits=0;for(let n=0;n<scale;n++)for(const query of queries){const terms=norm(query).split(/\s+/);for(const row of discovery)if(terms.every(term=>(row[5]||"").includes(term)))hits++}return hits};
     for(const scale of[1,2,4]){
-      const t0=PERF.now(),built=buildRuntime(scale),runtimeIndexMs=PERF.now()-t0,t1=PERF.now(),hits=scan(scale),searchMs=PERF.now()-t1;
-      result.push({scale,articles:articleCount*scale,built,runtimeIndexMs:Math.round(runtimeIndexMs*10)/10,prebuiltSearchMs:Math.round(searchMs*10)/10,hits});
+      const t0=PERF.now(),built=buildRuntime(scale),runtimeIndexMs=PERF.now()-t0,t1=PERF.now(),hits=scan(scale),searchMs=PERF.now()-t1,t2=PERF.now(),discoveryHits=scanDiscovery(scale),discoveryMs=PERF.now()-t2;
+      result.push({scale,articles:articleCount*scale,built,runtimeIndexMs:Math.round(runtimeIndexMs*10)/10,prebuiltSearchMs:Math.round(searchMs*10)/10,discoveryMs:Math.round(discoveryMs*10)/10,hits,discoveryHits});
       await new Promise(resolve=>setTimeout(resolve,0));
     }
     const report={mode:"prebuilt",durationMs:Math.round((PERF.now()-started)*10)/10,results:result};PERF.update({},{benchmark:report});return report;

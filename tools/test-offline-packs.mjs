@@ -23,7 +23,11 @@ const searchRows=[];
 let articleCount=0,unitCount=0;
 
 for(const [packId,pack] of Object.entries(manifest.packs)){
-  const acts=JSON.parse(zlib.gunzipSync(fs.readFileSync(pack.data)));
+  const acts=pack.acts.map(code=>{
+    const info=manifest.acts[code];
+    assert.ok(info?.data,`Brak pliku danych dla ${code}`);
+    return JSON.parse(zlib.gunzipSync(fs.readFileSync(info.data)));
+  });
   const search=JSON.parse(zlib.gunzipSync(fs.readFileSync(pack.search)));
   assert.deepEqual(Array.from(acts,act=>act[0]),Array.from(pack.acts),`Kolejność aktów w ${packId}`);
   assert.equal(search.length,pack.counts.articles,`Liczba indeksowanych artykułów w ${packId}`);

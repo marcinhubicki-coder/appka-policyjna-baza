@@ -1,16 +1,16 @@
 {
   "version": 2,
-  "sourceHash": "8836207e42b81743",
-  "runtimeVersion": "f8ad1bf7c8ccaee4",
-  "sourceBytes": 1488570,
-  "routerCompressedBytes": 237664,
-  "discoveryCompressedBytes": 648803,
+  "sourceHash": "4c128ee90b0fe3b6",
+  "runtimeVersion": "fb00293348d95411",
+  "sourceBytes": 1656318,
+  "routerCompressedBytes": 264438,
+  "discoveryCompressedBytes": 720979,
   "totals": {
-    "acts": 14,
-    "articles": 4210,
-    "units": 22644,
-    "dataCompressedBytes": 1125701,
-    "searchCompressedBytes": 1040749
+    "acts": 18,
+    "articles": 4527,
+    "units": 25082,
+    "dataCompressedBytes": 1254764,
+    "searchCompressedBytes": 1154910
   },
   "packs": {
     "core": {
@@ -34,18 +34,22 @@
     },
     "interventions": {
       "counts": {
-        "acts": 3,
-        "articles": 1249,
-        "units": 7765
+        "acts": 7,
+        "articles": 1566,
+        "units": 10203
       },
       "bytes": {
-        "data": 349143,
-        "search": 311784
+        "data": 478206,
+        "search": 425945
       },
       "acts": [
         "cudz",
         "nieletni",
-        "alk"
+        "alk",
+        "nark",
+        "przemoc",
+        "psych",
+        "tyton"
       ]
     },
     "traffic": {

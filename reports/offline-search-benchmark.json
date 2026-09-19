@@ -1,0 +1,36 @@
+{
+  "environment": "node-build-trend-only",
+  "queries": [
+    "zatrzymanie",
+    "policjant",
+    "pojazd",
+    "nieletni",
+    "alkohol",
+    "przeszukanie",
+    "art 15",
+    "srodek przymusu"
+  ],
+  "results": [
+    {
+      "scale": 1,
+      "articles": 4527,
+      "runtimeIndexMs": 76.43,
+      "prebuiltSearchMs": 23.47,
+      "hits": 1729
+    },
+    {
+      "scale": 2,
+      "articles": 9054,
+      "runtimeIndexMs": 149.14,
+      "prebuiltSearchMs": 46.61,
+      "hits": 3458
+    },
+    {
+      "scale": 4,
+      "articles": 18108,
+      "runtimeIndexMs": 286.03,
+      "prebuiltSearchMs": 93.13,
+      "hits": 6916
+    }
+  ]
+}\n

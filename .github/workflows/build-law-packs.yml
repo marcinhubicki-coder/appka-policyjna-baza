@@ -1,0 +1,47 @@
+name: Build offline law packs
+
+on:
+  push:
+    branches:
+      - feat/offline-search-packs-v1
+    paths:
+      - data.js
+      - law-config.js
+      - tools/build-law-packs.mjs
+      - tools/benchmark-law-packs.mjs
+      - tools/test-offline-packs.mjs
+      - tools/legal-content.mjs
+      - .github/workflows/build-law-packs.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/offline-search-packs-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build deterministic packs
+        run: node tools/build-law-packs.mjs
+      - name: Validate packs and search parity
+        run: node tools/test-offline-packs.mjs
+      - name: Benchmark 1x 2x 4x
+        run: node tools/benchmark-law-packs.mjs
+      - name: Commit generated assets
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add law-manifest.js law-catalog.json.gz packs reports/offline-pack-stats.json
+          if git diff --cached --quiet; then
+            echo "Generated assets are current."
+          else
+            git commit -m "Generate offline law packs"
+            git push origin HEAD:feat/offline-search-packs-v1
+          fi

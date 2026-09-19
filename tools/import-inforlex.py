@@ -84,7 +84,17 @@ def import_act(code, html, url, old_rows, as_of):
                     path[pending]['title'] = text;pending = None
                 elif not rows and code_in_source == 'ap_1':
                     preamble.append(text)
-                elif rows and path and len(text) <= 140 and not re.search(r'[.;:]
+                elif rows and path and len(text) <= 140 and not re.search(r'[.;:]\\s*$', text):
+                    # Some consolidated acts use unnumbered official intertitles inside a
+                    # chapter (e.g. "Przyjęcie do szpitala psychiatrycznego").
+                    # Keep them as a fourth-level navigation heading, but retain the
+                    # strict failure for sentence-like/editorial material.
+                    path = [item for item in path if item['level'] < 4]
+                    path.append({'prefix': '', 'title': text, 'level': 4})
+                    pending = None
+                else:
+                    raise ValueError(f'{code}/{code_in_source}: unexpected material before article: {text[:100]}')
+                continue
             if match:
                 number = match[1];article_id = code+'-art-'+canonical(number)
                 if article_id in seen:

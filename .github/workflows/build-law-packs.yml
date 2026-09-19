@@ -7,9 +7,20 @@ on:
     paths:
       - data.js
       - law-config.js
+      - law-data-loader.js
+      - app.js
+      - settings.js
+      - reader-core.js
+      - reader-settings.js
+      - favorites-ui.js
+      - nav.js
+      - index.html
+      - sw.js
+      - vercel.json
       - tools/build-law-packs.mjs
       - tools/benchmark-law-packs.mjs
       - tools/test-offline-packs.mjs
+      - tools/test-offline-runtime.mjs
       - tools/legal-content.mjs
       - .github/workflows/build-law-packs.yml
   workflow_dispatch:

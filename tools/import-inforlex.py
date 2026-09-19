@@ -84,7 +84,7 @@ def import_act(code, html, url, old_rows, as_of):
                     path[pending]['title'] = text;pending = None
                 elif not rows and code_in_source == 'ap_1':
                     preamble.append(text)
-                elif rows and path and len(text) <= 140 and not re.search(r'[.;:]\\s*$', text):
+                elif rows and path and len(text) <= 140 and not re.search(r'[.;:]\s*, text):
                     # Some consolidated acts use unnumbered official intertitles inside a
                     # chapter (e.g. "Przyjęcie do szpitala psychiatrycznego").
                     # Keep them as a fourth-level navigation heading, but retain the

@@ -20,6 +20,7 @@ const lawData=globalThis.__LAW_DATA||null;
 const META={...LEGACY_META,...Object.fromEntries(Object.entries(LAW_CONFIG.acts||{}).map(([code,meta])=>[code,[meta.short||code,meta.name||code,meta.citation||""]]))};
 let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null,CATALOG=null,DISCOVERY=null;
 const loadedDataPacks=new Map(),loadedSearchPacks=new Map(),catalogArticleMap=new Map(),catalogActArticles=new Map();
+const DATA_ACT_CACHE_LIMIT=2,dataActLru=[];
 const packages=globalThis.__LAW_PACKAGES||{isEnabled:()=>true};
 const searchIndex=[],searchResultGroups=new Map(),SEARCH_FILTER_KEY="police-law-search-excluded-v1";
 let searchWarmCursor=0,timer=null,searchWarmWork=0,searchWarmPending=false;
@@ -114,11 +115,38 @@ function releasePackData(packId){
     units:unitMap.size
   });
 }
+function touchDataAct(code){
+  const index=dataActLru.indexOf(code);if(index>=0)dataActLru.splice(index,1);
+  dataActLru.push(code);
+}
+function releaseLoadedAct(code){
+  const packId=lawData?.packForAct?.(code);if(!packId)return false;
+  const acts=loadedDataPacks.get(packId)||[],next=acts.filter(act=>act[0]!==code);
+  if(next.length===acts.length)return false;
+  if(next.length)loadedDataPacks.set(packId,next);else loadedDataPacks.delete(packId);
+  lawData?.releaseAct?.(code);
+  const index=dataActLru.indexOf(code);if(index>=0)dataActLru.splice(index,1);
+  DATA=[...loadedDataPacks.values()].flat();sortLoadedData();rebuildLoadedMaps();
+  PERF.update({},{
+    loadedDataPacks:[...loadedDataPacks.keys()],
+    loadedActs:DATA.length,
+    dataActCacheLimit:DATA_ACT_CACHE_LIMIT,
+    articles:articleMap.size,
+    units:unitMap.size
+  });
+  return true;
+}
+function pruneLoadedActs(currentCode){
+  if(document.body.classList.contains('favorites-all-acts'))return;
+  touchDataAct(currentCode);
+  const keep=new Set(dataActLru.slice(-DATA_ACT_CACHE_LIMIT));
+  for(const act of [...DATA])if(!keep.has(act[0]))releaseLoadedAct(act[0]);
+}
 async function ensureActLoaded(code){
-  if(DATA.some(act=>act[0]===code))return true;
+  if(DATA.some(act=>act[0]===code)){touchDataAct(code);return true;}
   if(!lawData?.supported)return false;
   const packId=lawData.packForAct(code);if(!packId)return false;
-  const act=await lawData.loadAct(code);registerPackData(packId,[act]);return DATA.some(item=>item[0]===code);
+  const act=await lawData.loadAct(code);registerPackData(packId,[act]);touchDataAct(code);return DATA.some(item=>item[0]===code);
 }
 function activePackIds(){
   if(!lawData)return[];
@@ -537,7 +565,7 @@ function renderLoadedAct(code,target=null,scroll=true){
 async function renderAct(code,target=null,scroll=true){
   if(!hasAct(code))return false;
   if(!await ensureActLoaded(code))return false;
-  renderLoadedAct(code,target,scroll);return true;
+  renderLoadedAct(code,target,scroll);pruneLoadedActs(code);return true;
 }
 function canonicalLegalId(id){
   if(CATALOG?.migrations)for(const meta of Object.values(CATALOG.migrations)){if(meta?.idAliases?.[id])return meta.idAliases[id];if(meta?.partAliases?.[id])return meta.partAliases[id]}

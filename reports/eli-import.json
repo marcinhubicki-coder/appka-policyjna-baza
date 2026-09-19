@@ -1,0 +1,47 @@
+{
+  "asOf": "2026-09-20",
+  "acts": [
+    {
+      "code": "nk",
+      "stage": "domestic-violence",
+      "rows": 23,
+      "sha256": "35d3db7093d1f4583070261ead9086a687f52ce3af0bce4b2fa33a7129d590c5",
+      "official": "https://eli.gov.pl/eli/DU/2023/1870/ogl"
+    },
+    {
+      "code": "nakazy",
+      "stage": "domestic-violence",
+      "rows": 8,
+      "sha256": "5a7228959178ed638b3924433d9d8403e6262929f3cb65e2f17837f3eeb12f23",
+      "official": "https://eli.gov.pl/eli/DU/2023/1613/ogl"
+    },
+    {
+      "code": "protop",
+      "stage": "domestic-violence",
+      "rows": 3,
+      "sha256": "fc5a7c8539778cd0058d2ba194d501c6eb7869cdb3d5755241801403a203cd89",
+      "official": "https://eli.gov.pl/eli/DU/2023/1612/ogl"
+    },
+    {
+      "code": "zawdrzwi",
+      "stage": "domestic-violence",
+      "rows": 3,
+      "sha256": "4daf91105ed9882dff335d435da925cfda2485efdf21d11b518ca2628fe9da2e",
+      "official": "https://eli.gov.pl/eli/DU/2023/1607/ogl"
+    },
+    {
+      "code": "zawkoresp",
+      "stage": "domestic-violence",
+      "rows": 3,
+      "sha256": "096cea813e544444e3e99dfc74020532818b3f13d9aa1174bd4a5d3e2a2de0d4",
+      "official": "https://eli.gov.pl/eli/DU/2023/1614/ogl"
+    },
+    {
+      "code": "zgrom",
+      "stage": "public-order",
+      "rows": 41,
+      "sha256": "548760b90f63347e1fb197dc930810e061b6ec3ec8ae5da428b0cadef1a42272",
+      "official": "https://eli.gov.pl/eli/DU/2022/1389/ogl"
+    }
+  ]
+}

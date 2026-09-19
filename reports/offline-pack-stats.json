@@ -1,16 +1,16 @@
 {
   "version": 2,
-  "sourceHash": "4c128ee90b0fe3b6",
+  "sourceHash": "1b2fbb6ecc175f55",
   "runtimeVersion": "e70532f422cac89c",
-  "sourceBytes": 1656318,
-  "routerCompressedBytes": 264438,
-  "discoveryCompressedBytes": 720979,
+  "sourceBytes": 1676002,
+  "routerCompressedBytes": 269641,
+  "discoveryCompressedBytes": 730053,
   "totals": {
-    "acts": 18,
-    "articles": 4527,
-    "units": 25082,
-    "dataCompressedBytes": 1254764,
-    "searchCompressedBytes": 1154910
+    "acts": 24,
+    "articles": 4608,
+    "units": 25368,
+    "dataCompressedBytes": 1273432,
+    "searchCompressedBytes": 1168897
   },
   "packs": {
     "core": {
@@ -34,13 +34,13 @@
     },
     "interventions": {
       "counts": {
-        "acts": 7,
-        "articles": 1566,
-        "units": 10203
+        "acts": 12,
+        "articles": 1606,
+        "units": 10362
       },
       "bytes": {
-        "data": 478206,
-        "search": 425945
+        "data": 488915,
+        "search": 432954
       },
       "acts": [
         "cudz",
@@ -49,7 +49,12 @@
         "nark",
         "przemoc",
         "psych",
-        "tyton"
+        "tyton",
+        "nk",
+        "nakazy",
+        "protop",
+        "zawdrzwi",
+        "zawkoresp"
       ]
     },
     "traffic": {
@@ -68,16 +73,17 @@
     },
     "public-order": {
       "counts": {
-        "acts": 1,
-        "articles": 103,
-        "units": 539
+        "acts": 2,
+        "articles": 144,
+        "units": 666
       },
       "bytes": {
-        "data": 26653,
-        "search": 24677
+        "data": 34612,
+        "search": 31655
       },
       "acts": [
-        "bim"
+        "bim",
+        "zgrom"
       ]
     },
     "kgp": {

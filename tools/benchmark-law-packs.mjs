@@ -3,6 +3,7 @@ import { loadLegalData } from "./legal-content.mjs";
 
 const data=loadLegalData("data.js");
 const norm=value=>String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/ł/g,"l");
+const tidy=value=>String(value??"").replace(/\s+([,.;:])/g,"$1").replace(/[ \t]{2,}/g," ").trim();
 const rawRows=[];
 for(const act of data)for(const row of act[3])rawRows.push([row[0],act[0],row]);
 const prebuilt=rawRows.map(([id,act,row])=>[id,act,norm(row[2]+" "+row[3]+" "+row[4].map(unit=>tidy(unit[3])).join(" "))]);

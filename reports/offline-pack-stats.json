@@ -1,23 +1,30 @@
 {
-  "version": 2,
-  "sourceHash": "1b2fbb6ecc175f55",
-  "runtimeVersion": "0a37a57ee449084a",
+  "version": 3,
+  "sourceHash": "b97bc42a482357c7",
+  "runtimeVersion": "2a4300586453a9d8",
   "sourceBytes": 1676002,
-  "routerCompressedBytes": 269641,
-  "discoveryCompressedBytes": 730053,
+  "routerCompressedBytes": 268994,
+  "discoveryCompressedBytes": 729675,
   "totals": {
-    "acts": 24,
-    "articles": 4608,
-    "units": 25368,
-    "dataCompressedBytes": 1273432,
-    "searchCompressedBytes": 1168897
+    "acts": 21,
+    "articles": 4599,
+    "units": 25351,
+    "dataCompressedBytes": 1271089,
+    "searchCompressedBytes": 1168607
+  },
+  "documents": {
+    "acts": 3,
+    "rows": 9,
+    "units": 17,
+    "compressedBytes": 2343
   },
   "packs": {
     "core": {
       "counts": {
         "acts": 6,
         "articles": 2299,
-        "units": 9773
+        "units": 9773,
+        "searchable": 2299
       },
       "bytes": {
         "data": 546935,
@@ -34,13 +41,14 @@
     },
     "interventions": {
       "counts": {
-        "acts": 12,
-        "articles": 1606,
-        "units": 10362
+        "acts": 9,
+        "articles": 1597,
+        "units": 10345,
+        "searchable": 1597
       },
       "bytes": {
-        "data": 488915,
-        "search": 432954
+        "data": 486572,
+        "search": 432664
       },
       "acts": [
         "cudz",
@@ -51,17 +59,15 @@
         "psych",
         "tyton",
         "nk",
-        "nakazy",
-        "protop",
-        "zawdrzwi",
-        "zawkoresp"
+        "nakazy"
       ]
     },
     "traffic": {
       "counts": {
         "acts": 1,
         "articles": 441,
-        "units": 3836
+        "units": 3836,
+        "searchable": 441
       },
       "bytes": {
         "data": 162076,
@@ -75,7 +81,8 @@
       "counts": {
         "acts": 2,
         "articles": 144,
-        "units": 666
+        "units": 666,
+        "searchable": 144
       },
       "bytes": {
         "data": 34612,
@@ -90,7 +97,8 @@
       "counts": {
         "acts": 3,
         "articles": 118,
-        "units": 731
+        "units": 731,
+        "searchable": 118
       },
       "bytes": {
         "data": 40894,

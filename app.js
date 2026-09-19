@@ -160,6 +160,37 @@ async function syncPackActivation(packId){
   }
   rebuildSearchIndex();
 }
+async function runPerformanceBenchmark(){
+  const started=PERF.now(),queries=["zatrzymanie","policjant","pojazd","nieletni","alkohol","przeszukanie","art 15","srodek przymusu"];
+  if(!prebuiltSearchMode||!lawData){
+    const rows=DATA.flatMap(act=>act[3].map(row=>({act:act[0],row,text:null})));
+    const result=[];
+    for(const scale of[1,2,4]){
+      const t0=PERF.now();for(let n=0;n<scale;n++)for(const item of rows)searchText({act:item.act,row:item.row,text:null});const runtimeIndexMs=PERF.now()-t0;
+      const prepared=rows.map(item=>({act:item.act,row:item.row,text:searchText({act:item.act,row:item.row,text:null})}));
+      const t1=PERF.now();let hits=0;for(let n=0;n<scale;n++)for(const query of queries){const terms=norm(query).split(/\s+/);for(const item of prepared)if(terms.every(term=>item.text.includes(term)))hits++}
+      result.push({scale,articles:rows.length*scale,runtimeIndexMs:Math.round(runtimeIndexMs*10)/10,searchMs:Math.round((PERF.now()-t1)*10)/10,hits});
+    }
+    const report={mode:"legacy",durationMs:Math.round((PERF.now()-started)*10)/10,results:result};PERF.update({},{benchmark:report});return report;
+  }
+  const before=lawData.snapshot(),packIds=Object.keys(LAW_MANIFEST.packs||{}),dataByPack=new Map(),searchByPack=new Map();
+  try{
+    for(const packId of packIds){dataByPack.set(packId,await lawData.loadData(packId));searchByPack.set(packId,await lawData.loadSearch(packId))}
+    const rawActs=[...dataByPack.values()].flat(),ready=[...searchByPack.values()].flat(),articleCount=ready.length,result=[];
+    const buildRuntime=scale=>{const out=[];for(let n=0;n<scale;n++)for(const act of rawActs)for(const row of act[3])out.push(norm(row[2]+" "+row[3]+" "+row[4].map(unit=>tidy(unit[3])).join(" ")));return out.length};
+    const scan=scale=>{let hits=0;for(let n=0;n<scale;n++)for(const query of queries){const terms=norm(query).split(/\s+/);for(const row of ready)if(terms.every(term=>row[2].includes(term)))hits++}return hits};
+    for(const scale of[1,2,4]){
+      const t0=PERF.now(),built=buildRuntime(scale),runtimeIndexMs=PERF.now()-t0,t1=PERF.now(),hits=scan(scale),searchMs=PERF.now()-t1;
+      result.push({scale,articles:articleCount*scale,built,runtimeIndexMs:Math.round(runtimeIndexMs*10)/10,prebuiltSearchMs:Math.round(searchMs*10)/10,hits});
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    const report={mode:"prebuilt",durationMs:Math.round((PERF.now()-started)*10)/10,results:result};PERF.update({},{benchmark:report});return report;
+  }finally{
+    const keepData=new Set(before.dataPacks||[]),keepSearch=new Set(before.searchPacks||[]);
+    for(const packId of packIds){if(!keepData.has(packId))lawData.releaseData(packId);if(!keepSearch.has(packId))lawData.releaseSearch(packId)}
+  }
+}
+globalThis.__POLICE_RUN_BENCHMARK=runPerformanceBenchmark;
 function captureDataResource(){
   if(prebuiltSearchMode){
     const snap=lawData?.snapshot?.()||{},stats=Object.values(snap.metrics||{});

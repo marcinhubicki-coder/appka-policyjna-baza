@@ -38,7 +38,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add law-manifest.js law-catalog.json.gz packs reports/offline-pack-stats.json
+          git add law-manifest.js law-router.json.gz law-discovery.json.gz packs reports/offline-pack-stats.json
           if git diff --cached --quiet; then
             echo "Generated assets are current."
           else

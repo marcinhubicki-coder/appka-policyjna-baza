@@ -6,7 +6,7 @@
       "articles": 143,
       "versionFrom": "2026-08-27",
       "versionTo": null,
-      "sha256": "060a9ff78ddb50ddf344ae3578173f505357d79d5200fe420828d4499498558a",
+      "sha256": "f918e988171700b4e8966bfab233203c1f8603b5bab411fe10f85cb0805795a0",
       "official": "https://eli.gov.pl/eli/DU/2023/1939/ogl"
     },
     {
@@ -14,7 +14,7 @@
       "articles": 43,
       "versionFrom": "2026-02-27",
       "versionTo": null,
-      "sha256": "1d29916576b94742d0ed0ca3fe70a58bf87877f2d0eb4da9c7761bc585446877",
+      "sha256": "5296bc996db36cab4e6cb31f00c85a28832153926f3cef7c9f319d05db377e1f",
       "official": "https://eli.gov.pl/eli/DU/2024/1673/ogl"
     },
     {
@@ -22,7 +22,7 @@
       "articles": 74,
       "versionFrom": "2024-06-21",
       "versionTo": "2028-05-18",
-      "sha256": "12500573e3eb7b15bdb07de8b17262542e9c755a0b4a2230205c985b7cbf1065",
+      "sha256": "0b9e4957771a2cb226c20388d809e9fd4f641ef82affd94119e1f415a02d99a9",
       "official": "https://eli.gov.pl/eli/DU/2024/917/ogl"
     },
     {
@@ -30,7 +30,7 @@
       "articles": 57,
       "versionFrom": "2026-09-16",
       "versionTo": null,
-      "sha256": "b504f658b9d4d47b2e774a20966822149ac902f8468a2ae37f50b7facc798673",
+      "sha256": "7ea78a802d9ae677d6eac6807208c575b99b26b8ca8ef6f6b44cb1adc5f598fb",
       "official": "https://eli.gov.pl/eli/DU/2026/1214/ogl"
     },
     {
@@ -38,7 +38,7 @@
       "articles": 194,
       "versionFrom": "2026-09-03",
       "versionTo": "2028-05-18",
-      "sha256": "336230a3a849d9b31a1920186220c741d272c22ddfb9cef679aa67ae72444c7e",
+      "sha256": "6d9b2b75fd03e319b2b71af9b39a24d626d1568e8887ade8f3df7937fbf30e61",
       "official": "https://eli.gov.pl/eli/DU/2025/1226/ogl"
     },
     {
@@ -46,7 +46,7 @@
       "articles": 28,
       "versionFrom": "2026-03-03",
       "versionTo": null,
-      "sha256": "09193985e461f989fa8d35eafb8a570b02076a00af054a0d19773ac678ce3108",
+      "sha256": "e89fc50f3126a0ea596e1a9a397ac06517352eabbd21c3dc852aa1b20f067400",
       "official": "https://eli.gov.pl/eli/DU/2019/2141/ogl"
     },
     {
@@ -54,7 +54,7 @@
       "articles": 12,
       "versionFrom": "2026-06-03",
       "versionTo": null,
-      "sha256": "5a7bac294a149387229d3c3a841f45f9b1a35604506e93a5fb257de582baca16",
+      "sha256": "14dca699a22e65e115dd4ffee6a1a9be078716edbeb5445c98e98a7e1e98112f",
       "official": "https://eli.gov.pl/eli/DU/2026/724/ogl"
     },
     {
@@ -62,7 +62,7 @@
       "articles": 78,
       "versionFrom": "2026-03-18",
       "versionTo": "2028-05-18",
-      "sha256": "29bec41d3ca55657e15b5db3d5291cab95152f954ae1b184a36bd835ee18c754",
+      "sha256": "9cd5f1895f2504e9e4f9ef4a8d868f1e4635769155311a1ff7d3014463de7c2c",
       "official": "https://eli.gov.pl/eli/DU/2024/485/ogl"
     },
     {
@@ -70,7 +70,7 @@
       "articles": 87,
       "versionFrom": "2026-07-04",
       "versionTo": null,
-      "sha256": "9808a9744358e546fb7a6a3a7bf76b7538e1d3eca1217a9e1bcb32c28993fb23",
+      "sha256": "7080be6dbe4fd1157ee16ea2d061382ca710783e422c40a1c8e719fead25da36",
       "official": "https://eli.gov.pl/eli/DU/2025/532/ogl"
     }
   ]

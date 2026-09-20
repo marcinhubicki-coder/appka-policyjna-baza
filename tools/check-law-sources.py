@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import hashlib, json, re, sys, urllib.request
 from pathlib import Path
+from bs4 import BeautifulSoup
 
 ROOT=Path(__file__).resolve().parents[1]
 UA={"User-Agent":"Mozilla/5.0 (compatible; AppkaPolicyjnaFreshness/1.0)","Accept-Language":"pl-PL,pl;q=0.9,en;q=0.5"}
@@ -22,7 +23,8 @@ infor=json.loads((ROOT/"tools/interventions-sources.json").read_text())
 for src in infor["acts"]:
     raw=check_url("inforlex",src["code"],src["url"],src["expectedVersionFrom"])
     if not raw:continue
-    text=re.sub(r'\s+',' ',raw.decode("utf-8","ignore"))
+    soup=BeautifulSoup(raw,"lxml")
+    text=re.sub(r'\s+',' ',soup.get_text(' ')).strip()
     m=re.search(r'Wersja aktualna\s+od\s+(\d{4}\.\d{2}\.\d{2})',text)
     actual=m.group(1).replace(".","-") if m else None
     report["checked"][-1]["actualVersionFrom"]=actual
@@ -46,9 +48,17 @@ if raw:
 
 for code,url in [
     ("wroalk-base","https://edzienniki.duw.pl/WDU_D/2025/3906/akt.pdf"),
-    ("wroalk-amend","https://edzienniki.duw.pl/eli/POL_WOJ_DS/2025/4806/ogl/pol/pdf"),
-    ("wroclaw-alcohol-index","https://bip.um.wroc.pl/sprawa-do-zalatwienia/5995/zezwolenie-na-sprzedaz-alkoholu")
+    ("wroalk-amend","https://edzienniki.duw.pl/eli/POL_WOJ_DS/2025/4806/ogl/pol/pdf")
 ]:check_url("wroclaw",code,url)
+
+# The municipal BIP page is an auxiliary discovery page, not the legal source.
+# Its TLS chain occasionally fails on GitHub runners, so it must not invalidate
+# otherwise verified official journal documents.
+try:
+    data=fetch("https://bip.um.wroc.pl/sprawa-do-zalatwienia/5995/zezwolenie-na-sprzedaz-alkoholu")
+    report["checked"].append({"code":"wroclaw-alcohol-index","kind":"wroclaw-aux","url":"https://bip.um.wroc.pl/sprawa-do-zalatwienia/5995/zezwolenie-na-sprzedaz-alkoholu","bytes":len(data),"sha256":hashlib.sha256(data).hexdigest()})
+except Exception as exc:
+    report["warnings"].append({"code":"wroclaw-alcohol-index","kind":"auxiliary-unavailable","error":str(exc)})
 
 out=ROOT/"reports/source-freshness.json";out.parent.mkdir(exist_ok=True);out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n")
 print(json.dumps(report,ensure_ascii=False,indent=2))

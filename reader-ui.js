@@ -30,9 +30,11 @@
   document.addEventListener('keydown',event=>{if(modal&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closeModal()}},true);
 
   const wrap=document.createElement('div');wrap.className='quickbar-wrap';bar.before(wrap);wrap.append(bar);
-  const more=button('','acts-more',openActPicker),moreLabel=document.createElement('span'),moreSlot=document.createElement('div');moreLabel.textContent='+';more.append(moreLabel);more.dataset.maxCount='+'+(api?.list?.().length||0);more.setAttribute('aria-label','Wybierz akt z pełnej listy');moreSlot.className='acts-more-slot';moreSlot.append(more);wrap.append(moreSlot);
+  const more=button('','acts-more',openActPicker),moreLabel=document.createElement('span'),moreSlot=document.createElement('div');moreLabel.textContent='+';more.append(moreLabel);more.dataset.maxCount='+'+(api?.pinnedList?.().length||0);more.setAttribute('aria-label','Otwórz katalog prawa');moreSlot.className='acts-more-slot';moreSlot.append(more);wrap.append(moreSlot);
   let pillsQueued=false,tailResting=false,releaseTimer=0,settleTimer=0,settlingUntil=0,lastLeft=0,lastCue=1,pillPointer=null,pillTouch=null,tailPull=0,tailAnchor=null,pillSuppressUntil=0;
   const unpinnedCount=()=>Math.max(0,(api?.list?.()||[]).filter(item=>item.quickbarEligible!==false&&!item.pinned).length);
+  const catalogExtraCount=()=>unpinnedCount()+(api?.documents?.().length||0);
+  const hasCatalogExtras=()=>catalogExtraCount()>0;
   let tailCanSnap=true,tailFrame=0,revealFrame=0,autoPillMotion=false,autoPillCode='',autoPillTimer=0;
   const motionEase=t=>core.readingEase?.(t)??(t*t*(3-2*t));
   function finishTailScroll(){
@@ -80,7 +82,7 @@
   function restTail(on){
     if(on&&autoPillMotion)return;
     if(tailResting===on)return;if(!on){tailCanSnap=false;cancelAnimationFrame(tailFrame)}tailResting=on;clearTimeout(releaseTimer);clearTimeout(settleTimer);
-    settlingUntil=performance.now()+360;wrap.classList.toggle('is-tail-resting',on);if(on&&unpinnedCount()===0){more.style.setProperty('--cue-amount','0');more.disabled=true;more.tabIndex=-1;more.setAttribute('aria-hidden','true')}
+    settlingUntil=performance.now()+360;wrap.classList.toggle('is-tail-resting',on);if(on&&!hasCatalogExtras()){more.style.setProperty('--cue-amount','0');more.disabled=true;more.tabIndex=-1;more.setAttribute('aria-hidden','true')}
     if(on){cancelAnimationFrame(revealFrame);finishTailScroll()}settleTimer=setTimeout(()=>{lastLeft=bar.scrollLeft;queuePills()},370);queuePills();
   }
   function releaseTail(){
@@ -92,12 +94,13 @@
     const pills=[...bar.querySelectorAll('button[data-act]')].filter(p=>!p.hidden),viewport=bar.getBoundingClientRect(),pull=renderedPull(),rects=pills.map(p=>{const rect=p.getBoundingClientRect();return{left:rect.left-pull,right:rect.right-pull,width:rect.width}});
     if(viewport.width===0)return;
     const width=more.offsetWidth;if(width>0)wrap.style.setProperty('--more-width',width+'px');
-    const right=viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0),cue=atRightEdge()||(tailResting&&performance.now()<settlingUntil)?{text:'+',amount:0,count:0}:core.overflowCue(rects,{right}),extra=unpinnedCount(),total=cue.count+extra;
-    wrap.classList.toggle('has-library-extra',extra>0);if(tailResting&&!atRightEdge()&&performance.now()>=settlingUntil&&(rects.at(-1)?.right||0)>right+1.5)restTail(false);
+    const right=viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0),cue=atRightEdge()||(tailResting&&performance.now()<settlingUntil)?{text:'+',amount:0,count:0}:core.overflowCue(rects,{right}),catalogExtras=catalogExtraCount();
+    wrap.classList.toggle('has-library-extra',catalogExtras>0);if(tailResting&&!atRightEdge()&&performance.now()>=settlingUntil&&(rects.at(-1)?.right||0)>right+1.5)restTail(false);
     lastCue=cue.amount;if(cue.amount>.65)tailCanSnap=true;if(!tailResting&&!autoPillMotion&&!revealFrame&&tailCanSnap&&cue.count===0&&cue.amount<1&&bar.scrollWidth>bar.clientWidth&&!bar.querySelector('[data-count-moving]')){restTail(true);return}
     bar.style.setProperty('--pills-fade-left',Math.min(20,Math.max(0,bar.scrollLeft))+'px');bar.style.setProperty('--pills-fade-right',Math.min(20,Math.max(0,(rects.at(-1)?.right||0)-right))+'px');
-    const label=total?('+'+total):'+';if(moreLabel.textContent!==label)moreLabel.textContent=label;more.dataset.maxCount='+'+Math.max(total,(api?.list?.().length||0));const visibleAmount=total?1:cue.amount;
-    more.style.setProperty('--cue-amount',String(visibleAmount));more.disabled=visibleAmount===0;more.tabIndex=visibleAmount===0?-1:0;more.setAttribute('aria-hidden',String(visibleAmount===0));more.setAttribute('aria-label',total?total+' pozycji poza paskiem. Otwórz katalog.':'Otwórz katalog');
+    const label=cue.count>0?cue.text:'+';if(moreLabel.textContent!==label)moreLabel.textContent=label;more.dataset.maxCount='+'+Math.max(1,(api?.pinnedList?.().length||0));
+    const visibleAmount=cue.count>0?cue.amount:(catalogExtras>0?1:cue.amount);
+    more.style.setProperty('--cue-amount',String(visibleAmount));more.disabled=visibleAmount===0;more.tabIndex=visibleAmount===0?-1:0;more.setAttribute('aria-hidden',String(visibleAmount===0));more.setAttribute('aria-label',cue.count>0?cue.count+' przypiętych aktów po prawej. Otwórz katalog.':'Otwórz katalog prawa');
     releaseTail();
   }
   function queuePills(){if(pillsQueued)return;pillsQueued=true;requestAnimationFrame(()=>{pillsQueued=false;measurePills()})}

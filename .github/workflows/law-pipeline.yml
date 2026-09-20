@@ -12,6 +12,7 @@ on:
       - tools/import-interventions.py
       - tools/import-eli-acts.py
       - tools/import-special-sources.py
+      - tools/check-law-sources.py
       - tools/build-law-packs.mjs
       - tools/test-offline-packs.mjs
       - tools/test-offline-runtime.mjs

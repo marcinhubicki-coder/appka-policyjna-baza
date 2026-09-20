@@ -74,7 +74,19 @@
     ['uop',/^o Policji\b/i],['cudz',/^o cudzoziemcach\b/i],
     ['nieletni',/^o wspieraniu i resocjalizacji nieletnich/i],
     ['bim',/^o bezpieczeństwie imprez masowych/i],
-    ['alk',/^o wychowaniu w trzeźwości i przeciwdziałaniu alkoholizmowi/i]
+    ['alk',/^o wychowaniu w trzeźwości i przeciwdziałaniu alkoholizmowi/i],
+    ['nark',/^o przeciwdziałaniu narkomanii/i],
+    ['przemoc',/^o przeciwdziałaniu przemocy domowej/i],
+    ['psych',/^o ochronie zdrowia psychicznego/i],
+    ['tyton',/^o ochronie zdrowia przed następstwami używania tytoniu/i],
+    ['kier',/^o kierujących pojazdami/i],
+    ['bron',/^o broni i amunicji/i],
+    ['ochrona',/^o ochronie osób i mienia/i],
+    ['zgrom',/^(?:Prawo|Prawa|Prawem) o zgromadzeniach/i],
+    ['krd',/^w sprawie kontroli ruchu drogowego/i],
+    ['punkty',/^w sprawie ewidencji kierujących pojazdami naruszających przepisy ruchu drogowego/i],
+    ['upraw',/^w sprawie postępowania przy wykonywaniu niektórych uprawnień policjantów/i],
+    ['nk',/^w sprawie procedury [„"]?Niebieskie Karty/i]
   ];
   function externalActReferences(text){
     return externalReferenceRanges(text).flatMap(range=>{

@@ -638,6 +638,22 @@ function buildMenu(){
 }
 globalThis.__POLICE_REBUILD_MENU=buildMenu;
 function searchItemMarkup(row,act){return `<a class="search-item" href="#${esc(row[0])}" data-a="${esc(act)}"><b>${esc(row[2])} · ${esc(row[3])}</b><small>${esc(row[4].map(unit=>unit[3]).join(" ").slice(0,190))}…</small></a>`}
+function discoveryItemMarkup(entry){
+  const id=entry[0],act=entry[1],packId=entry[2],heading=entry[3],title=entry[4],meta=META[act]||[act,act,""],pack=LAW_CONFIG.packs?.[packId]||LAW_MANIFEST?.packs?.[packId]||{};
+  const disabled=!packages.isEnabled(act),kind=isDocumentCode(act)?"dokument":"akt",state=disabled?`${kind} wyłączony · otwórz tymczasowo`:"poza bieżącym filtrem · otwórz";
+  return `<a class="search-item search-discovery-item" href="#${esc(id)}" data-a="${esc(act)}" data-discovery="1"><b>${esc(heading)} · ${esc(title)}</b><small>${esc(meta[0])} — ${esc(meta[1])} · ${esc(state)}</small></a>`;
+}
+function bindSearchResultLinks(root=results){root.querySelectorAll("a.search-item:not([data-search-bound])").forEach(a=>{a.dataset.searchBound="1";a.onclick=async e=>{
+  e.preventDefault();const code=a.dataset.a,id=a.getAttribute("href").slice(1),favoriteResults=searchFavoritesOnly;
+  captureSearchReturn();closeSearch(true);q.blur();
+  if(favoriteResults&&globalThis.__FAVORITES_OPEN_ALL)globalThis.__FAVORITES_OPEN_ALL(code,id);
+  else{
+    globalThis.__FAVORITES_LEAVE_FILTER?.();
+    await renderAct(code,id);
+    const hit=globalThis.__POLICE_SEARCH_HIT?.(id,q.value.trim());
+    if(hit)globalThis.__READER_STATE?.toElement(hit);
+  }
+}})}
 function activeSearchSection(act,total){
   let section=results.querySelector('.search-group[data-search-act="'+CSS.escape(act)+'"]');if(section)return section;
   const meta=META[act]||[act,act,""];section=document.createElement("section");section.className="search-group";section.dataset.searchAct=act;section.setAttribute("aria-labelledby","search-act-"+act);

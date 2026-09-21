@@ -546,7 +546,7 @@ function renderLoadedAct(code,target=null,scroll=true){
   const renderCompleted=PERF.now();
   PERF.update({lastActRenderMs:renderCompleted-renderStarted},{lastAct:ACT[0],lastActArticles:ACT[3].length,lastActInitialArticles:range.last-range.first+1,lastActUnits:ACT[3].reduce((sum,row)=>sum+(row[4]?.length||0),0),streamRenderedArticles:range.last-range.first+1,streamTotalArticles:ACT[3].length});
   window.dispatchEvent(new CustomEvent('police-law-rendered',{detail:{act:ACT[0]}}));
-  history.replaceState(null,"",target?"#"+target:"#act-"+ACT[0]);
+  if(globalThis.__POLICE_LAUNCHER_BOOT)history.replaceState(null,"","#start");else history.replaceState(null,"",target?"#"+target:"#act-"+ACT[0]);
   if(remembered)state.restorePlace(remembered);else if(target)jump(target,false);else if(scroll){const card=document.getElementById("actcard");if(globalThis.__READER_STATE)globalThis.__READER_STATE.toElement(card,{alignTop:true});else card.scrollIntoView({behavior:"auto",block:"start"})}
   requestAnimationFrame(()=>{const paintedAt=PERF.now(),metrics={lastActPaintMs:paintedAt-renderStarted};if(PERF.state.metrics.initialReadyMs==null)metrics.initialReadyMs=paintedAt-PERF.state.startedAt;PERF.update(metrics);captureDataResource()});
 }

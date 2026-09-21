@@ -68,11 +68,11 @@
     return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;window.removeEventListener('police-law-rendered',finish);resolve()};window.addEventListener('police-law-rendered',finish,{once:true});setTimeout(finish,3000)});
   }
   function close(animate=true){
-    if(!isOpen())return;opened=false;document.body.classList.remove('launcher-open');shell.setAttribute('aria-hidden','true');
+    if(!isOpen())return;opened=false;globalThis.__POLICE_LAUNCHER_BOOT=false;document.body.classList.remove('launcher-open');shell.setAttribute('aria-hidden','true');
     const finish=()=>{shell.hidden=true;shell.classList.remove('is-closing')};if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){shell.classList.add('is-closing');setTimeout(finish,190)}else finish();
   }
   function open({focus=false}={}){
-    if(isOpen())return;opened=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing');document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();if(focus)setTimeout(()=>query.focus(),80);
+    if(isOpen())return;opened=true;globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing');document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();if(focus)setTimeout(()=>query.focus(),80);
   }
   async function openResult(id,act){
     const meta=resultMeta(id),label=meta?(meta.heading+(meta.title?' · '+meta.title:'')):id,sub=meta?.actName||act;remember(id,act,label,sub);close();
@@ -94,6 +94,6 @@
   globalThis.__POLICE_LAUNCHER_OPEN=options=>open(options||{});
   globalThis.__POLICE_LAUNCHER_CLOSE=()=>close();
   const initial=document.documentElement.dataset.launcherSkip!=='1'&&!isDeepLink();
-  if(initial){shell.hidden=false;shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');opened=true;history.replaceState(null,'','#start')}else{shell.hidden=true;shell.setAttribute('aria-hidden','true')}
+  if(initial){globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');opened=true;history.replaceState(null,'','#start')}else{shell.hidden=true;shell.setAttribute('aria-hidden','true')}
   const warm=()=>ensureData();if('requestIdleCallback'in window)requestIdleCallback(warm,{timeout:1600});else setTimeout(warm,500);
 })();

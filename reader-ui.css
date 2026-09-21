@@ -9,6 +9,11 @@ body.drawer-open .top-inner,body.search-active .top-inner{padding-bottom:0!impor
 .quickbar-wrap .quickbar{overscroll-behavior-x:none}
 .quickbar-wrap .quickbar button{transform:translateX(var(--tail-pull,0px));user-select:none;-webkit-user-select:none;transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .34s cubic-bezier(.42,0,.2,1)}
 .quickbar-wrap.is-tail-dragging .quickbar button{transition:background-color .18s ease,border-color .18s ease,color .18s ease}
+.quickbar button[data-temporary]{overflow:hidden;max-width:180px;transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .34s cubic-bezier(.42,0,.2,1),width .38s cubic-bezier(.42,0,.2,1),max-width .38s cubic-bezier(.42,0,.2,1),padding .38s cubic-bezier(.42,0,.2,1),opacity .28s ease,border-width .38s cubic-bezier(.42,0,.2,1)}
+.quickbar button[data-temporary].temporary-grace{border-style:dashed}
+.quickbar button[data-temporary].temporary-removing{width:var(--temporary-width);max-width:var(--temporary-width);opacity:.82}
+.quickbar button[data-temporary].temporary-removing.is-collapsing{width:0;max-width:0;min-width:0;padding-left:0;padding-right:0;border-left-width:0;border-right-width:0;opacity:0}
+.search-other-pill{border-style:dashed!important}
 .act-pill-label,.acts-more>span,.acts-more::before{padding-inline:5px}
 .act-pill-count{display:grid;place-items:center;flex:none;width:0;height:17px;overflow:hidden;border-radius:999px;background:#2e78b5;color:#fff;font-size:8.5px;font-variant-numeric:tabular-nums;line-height:1;opacity:0;transition:width .18s ease,opacity .18s ease}
 .search-has-hit .act-pill-count.count-ready{width:max(17px,calc(var(--hit-digits,1)*1ch + 8px));opacity:1}
@@ -66,7 +71,7 @@ body.drawer-open .search-return{left:8px!important;right:8px!important;bottom:ca
 .favorites-scope-button{font:inherit;font-size:9px;border:0;background:transparent;color:#396b90;min-height:32px;padding:3px}.favorites-label{flex-wrap:wrap}.favorites-controls{flex-wrap:nowrap}
 .act-coverage{font-size:11px;line-height:1.45;color:#6c8092;margin:6px 0}.act-preamble{font-size:13px;line-height:1.55;color:#526e84;margin:10px 0}
 #clear[hidden]{display:none!important}
-@media(prefers-reduced-motion:reduce){.reader-toc,.reader-toc-backdrop,.acts-more,.acts-more-slot,.quickbar-wrap .quickbar button,.act-pill-count{transition:none}}
+@media(prefers-reduced-motion:reduce){.reader-toc,.reader-toc-backdrop,.acts-more,.acts-more-slot,.quickbar-wrap .quickbar button,.act-pill-count{transition:none}.quickbar button[data-temporary].temporary-removing.is-collapsing{display:none}}
 /* Provenance and migration messages stay in normal document flow. */
 .source-details{font-size:12px;line-height:1.48;color:var(--muted);margin:6px 0 0}.source-details p{font:inherit;margin:6px 0}.source-details a{color:var(--accent)}body.drawer-open .source-details{font-size:7.5px;line-height:1.15}.source-warning{font-size:13px;line-height:1.5;padding:10px;border:1px solid #d8ab63;border-radius:8px;background:#fff5df;color:#694614}.source-details summary{cursor:pointer}.favorite-review-notice{margin:8px 12px}
 /* A single fixed reader, with results and dialogs owning their scroll area. */

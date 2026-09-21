@@ -20,6 +20,8 @@ on:
       - app.js
       - reader-core.js
       - reader-ui.js
+      - quickbar-motion.js
+      - reader-ui.css
       - reader-settings.js
       - linking-rules.js
       - offline.js

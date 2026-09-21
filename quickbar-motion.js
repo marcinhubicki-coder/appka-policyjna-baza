@@ -15,7 +15,7 @@
     animation.onfinish=()=>{if(state.animation!==animation)return;state.animation=null;exactBadge(state)};
   }
   function updateBadges(detail){
-    for(const pill of bar.querySelectorAll('button[data-act]')){
+    for(const pill of bar.querySelectorAll('button[data-act],button[data-search-other]')){
       const badge=pill.querySelector('.act-pill-count');if(!badge)continue;
       let state=badges.get(pill);
       if(!state){state={badge,value:null};badges.set(pill,state)}
@@ -36,8 +36,8 @@
   }
   function highlight(code){
     const changed=highlighted!==code;highlighted=code;
-    for(const pill of bar.querySelectorAll('button[data-act]')){
-      const on=pill.dataset.act===code;if(pill.classList.contains('on')!==on)pill.classList.toggle('on',on);
+    for(const pill of bar.querySelectorAll('button[data-act],button[data-search-other]')){
+      const pillCode=pill.hasAttribute('data-search-other')?"__other__":pill.dataset.act,on=pillCode===code;if(pill.classList.contains('on')!==on)pill.classList.toggle('on',on);
       if(on&&pill.getAttribute('aria-current')!=='true')pill.setAttribute('aria-current','true');else if(!on&&pill.hasAttribute('aria-current'))pill.removeAttribute('aria-current');
     }
     if(changed&&globalThis.__POLICE_SEARCH_STATE?.active)globalThis.__READER_QUICKBAR?.reveal(code);
@@ -72,6 +72,6 @@
   window.addEventListener('police-law-search-state',event=>{
     const detail=event.detail;stopScroll();updateBadges(detail);
     if(!detail.active){groups=[];highlight(typeof ACT!=='undefined'?ACT?.[0]:'');return}
-    if(!detail.pending){groups=[...results.querySelectorAll('.search-group')];queueActive()}
+    if(!detail.pending){groups=[...results.querySelectorAll('.search-group[data-search-act]')];queueActive()}
   });
 })();

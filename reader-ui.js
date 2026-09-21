@@ -88,7 +88,7 @@
     releaseTimer=setTimeout(()=>{if(!pillPointer&&!pillTouch&&lastCue===0)restTail(true)},0);
   }
   function measurePills(){
-    const pills=[...bar.querySelectorAll('button[data-act]')].filter(p=>!p.hidden),viewport=bar.getBoundingClientRect(),pull=renderedPull(),rects=pills.map(p=>{const rect=p.getBoundingClientRect();return{left:rect.left-pull,right:rect.right-pull,width:rect.width}});
+    const pills=[...bar.querySelectorAll('button[data-act],button[data-search-other]')].filter(p=>!p.hidden),viewport=bar.getBoundingClientRect(),pull=renderedPull(),rects=pills.map(p=>{const rect=p.getBoundingClientRect();return{left:rect.left-pull,right:rect.right-pull,width:rect.width}});
     if(viewport.width===0)return;
     more.dataset.maxCount='+'+pills.length;const width=more.offsetWidth;if(width>0)wrap.style.setProperty('--more-width',width+'px');
     const right=viewport.right-parseFloat(getComputedStyle(bar).paddingRight||0),cue=atRightEdge()||(tailResting&&performance.now()<settlingUntil)?{text:'+',amount:0,count:0}:core.overflowCue(rects,{right});
@@ -101,7 +101,7 @@
   }
   function queuePills(){if(pillsQueued)return;pillsQueued=true;requestAnimationFrame(()=>{pillsQueued=false;measurePills()})}
   function revealPill(code){
-    const pill=bar.querySelector('[data-act="'+CSS.escape(code||'')+'"]');if(!pill||pill.hidden)return;
+    const selector=code==="__other__"?'[data-search-other]':'[data-act="'+CSS.escape(code||'')+'"]',pill=bar.querySelector(selector);if(!pill||pill.hidden)return;
     if(pillPointer||pillTouch){clearTimeout(autoPillTimer);autoPillTimer=setTimeout(()=>revealPill(code),40);return}
     const firstBox=bar.getBoundingClientRect(),firstRect=pill.getBoundingClientRect();if(!firstBox.width)return;
     const visible=[...bar.querySelectorAll('button[data-act]')].filter(node=>!node.hidden),last=pill===visible.at(-1);
@@ -117,7 +117,7 @@
     };
     const run=(attempt=0)=>{
       if(!autoPillMotion||autoPillCode!==code)return;
-      const targetPill=bar.querySelector('[data-act="'+CSS.escape(code||'')+'"]');if(!targetPill||targetPill.hidden){finish();return}
+      const targetPill=bar.querySelector(selector);if(!targetPill||targetPill.hidden){finish();return}
       const box=bar.getBoundingClientRect(),r=targetPill.getBoundingClientRect(),nodes=[...bar.querySelectorAll('button[data-act]')].filter(node=>!node.hidden);
       if(!box.width){finish();return}
       const tail=nodes.at(-1),tr=tail?.getBoundingClientRect(),right=box.right-parseFloat(getComputedStyle(bar).paddingRight||0);
@@ -146,7 +146,7 @@
   }
   globalThis.__READER_QUICKBAR={reveal:revealPill};
   const pillSizes=new ResizeObserver(queuePills);
-  function observePills(){pillSizes.disconnect();pillSizes.observe(bar);bar.querySelectorAll('button[data-act]').forEach(pill=>pillSizes.observe(pill));queuePills()}
+  function observePills(){pillSizes.disconnect();pillSizes.observe(bar);bar.querySelectorAll('button[data-act],button[data-search-other]').forEach(pill=>pillSizes.observe(pill));queuePills()}
   bar.addEventListener('scroll',()=>{if(tailResting&&performance.now()>settlingUntil&&bar.scrollLeft<lastLeft-.5)restTail(false);lastLeft=bar.scrollLeft;queuePills();releaseTail()},{passive:true});
   bar.addEventListener('scrollend',releaseTail,{passive:true});
   bar.addEventListener('pointerdown',event=>{cancelAutoPillMotion();pillPointer={x:event.clientX,y:event.clientY};beginTail(pillPointer)},{passive:true});
@@ -165,12 +165,13 @@
   new MutationObserver(observePills).observe(bar,{childList:true});window.addEventListener('police-law-menu-built',observePills);observePills();
   function openActPicker(){
     const body=dialog('Wybierz akt lub dokument',true);
-    for(const pill of bar.querySelectorAll('button[data-act]:not([hidden])')){
-      const code=pill.dataset.act,meta=META[code]||[code,code],item=button('','act-picker-item',()=>{
-        closeModal();const target=bar.querySelector('[data-act="'+CSS.escape(code)+'"]');if(!globalThis.__POLICE_QUICKBAR_ACT?.(code))target?.click();
+    for(const pill of bar.querySelectorAll('button[data-act]:not([hidden]),button[data-search-other]:not([hidden])')){
+      const other=pill.hasAttribute('data-search-other'),code=other?"__other__":pill.dataset.act,meta=other?["Inne ustawy","Pozostałe wyniki wyszukiwania"]:(META[code]||[code,code]),item=button('','act-picker-item',()=>{
+        closeModal();const target=other?bar.querySelector('[data-search-other]'):bar.querySelector('[data-act="'+CSS.escape(code)+'"]');
+        if(other)globalThis.__POLICE_SEARCH_GOTO_ACT?.("__other__");else if(!globalThis.__POLICE_QUICKBAR_ACT?.(code))target?.click();
         if(target&&document.body.matches('.search-active,.search-editing')){const r=target.getBoundingClientRect(),box=bar.getBoundingClientRect();bar.scrollTo({left:bar.scrollLeft+r.left-box.left-(box.width-r.width)/2,behavior:'auto'})}queuePills();
       });
-      item.setAttribute('aria-current',String(ACT?.[0]===code));const short=document.createElement('b');short.textContent=meta[0];const copy=document.createElement('span');copy.textContent=meta[1];item.append(short,copy);body.append(item);
+      item.setAttribute('aria-current',String(!other&&ACT?.[0]===code));const short=document.createElement('b');short.textContent=meta[0];const copy=document.createElement('span');copy.textContent=meta[1];item.append(short,copy);body.append(item);
     }
     body.querySelector('button')?.focus();
   }

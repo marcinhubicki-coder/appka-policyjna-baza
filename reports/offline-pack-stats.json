@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "sourceHash": "194b00b3db4dff91",
-  "runtimeVersion": "4902126c5bd404c6",
+  "sourceHash": "c7079465f6302393",
+  "runtimeVersion": "ca8c3e34bd4e8901",
   "sourceBytes": 1888498,
   "routerCompressedBytes": 309723,
   "discoveryCompressedBytes": 1039204,
@@ -9,7 +9,7 @@
     "acts": 28,
     "articles": 5034,
     "units": 29159,
-    "dataCompressedBytes": 1436200,
+    "dataCompressedBytes": 1436199,
     "searchCompressedBytes": 1309791
   },
   "documents": {
@@ -109,7 +109,7 @@
         "searchable": 118
       },
       "bytes": {
-        "data": 38746,
+        "data": 38745,
         "search": 35551
       },
       "acts": [

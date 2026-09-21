@@ -1,22 +1,24 @@
 {
   "version": 3,
-  "sourceHash": "14df676805c48caf",
-  "runtimeVersion": "251a99cd20981132",
+  "sourceHash": "3b3755e02daaa367",
+  "runtimeVersion": "17d479f44869b219",
   "sourceBytes": 1888494,
-  "routerCompressedBytes": 309132,
-  "discoveryCompressedBytes": 816899,
+  "routerCompressedBytes": 309722,
+  "discoveryCompressedBytes": 1039204,
   "totals": {
     "acts": 28,
     "articles": 5034,
     "units": 29159,
-    "dataCompressedBytes": 1436194,
+    "dataCompressedBytes": 1436198,
     "searchCompressedBytes": 1309791
   },
   "documents": {
     "acts": 3,
     "rows": 9,
     "units": 17,
-    "compressedBytes": 2343
+    "compressedBytes": 2343,
+    "searchCompressedBytes": 729,
+    "searchable": 9
   },
   "packs": {
     "core": {
@@ -47,7 +49,7 @@
         "searchable": 1628
       },
       "bytes": {
-        "data": 496552,
+        "data": 496550,
         "search": 441211
       },
       "acts": [
@@ -71,7 +73,7 @@
         "searchable": 675
       },
       "bytes": {
-        "data": 261536,
+        "data": 261538,
         "search": 222025
       },
       "acts": [
@@ -89,7 +91,7 @@
         "searchable": 309
       },
       "bytes": {
-        "data": 91575,
+        "data": 91577,
         "search": 82245
       },
       "acts": [
@@ -107,7 +109,7 @@
         "searchable": 118
       },
       "bytes": {
-        "data": 38742,
+        "data": 38744,
         "search": 35551
       },
       "acts": [

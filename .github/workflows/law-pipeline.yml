@@ -18,6 +18,7 @@ on:
       - tools/test-offline-runtime.mjs
       - tools/benchmark-law-packs.mjs
       - app.js
+      - app.css
       - reader-core.js
       - reader-ui.js
       - quickbar-motion.js

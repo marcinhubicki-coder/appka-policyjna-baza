@@ -1,9 +1,39 @@
 (function(){
-  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),status=document.getElementById('launcherHint'),shortcuts=document.getElementById('launcherShortcuts'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader');
+  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader');
   if(!shell||!query)return;
-  const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=8;
-  const phrases=['Legitymowanie','Zatrzymanie','Kontrola osobista','Przeszukanie','ŚPB','Nietrzeźwy','Przemoc domowa','Nieletni','Ruch drogowy','Narkotyki'];
-  let router=null,discovery=null,articleById=new Map(),actByCode=new Map(),loadPromise=null,searchTimer=0,opened=false;
+  const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=10;
+  const QUICK_SECTIONS=[
+    {id:'legitymowanie',label:'Podstawy legitymowania',items:[
+      {label:'UoP · art. 15',target:'uop-art-15',fallback:'legitymowanie'},
+      {label:'Rozp. · § 4',target:'upraw-par-4',fallback:'ustala tożsamość osoby legitymowanej'},
+      {label:'Rozp. · § 7',target:'upraw-par-7',fallback:'dokumentuje legitymowanie'}
+    ]},
+    {id:'wykroczenia',label:'Częste wykroczenia',items:[
+      {label:'Zakłócanie spokoju',target:'kw-art-51',fallback:'zakłócanie spokoju'},
+      {label:'Wprowadzanie w błąd',target:'kw-art-65',fallback:'wprowadza w błąd organ państwowy'},
+      {label:'Kradzież',target:'kw-art-119',fallback:'kradzież wykroczenie'},
+      {label:'Uszkodzenie mienia',target:'kw-art-124',fallback:'uszkodzenie mienia wykroczenie'},
+      {label:'Nieobyczajny wybryk',target:'kw-art-140',fallback:'nieobyczajny wybryk'},
+      {label:'Nieprzyzwoite słowa',target:'kw-art-141',fallback:'nieprzyzwoite słowa'},
+      {label:'Zaśmiecanie',target:'kw-art-145',fallback:'zaśmiecanie'},
+      {label:'Spożywanie alkoholu',target:'alk-art-43s1',fallback:'spożywa napoje alkoholowe wbrew zakazom'},
+      {label:'Palenie tytoniu',target:'tyton-art-13',fallback:'pali wyroby tytoniowe wbrew'}
+    ]},
+    {id:'przestepstwa',label:'Częste przestępstwa',items:[
+      {label:'Groźby karalne',target:'kk-art-190',fallback:'groźba karalna'},
+      {label:'Uszkodzenie ciała',target:'kk-art-157',fallback:'naruszenie czynności narządu ciała'},
+      {label:'Bójka / pobicie',target:'kk-art-158',fallback:'bójka pobicie'},
+      {label:'Nietrzeźwy kierujący',target:'kk-art-178a',fallback:'prowadzi pojazd w stanie nietrzeźwości'},
+      {label:'Naruszenie nietykalności',target:'kk-art-217',fallback:'narusza nietykalność cielesną'},
+      {label:'Znieważenie funkcjonariusza',target:'kk-art-226',fallback:'znieważa funkcjonariusza'},
+      {label:'Kradzież',target:'kk-art-278',fallback:'kradzież'},
+      {label:'Kradzież z włamaniem',target:'kk-art-279',fallback:'kradzież z włamaniem'},
+      {label:'Rozbój',target:'kk-art-280',fallback:'rozbój'},
+      {label:'Uszkodzenie mienia',target:'kk-art-288',fallback:'niszczy uszkadza cudzą rzecz'},
+      {label:'Narkotyki',target:'nark-art-62',fallback:'posiadanie środków odurzających'}
+    ]}
+  ];
+  let router=null,discovery=null,articleById=new Map(),actByCode=new Map(),loadPromise=null,searchTimer=0,opened=false,openSectionId='';
   const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/ł/g,'l').replace(/\s+/g,' ').trim();
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function isDeepLink(){try{const h=decodeURIComponent(location.hash.slice(1));return !!h&&h!=='start'}catch(_){return false}}
@@ -16,6 +46,12 @@
   function renderRecent(){
     const items=readRecent();recentBox.hidden=!items.length;if(!items.length){recentList.replaceChildren();return}
     recentList.innerHTML=items.map(item=>'<button class="launcher-recent-item" type="button" data-recent="'+esc(item.id)+'"><span><b>'+esc(item.label||item.id)+'</b><small>'+esc(item.sub||item.act)+'</small></span><span>›</span></button>').join('');
+  }
+  function renderQuickSections(){
+    quickSections.innerHTML=QUICK_SECTIONS.map(section=>{
+      const open=section.id===openSectionId;
+      return '<section class="launcher-quick-section'+(open?' is-open':'')+'" data-quick-section="'+esc(section.id)+'"><button class="launcher-quick-toggle" type="button" aria-expanded="'+String(open)+'"><span>'+esc(section.label)+'</span><span class="launcher-quick-chevron" aria-hidden="true">›</span></button><div class="launcher-quick-body"'+(open?'':' hidden')+'><div class="launcher-quick-chips">'+section.items.map((item,index)=>'<button class="launcher-chip" type="button" data-quick-item="'+esc(section.id)+'" data-quick-index="'+index+'">'+esc(item.label)+'</button>').join('')+'</div></div></section>';
+    }).join('');
   }
   async function ensureData(){
     if(router&&discovery)return{router,discovery};if(loadPromise)return loadPromise;
@@ -55,9 +91,9 @@
   }
   async function runSearch(){
     const value=query.value.trim();searchWrap.classList.toggle('has-value',!!value);
-    if(norm(value).length<2){resultsBox.hidden=true;resultList.replaceChildren();status.textContent='Wpisz co najmniej 2 znaki';shortcuts.hidden=false;recentBox.hidden=!readRecent().length;return}
-    shortcuts.hidden=true;recentBox.hidden=true;resultsBox.hidden=false;resultList.hidden=true;showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam w całej bazie…';
-    const stamp=value;const items=await findResults(value);if(query.value.trim()!==stamp)return;renderResults(items,value);
+    if(norm(value).length<2){resultsBox.hidden=true;resultList.replaceChildren();recentBox.hidden=!readRecent().length;return}
+    recentBox.hidden=true;resultsBox.hidden=false;resultList.hidden=true;showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam w całej bazie…';
+    const stamp=value,items=await findResults(value);if(query.value.trim()!==stamp)return;renderResults(items,value);
   }
   function scheduleSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,110)}
   function fullSearch(){
@@ -72,21 +108,27 @@
     const finish=()=>{shell.hidden=true;shell.classList.remove('is-closing')};if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){shell.classList.add('is-closing');setTimeout(finish,190)}else finish();
   }
   function open({focus=false}={}){
-    if(isOpen())return;opened=true;globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing');document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();if(focus)setTimeout(()=>query.focus(),80);
+    if(isOpen())return;opened=true;globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing');document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();renderQuickSections();if(focus)setTimeout(()=>query.focus(),80);
   }
-  async function openResult(id,act){
-    const meta=resultMeta(id),label=meta?(meta.heading+(meta.title?' · '+meta.title:'')):id,sub=meta?.actName||act;remember(id,act,label,sub);close();
-    await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
+  async function openTarget(id,actHint='',rememberLabel=''){
+    await ensureData();const meta=resultMeta(id),act=meta?.act||actHint;if(!meta&&rememberLabel){query.value=rememberLabel;searchWrap.classList.add('has-value');runSearch();return}
+    const label=rememberLabel||meta?.heading||id,sub=meta?.actName||act;if(meta)remember(id,act,meta.heading+(meta.title?' · '+meta.title:''),sub);
+    globalThis.__POLICE_LAUNCHER_RETURN?.show?.();close();await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
   }
-  function renderShortcuts(){
-    shortcuts.innerHTML=phrases.map(value=>'<button class="launcher-chip" type="button" data-phrase="'+esc(value)+'">'+esc(value)+'</button>').join('');
+  async function openQuickItem(sectionId,index){
+    const section=QUICK_SECTIONS.find(item=>item.id===sectionId),item=section?.items?.[Number(index)];if(!item)return;
+    await ensureData();if(articleById.has(item.target)){await openTarget(item.target,'',item.label);return}
+    query.value=item.fallback||item.label;searchWrap.classList.add('has-value');runSearch();query.focus();
   }
-  renderShortcuts();renderRecent();
+  renderQuickSections();renderRecent();
   query.addEventListener('input',scheduleSearch);
   clear.addEventListener('click',()=>{query.value='';runSearch();query.focus()});
-  shortcuts.addEventListener('click',event=>{const button=event.target.closest('[data-phrase]');if(!button)return;query.value=button.dataset.phrase;searchWrap.classList.add('has-value');runSearch()});
-  resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button)openResult(button.dataset.result,button.dataset.act)});
-  recentList.addEventListener('click',event=>{const button=event.target.closest('[data-recent]');if(!button)return;const item=readRecent().find(x=>x.id===button.dataset.recent);if(item)openResult(item.id,item.act)});
+  quickSections.addEventListener('click',event=>{
+    const toggle=event.target.closest('.launcher-quick-toggle');if(toggle){const section=toggle.closest('[data-quick-section]'),id=section?.dataset.quickSection||'';openSectionId=openSectionId===id?'':id;renderQuickSections();return}
+    const item=event.target.closest('[data-quick-item]');if(item)openQuickItem(item.dataset.quickItem,item.dataset.quickIndex);
+  });
+  resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button)openTarget(button.dataset.result,button.dataset.act)});
+  recentList.addEventListener('click',event=>{const button=event.target.closest('[data-recent]');if(!button)return;const item=readRecent().find(x=>x.id===button.dataset.recent);if(item)openTarget(item.id,item.act,item.label)});
   showAll.addEventListener('click',fullSearch);readerButton.addEventListener('click',()=>close());
   shell.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
   document.getElementById('home')?.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();globalThis.__POLICE_SEARCH_CLEAR?.();open()},{capture:true});

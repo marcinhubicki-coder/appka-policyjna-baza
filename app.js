@@ -19,12 +19,12 @@ const LAW_MANIFEST=globalThis.__LAW_MANIFEST||null;
 const DOCUMENT_MANIFEST=globalThis.__DOCUMENT_MANIFEST||null;
 const lawData=globalThis.__LAW_DATA||null;
 const META={...LEGACY_META,...Object.fromEntries(Object.entries(LAW_CONFIG.acts||{}).map(([code,meta])=>[code,[meta.short||code,meta.name||code,meta.citation||""]]))};
-let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null,CATALOG=null,DISCOVERY=null,temporaryActCode="",temporaryRetiringCode="",temporaryRemovalTimer=0,temporaryRemovalFinishTimer=0;
+let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null,CATALOG=null,DISCOVERY=null,temporaryActCode="",temporaryRetiringCode="",temporaryRemovalTimer=0,temporaryRemovalFinishTimer=0,launcherReturnPending=false;
 const loadedDataPacks=new Map(),loadedSearchPacks=new Map(),catalogArticleMap=new Map(),catalogActArticles=new Map();
 const DATA_ACT_CACHE_LIMIT=2,dataActLru=[];
 const packages=globalThis.__LAW_PACKAGES||{isEnabled:()=>true};
-const searchIndex=[],searchResultGroups=new Map(),SEARCH_FILTER_KEY="police-law-search-excluded-v1";
-let searchWarmCursor=0,timer=null,searchWarmWork=0,searchWarmPending=false;
+const searchIndex=[],searchResultGroups=new Map(),SEARCH_FILTER_KEY="police-law-search-excluded-v1",SEARCH_PAGE_SIZE=10;
+let searchWarmCursor=0,timer=null,searchWarmWork=0,searchWarmPending=false,searchRenderQueue=[],searchRenderCursor=0,searchPageObserver=null;
 let searchExcluded=readSearchExcluded(),searchFavoritesOnly=false,searchState={active:false,counts:new Map(),favoritesOnly:false};
 const idMap=new Map(),articleMap=new Map(),unitMap=new Map();
 let searchHydrationPromise=null,prebuiltSearchMode=!!(lawData&&lawData.supported);
@@ -294,15 +294,24 @@ function paintSearchPills(active,counts,discoveryHits=searchState.discoveryHits|
   }else other?.remove();
 }
 function emitSearchState(active,counts=new Map(),pending=false,discoveryHits=active?(searchState.discoveryHits||0):0){searchState={active,counts,pending,discoveryHits,favoritesOnly:active&&searchFavoritesOnly};document.body.classList.toggle("search-active",active);document.body.classList.toggle("search-favorites-only",active&&searchFavoritesOnly);globalThis.__READER_STATE?.lock("search",active);if(active)globalThis.__READER_TOC_CLOSE?.(false);syncSearchFilterIndicator();if(!pending)paintSearchPills(active,counts,discoveryHits);const detail={active,pending,counts:Object.fromEntries(counts),discoveryHits,excluded:[...searchExcluded],favoritesOnly:searchState.favoritesOnly};globalThis.__POLICE_SEARCH_STATE=detail;window.dispatchEvent(new CustomEvent("police-law-search-state",{detail}))}
-globalThis.__POLICE_DISMISS_RETURN=kind=>{if(kind==='search')clearSearchReturn();else{origin=null;ret.classList.remove("show")}};
-function clearSearchReturn(){searchReturn=null;searchRet?.classList.remove("show")}
-function closeSearch(preserveReturn=false){searchFavoritesOnly=false;searchResultGroups.clear();results.classList.remove("show");emitSearchState(false,new Map());if(!preserveReturn)clearSearchReturn()}
+const searchReturnButton=searchRet?.querySelector?.("button");
+function updateReturnButton(){
+  if(!searchRet||!searchReturnButton)return;
+  const show=!!searchReturn||launcherReturnPending;searchRet.classList.toggle("show",show);
+  searchReturnButton.textContent=launcherReturnPending&&!searchReturn?"← Wróć do Start":"← Wróć do wyszukiwania";
+}
+globalThis.__POLICE_DISMISS_RETURN=kind=>{if(kind==='search'){searchReturn=null;launcherReturnPending=false;updateReturnButton()}else{origin=null;ret.classList.remove("show")}};
+function clearSearchReturn(){searchReturn=null;updateReturnButton()}
+function clearLauncherReturn(){launcherReturnPending=false;updateReturnButton()}
+function showLauncherReturn(){launcherReturnPending=true;searchReturn=null;updateReturnButton()}
+globalThis.__POLICE_LAUNCHER_RETURN={show:showLauncherReturn,clear:clearLauncherReturn,isActive:()=>launcherReturnPending};
+function closeSearch(preserveReturn=false){searchFavoritesOnly=false;searchResultGroups.clear();searchRenderQueue=[];searchRenderCursor=0;searchPageObserver?.disconnect?.();results.classList.remove("show");emitSearchState(false,new Map());if(!preserveReturn)clearSearchReturn()}
 function clearSearchInput(refocus=false){clearTimeout(timer);q.value="";closeSearch();if(refocus){document.body.classList.add('search-editing');q.focus({preventScroll:true})}else{document.body.classList.remove('search-editing');q.blur()}}
-function captureSearchReturn(){if(searchReturn)return;searchReturn={query:q.value,scrollTop:results.scrollTop,html:results.innerHTML,favoritesOnly:searchFavoritesOnly,counts:[...searchState.counts],discoveryHits:searchState.discoveryHits||0,groups:[...searchResultGroups].map(([code,group])=>[code,{act:group.act,rows:[...group.rows],shown:group.shown}])};searchRet?.classList.add("show")}
-function restoreSearchReturn(){if(!searchReturn)return;const saved=searchReturn;clearSearchReturn();clearTimeout(timer);q.value=saved.query;searchFavoritesOnly=saved.favoritesOnly;searchResultGroups.clear();for(const[code,group]of saved.groups)searchResultGroups.set(code,group);results.innerHTML=saved.html;results.querySelectorAll("[data-search-bound]").forEach(node=>node.removeAttribute("data-search-bound"));results.classList.add("show");emitSearchState(true,new Map(saved.counts),false,saved.discoveryHits||0);bindSearchResultLinks();requestAnimationFrame(()=>{results.scrollTop=saved.scrollTop;q.focus({preventScroll:true})})}
+function captureSearchReturn(){if(searchReturn)return;launcherReturnPending=false;searchReturn={query:q.value,scrollTop:results.scrollTop,html:results.innerHTML,favoritesOnly:searchFavoritesOnly,counts:[...searchState.counts],discoveryHits:searchState.discoveryHits||0,groups:[...searchResultGroups].map(([code,group])=>[code,{act:group.act,rows:[...group.rows]}]),renderQueue:[...searchRenderQueue],renderCursor:searchRenderCursor};updateReturnButton()}
+function restoreSearchReturn(){if(!searchReturn)return;const saved=searchReturn;searchReturn=null;updateReturnButton();clearTimeout(timer);q.value=saved.query;searchFavoritesOnly=saved.favoritesOnly;searchResultGroups.clear();for(const[code,group]of saved.groups)searchResultGroups.set(code,group);searchRenderQueue=[...saved.renderQueue];searchRenderCursor=saved.renderCursor;results.innerHTML=saved.html;results.querySelectorAll("[data-search-bound]").forEach(node=>node.removeAttribute("data-search-bound"));results.classList.add("show");emitSearchState(true,new Map(saved.counts),false,saved.discoveryHits||0);bindSearchResultLinks();observeSearchPageMore();requestAnimationFrame(()=>{results.scrollTop=saved.scrollTop;q.focus({preventScroll:true})})}
 globalThis.__POLICE_SEARCH_CLEAR=()=>clearSearchInput(false);
-searchRet?.querySelector?.("button")?.addEventListener?.("click",restoreSearchReturn);
-function gotoSearchAct(code){const other=code==="__other__";if(!searchState.active||(other?!searchState.discoveryHits:searchExcluded.has(code)||!searchState.counts.get(code)))return false;const heading=other?results.querySelector(".search-discovery-heading"):document.getElementById(`search-act-${code}`);if(!heading)return false;if(globalThis.__POLICE_SEARCH_SCROLL)return globalThis.__POLICE_SEARCH_SCROLL(code);const box=results.getBoundingClientRect(),row=heading.getBoundingClientRect();results.scrollTo({top:Math.max(0,results.scrollTop+row.top-box.top-1),behavior:"auto"});return true}
+searchRetButton?.addEventListener?.("click",()=>{if(launcherReturnPending&&!searchReturn){clearLauncherReturn();globalThis.__POLICE_LAUNCHER_OPEN?.({restore:true});return}restoreSearchReturn()});
+function gotoSearchAct(code){const other=code==="__other__";if(!searchState.active||(other?!searchState.discoveryHits:searchExcluded.has(code)||!searchState.counts.get(code)))return false;renderUntilSearchGroup(code);const heading=other?results.querySelector(".search-discovery-heading"):document.getElementById(`search-act-${code}`);if(!heading)return false;if(globalThis.__POLICE_SEARCH_SCROLL)return globalThis.__POLICE_SEARCH_SCROLL(code);const box=results.getBoundingClientRect(),row=heading.getBoundingClientRect();results.scrollTo({top:Math.max(0,results.scrollTop+row.top-box.top-1),behavior:"auto"});return true}
 function setSearchActEnabled(code,enabled){if(!hasAct(code))return;if(enabled)searchExcluded.delete(code);else searchExcluded.add(code);saveSearchExcluded();syncSearchFilterIndicator();window.dispatchEvent(new CustomEvent("police-law-search-filters",{detail:{excluded:[...searchExcluded]}}));if(searchState.active)search()}
 function enableFavoritesSearch(){if(searchFavoritesOnly)return;searchFavoritesOnly=true;syncSearchFilterIndicator();if(searchState.active)search()}
 function disableFavoritesSearch(){if(!searchFavoritesOnly)return;searchFavoritesOnly=false;syncSearchFilterIndicator();if(searchState.active)search()}
@@ -629,33 +638,44 @@ function buildMenu(){
 }
 globalThis.__POLICE_REBUILD_MENU=buildMenu;
 function searchItemMarkup(row,act){return `<a class="search-item" href="#${esc(row[0])}" data-a="${esc(act)}"><b>${esc(row[2])} · ${esc(row[3])}</b><small>${esc(row[4].map(unit=>unit[3]).join(" ").slice(0,190))}…</small></a>`}
-function remainingResultText(value){const tens=value%100,ones=value%10,words=value===1?"dalszy wynik":ones>=2&&ones<=4&&(tens<12||tens>14)?"dalsze wyniki":"dalszych wyników";return `+ ${value} ${words} w tej ustawie`}
-function searchMoreMarkup(group){const remaining=group.rows.length-group.shown;return remaining?`<button class="search-group-more" type="button" data-search-more="${esc(group.act)}" aria-label="Pokaż kolejne wyniki w tej ustawie">${remainingResultText(remaining)}</button>`:""}
-function searchGroupMarkup(group){const meta=META[group.act]||[group.act,group.act,""];return `<section class="search-group" data-search-act="${esc(group.act)}" aria-labelledby="search-act-${esc(group.act)}"><div class="search-act-heading" id="search-act-${esc(group.act)}" tabindex="-1"><span><b>${esc(meta[0])}</b><small>${esc(meta[1])}</small></span><em>${group.rows.length}</em></div>${group.rows.slice(0,group.shown).map(row=>searchItemMarkup(row,group.act)).join("")}${searchMoreMarkup(group)}</section>`}
-function discoveryItemMarkup(entry){
-  const id=entry[0],act=entry[1],packId=entry[2],heading=entry[3],title=entry[4],meta=META[act]||[act,act,""],pack=LAW_CONFIG.packs?.[packId]||LAW_MANIFEST?.packs?.[packId]||{};
-  const disabled=!packages.isEnabled(act),kind=isDocumentCode(act)?"dokument":"akt",state=disabled?`${kind} wyłączony · otwórz tymczasowo`:"poza bieżącym filtrem · otwórz";
-  return `<a class="search-item search-discovery-item" href="#${esc(id)}" data-a="${esc(act)}" data-discovery="1"><b>${esc(heading)} · ${esc(title)}</b><small>${esc(meta[0])} — ${esc(meta[1])} · ${esc(state)}</small></a>`;
+function activeSearchSection(act,total){
+  let section=results.querySelector('.search-group[data-search-act="'+CSS.escape(act)+'"]');if(section)return section;
+  const meta=META[act]||[act,act,""];section=document.createElement("section");section.className="search-group";section.dataset.searchAct=act;section.setAttribute("aria-labelledby","search-act-"+act);
+  section.innerHTML='<div class="search-act-heading" id="search-act-'+esc(act)+'" tabindex="-1"><span><b>'+esc(meta[0])+'</b><small>'+esc(meta[1])+'</small></span><em>'+total+'</em></div>';
+  results.append(section);return section;
 }
-function discoveryMarkup(entries){
-  if(!entries.length)return"";
-  const limit=30,shown=entries.slice(0,limit),left=entries.length-shown.length;
-  return `<section class="search-group search-discovery" data-search-act="__other__" aria-label="Wyniki w pozostałej bazie"><div class="search-act-heading search-discovery-heading"><span><b>Także w pozostałej bazie</b><small>Wyłączone akty i dokumenty — otwierane bez zmiany Twoich ustawień</small></span><em>${entries.length}</em></div>${shown.map(discoveryItemMarkup).join("")}${left?`<div class="search-discovery-more">+${left} dalszych wyników</div>`:""}</section>`;
+function discoverySearchSection(total){
+  let section=results.querySelector('.search-group[data-search-act="__other__"]');if(section)return section;
+  section=document.createElement("section");section.className="search-group search-discovery";section.dataset.searchAct="__other__";section.setAttribute("aria-label","Wyniki w pozostałej bazie");
+  section.innerHTML='<div class="search-act-heading search-discovery-heading"><span><b>Także w pozostałej bazie</b><small>Wyłączone akty i dokumenty — otwierane bez zmiany Twoich ustawień</small></span><em>'+total+'</em></div>';
+  results.append(section);return section;
 }
-function bindSearchResultLinks(root=results){root.querySelectorAll("a.search-item:not([data-search-bound])").forEach(a=>{a.dataset.searchBound="1";a.onclick=async e=>{
-  e.preventDefault();const code=a.dataset.a,id=a.getAttribute("href").slice(1),favoriteResults=searchFavoritesOnly,isDiscovery=a.dataset.discovery==="1";
-  captureSearchReturn();closeSearch(true);q.blur();
-  if(favoriteResults&&globalThis.__FAVORITES_OPEN_ALL)globalThis.__FAVORITES_OPEN_ALL(code,id);
-  else{
-    globalThis.__FAVORITES_LEAVE_FILTER?.();
-    await renderAct(code,id);
-    const hit=globalThis.__POLICE_SEARCH_HIT?.(id,q.value.trim());
-    if(hit)globalThis.__READER_STATE?.toElement(hit);
+function updateSearchPageMore(){
+  results.querySelectorAll("[data-search-page-more]").forEach(node=>node.remove());
+  const left=searchRenderQueue.length-searchRenderCursor;if(left<=0){searchPageObserver?.disconnect?.();return}
+  const button=document.createElement("button");button.type="button";button.className="search-page-more";button.dataset.searchPageMore="1";button.textContent="Pokaż kolejne "+Math.min(SEARCH_PAGE_SIZE,left)+" · "+left+" pozostało";results.append(button);observeSearchPageMore();
+}
+function renderNextSearchPage(){
+  if(searchRenderCursor>=searchRenderQueue.length){updateSearchPageMore();return false}
+  const end=Math.min(searchRenderQueue.length,searchRenderCursor+SEARCH_PAGE_SIZE),batch=searchRenderQueue.slice(searchRenderCursor,end);
+  for(const item of batch){
+    const section=item.kind==="discovery"?discoverySearchSection(item.total):activeSearchSection(item.act,item.total);
+    const template=document.createElement("template");template.innerHTML=item.kind==="discovery"?discoveryItemMarkup(item.entry):searchItemMarkup(item.row,item.act);section.append(template.content);
   }
-}})}
-function nextSearchBatch(remaining){const normal=Math.min(10,remaining);return remaining-normal>0&&remaining-normal<5?remaining:normal}
-function expandSearchGroup(button){const group=searchResultGroups.get(button.dataset.searchMore);if(!group)return;const remaining=group.rows.length-group.shown,batch=nextSearchBatch(remaining);if(!batch){button.remove();return}const template=document.createElement("template");template.innerHTML=group.rows.slice(group.shown,group.shown+batch).map(row=>searchItemMarkup(row,group.act)).join("");button.before(template.content);group.shown+=batch;bindSearchResultLinks(button.closest(".search-group")||results);const left=group.rows.length-group.shown;if(left)button.textContent=remainingResultText(left);else button.remove()}
-results.addEventListener("click",event=>{const button=event.target.closest("button[data-search-more]");if(!button)return;event.preventDefault();expandSearchGroup(button)});
+  searchRenderCursor=end;bindSearchResultLinks();updateSearchPageMore();return true;
+}
+function observeSearchPageMore(){
+  searchPageObserver?.disconnect?.();const button=results.querySelector("[data-search-page-more]");if(!button)return;
+  if(typeof IntersectionObserver!=="function")return;
+  searchPageObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){searchPageObserver.disconnect();requestAnimationFrame(()=>renderNextSearchPage())}},{root:results,rootMargin:"0px 0px 220px 0px",threshold:.01});
+  searchPageObserver.observe(button);
+}
+function renderUntilSearchGroup(code){
+  const selector=code==="__other__"?'.search-group[data-search-act="__other__"]':'.search-group[data-search-act="'+CSS.escape(code)+'"]';
+  let guard=0;while(!results.querySelector(selector)&&searchRenderCursor<searchRenderQueue.length&&guard++<1000)renderNextSearchPage();
+  return results.querySelector(selector);
+}
+results.addEventListener("click",event=>{const button=event.target.closest("button[data-search-page-more]");if(!button)return;event.preventDefault();renderNextSearchPage()});
 function beginSearchEditing(){document.body.classList.add('search-editing');globalThis.__READER_TOC_CLOSE?.(false);if(prebuiltSearchMode){ensureEnabledSearchReady().catch(()=>{});ensureDiscoveryReady().catch(()=>{})}}
 q.addEventListener('focus',beginSearchEditing);
 q.addEventListener('blur',()=>{if(emptySearchQuickbarInteraction)return;document.body.classList.remove('search-editing')});
@@ -674,13 +694,7 @@ async function search(){
   }
   const groups=allActCodes().map(code=>({act:code,rows:byAct.get(code)||[]})).filter(group=>group.rows.length);
   const counts=new Map(groups.map(group=>[group.act,group.rows.length]));
-  searchResultGroups.clear();
-  let activeHtml="";
-  if(groups.length){
-    const perGroup=Math.max(4,Math.min(24,Math.floor(48/groups.length)));
-    for(const group of groups){group.shown=Math.min(group.rows.length,perGroup);searchResultGroups.set(group.act,group)}
-    activeHtml=groups.map(searchGroupMarkup).join("");
-  }
+  searchResultGroups.clear();for(const group of groups)searchResultGroups.set(group.act,{act:group.act,rows:[...group.rows]});
   let discovery=[];
   if(prebuiltSearchMode&&CATALOG){
     const discoveryRows=await ensureDiscoveryReady();
@@ -692,10 +706,13 @@ async function search(){
       return outside&&(!favorites||favorites.has(id))&&terms.every(term=>text.includes(term));
     }).map(([entry])=>entry);
   }
-  if(!groups.length&&!discovery.length){
+  searchPageObserver?.disconnect?.();searchRenderQueue=[];searchRenderCursor=0;
+  for(const group of groups)for(const row of group.rows)searchRenderQueue.push({kind:"active",act:group.act,row,total:group.rows.length});
+  for(const entry of discovery)searchRenderQueue.push({kind:"discovery",entry,total:discovery.length});
+  if(!searchRenderQueue.length){
     const allExcluded=allActCodes().every(code=>!packages.isEnabled(code)||searchExcluded.has(code));
     results.innerHTML=`<div class="search-empty"><b>Brak wyników</b><small>${allExcluded?"Wszystkie ustawy są wyłączone z wyszukiwania.":searchFavoritesOnly?"Brak pasujących wyników w ulubionych.":"Spróbuj krótszego lub innego hasła."}</small></div>`;
-  }else results.innerHTML=activeHtml+discoveryMarkup(discovery);
+  }else{results.replaceChildren();renderNextSearchPage()}
   results.classList.add("show");
   PERF.update({lastSearchMs:PERF.now()-started},{lastSearchQueryTerms:terms.length,lastSearchHits:groups.reduce((sum,g)=>sum+g.rows.length,0),lastDiscoveryHits:discovery.length});
   emitSearchState(true,counts,false,discovery.length);bindSearchResultLinks();

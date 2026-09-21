@@ -53,7 +53,7 @@
   const flips=new Map();
   function dirty(){save.disabled=!!drag||draft.join('|')===initial.join('|')}
   function renderOrder(){
-    if(drag)return;const items=api.pinnedList?.()||api.list().filter(item=>item.pinned);if(items.map(item=>item.code).join('|')===initial.join('|')&&slots.length)return;
+    if(drag)return;const items=api.list();if(items.map(item=>item.code).join('|')===initial.join('|')&&slots.length)return;
     draft=items.map(item=>item.code);initial=[...draft];slots=[];tiles.clear();orderList.replaceChildren();
     for(const [i,item] of items.entries()){
       const slot=node('div','order-slot'),number=node('span','order-number',i+1),tile=node('button','order-tile'),copy=node('span','order-copy'),short=node('b','',item.short),name=node('small','',item.name),grip=node('span','order-grip','⠿');
@@ -108,13 +108,13 @@
     else if(drag&&['ArrowUp','ArrowDown','Home','End'].includes(event.key)){event.preventDefault();const index=draft.indexOf(drag.code),next=event.key==='Home'?0:event.key==='End'?draft.length-1:index+(event.key==='ArrowUp'?-1:1);moveTo(next);tile.focus({preventScroll:true});tile.scrollIntoView({block:'nearest',behavior:'auto'})}
   });
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&drag){event.preventDefault();event.stopImmediatePropagation();finish(true)}},true);
-  save.onclick=()=>{if(drag)return;const ok=api.setPinnedOrder?.(draft)??api.setOrder(draft);if(ok){initial=[...draft];status.textContent='Kolejność przypiętych aktów zapisana.';dirty()}else status.textContent='Nie udało się zapisać kolejności. Spróbuj ponownie.'};
+  save.onclick=()=>{if(drag)return;if(api.setOrder(draft)){initial=[...draft];status.textContent='Kolejność zapisana na tym urządzeniu.';dirty()}else status.textContent='Nie udało się zapisać kolejności. Spróbuj ponownie.'};
   document.getElementById('settingsClose')?.addEventListener('click',()=>finish(true));
   document.getElementById('settingsBackdrop')?.addEventListener('click',()=>finish(true));
   window.addEventListener('police-law-settings-open',()=>{finish(true);initial=[];renderOrder();renderPackages();for(const list of [orderList,document.getElementById('searchActFilters')])cues.get(list)?.queue()});
   window.addEventListener('police-law-settings-close',()=>finish(true));
   window.addEventListener('police-law-rendered',()=>{renderPackages();renderOrder()});
-  window.addEventListener('police-law-packages-change',renderPackages);window.addEventListener('police-law-pins-change',()=>{initial=[];renderOrder();renderPackages()});
+  window.addEventListener('police-law-packages-change',()=>{renderPackages();initial=[];renderOrder()});
   window.addEventListener('police-law-pack-progress',event=>{
     if(!packageStatus)return;const d=event.detail||{},names=api.groups?.().find(group=>group.id===d.packId)?.name||d.packId;
     if(d.stage==='fetch')packageStatus.textContent='Otwieram pakiet „'+names+'”…';

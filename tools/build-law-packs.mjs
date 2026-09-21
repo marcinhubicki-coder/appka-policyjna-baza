@@ -77,8 +77,8 @@ const router={version:3,sourceHash,acts:[],articles:[],ids:[],actArticles:{},mig
 const discovery=[];
 const seenIds=new Set();
 
-for(const act of lawActs){
-  const code=act[0],meta=config.acts[code],packId=meta.pack;
+for(const act of data){
+  const code=act[0],meta=config.acts[code],packId=isDocument(act)?"documents":meta.pack;
   router.acts.push([code,packId,meta.short,meta.name,meta.citation,act[3].length]);
   router.actArticles[code]=act[3].map(row=>row[0]);
   const actMeta=act[4]||{};
@@ -92,7 +92,7 @@ for(const act of lawActs){
   for(const row of act[3]){
     const unitIds=row[4].map((unit,index)=>unit[0]||`${row[0]}@@${index}`);
     router.articles.push([row[0],code,packId,row[2],row[3],unitIds]);
-    if(meta.searchable!==false)discovery.push([row[0],discoveryText(row)]);
+    if(meta.searchable!==false)discovery.push([row[0],discoveryText(row),tidy(row[4].map(unit=>unit[3]).join(" ")).slice(0,190)]);
     if(seenIds.has(row[0]))throw new Error("Powtórzone ID: "+row[0]);
     seenIds.add(row[0]);router.ids.push([row[0],code,packId]);
     for(const unit of row[4]){
@@ -119,6 +119,17 @@ for(const act of documentActs){
   const code=act[0],file=`documents/${code}.data.json.gz`,bytes=gzipJson(act,path.join(ROOT,file));
   documentData[code]={file,bytes};
 }
+const documentSearch=[];
+for(const act of documentActs){
+  const meta=config.acts[act[0]];
+  if(meta.searchable===false)continue;
+  for(const row of act[3]){
+    const preview=tidy(row[4].map(unit=>unit[3]).join(" ")).slice(0,190);
+    documentSearch.push([row[0],act[0],articleSearchText(row),preview]);
+  }
+}
+const documentSearchFile="documents/documents.search.json.gz";
+const documentSearchBytes=gzipJson(documentSearch,path.join(ROOT,documentSearchFile));
 
 const manifestPacks={};
 const totals={acts:0,articles:0,units:0,dataCompressedBytes:0,searchCompressedBytes:0};
@@ -171,10 +182,15 @@ fs.writeFileSync(path.join(ROOT,"law-manifest.js"),
   `globalThis.__LAW_MANIFEST=Object.freeze(${JSON.stringify(manifest)});\n`);
 
 const documentManifest={
-  version:1,
+  version:2,
   sourceHash,
   runtimeVersion,
+  name:config.documents?.name||"Dokumenty i wzory",
+  order:config.documents?.order||70,
   groups:config.documents?.groups||[],
+  search:documentSearchFile,
+  searchBytes:documentSearchBytes,
+  counts:{acts:documentActs.length,rows:documentActs.reduce((n,act)=>n+act[3].length,0),searchable:documentSearch.length},
   acts:stableObjectEntries(Object.fromEntries(documentActs.map(act=>{
     const code=act[0],meta=config.acts[code];
     return [code,{...meta,kind:"document",rows:act[3].length,data:documentData[code].file,dataBytes:documentData[code].bytes}];
@@ -187,7 +203,9 @@ const documentTotals={
   acts:documentActs.length,
   rows:documentActs.reduce((n,act)=>n+act[3].length,0),
   units:documentActs.reduce((n,act)=>n+act[3].reduce((sum,row)=>sum+row[4].length,0),0),
-  compressedBytes:Object.values(documentData).reduce((n,item)=>n+item.bytes,0)
+  compressedBytes:Object.values(documentData).reduce((n,item)=>n+item.bytes,0),
+  searchCompressedBytes:documentSearchBytes,
+  searchable:documentSearch.length
 };
 const stats={
   version:3,

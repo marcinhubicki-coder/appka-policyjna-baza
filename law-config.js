@@ -22,9 +22,9 @@
       tyton:{short:"Tytoń",name:"Ustawa o ochronie zdrowia przed następstwami używania tytoniu i wyrobów tytoniowych",citation:"Dz.U. 2026 poz. 1214",pack:"interventions",defaultEnabled:false,uiSubgroup:"substances",uiSubgroupName:"Substancje"},
       nk:{short:"Niebieskie Karty",name:"Rozporządzenie RM – procedura „Niebieskie Karty”",citation:"Dz.U. 2023 poz. 1870",pack:"interventions",defaultEnabled:false,topLevel:"par",uiSubgroup:"violence",uiSubgroupName:"Przemoc domowa"},
       nakazy:{short:"Nakazy / zakazy",name:"Rozporządzenie MSWiA – nakazy i zakazy wobec osoby stosującej przemoc domową",citation:"Dz.U. 2023 poz. 1613",pack:"interventions",defaultEnabled:false,topLevel:"par",uiSubgroup:"violence",uiSubgroupName:"Przemoc domowa"},
-      protop:{short:"Protokół opuszczenia",name:"Rozporządzenie MSWiA – protokół czynności opuszczenia mieszkania",citation:"Dz.U. 2023 poz. 1612",pack:"interventions",defaultEnabled:false,topLevel:"par",kind:"document",searchable:false,quickbarEligible:false},
-      zawdrzwi:{short:"Zawiad. drzwi",name:"Rozporządzenie MSWiA – zawiadomienie umieszczane na drzwiach",citation:"Dz.U. 2023 poz. 1607",pack:"interventions",defaultEnabled:false,topLevel:"par",kind:"document",searchable:false,quickbarEligible:false},
-      zawkoresp:{short:"Zawiad. koresp.",name:"Rozporządzenie MSWiA – zawiadomienie przy niemożności doręczenia korespondencji",citation:"Dz.U. 2023 poz. 1614",pack:"interventions",defaultEnabled:false,topLevel:"par",kind:"document",searchable:false,quickbarEligible:false},
+      protop:{short:"Protokół opuszczenia",name:"Rozporządzenie MSWiA – protokół czynności opuszczenia mieszkania",citation:"Dz.U. 2023 poz. 1612",pack:"interventions",defaultEnabled:false,topLevel:"par",kind:"document",searchable:true},
+      zawdrzwi:{short:"Zawiad. drzwi",name:"Rozporządzenie MSWiA – zawiadomienie umieszczane na drzwiach",citation:"Dz.U. 2023 poz. 1607",pack:"interventions",defaultEnabled:false,topLevel:"par",kind:"document",searchable:true},
+      zawkoresp:{short:"Zawiad. koresp.",name:"Rozporządzenie MSWiA – zawiadomienie przy niemożności doręczenia korespondencji",citation:"Dz.U. 2023 poz. 1614",pack:"interventions",defaultEnabled:false,topLevel:"par",kind:"document",searchable:true},
       bron:{short:"Broń",name:"Ustawa o broni i amunicji",citation:"Dz.U. 2024 poz. 485",pack:"public-order",defaultEnabled:false,uiSubgroup:"security",uiSubgroupName:"Broń i ochrona"},
       ochrona:{short:"Ochrona",name:"Ustawa o ochronie osób i mienia",citation:"Dz.U. 2025 poz. 532",pack:"public-order",defaultEnabled:false,uiSubgroup:"security",uiSubgroupName:"Broń i ochrona"},
       bim:{short:"Imprezy",name:"Ustawa o bezpieczeństwie imprez masowych",citation:"Dz.U. 2023 poz. 616",pack:"public-order",defaultEnabled:false,uiSubgroup:"order",uiSubgroupName:"Porządek publiczny"},
@@ -58,6 +58,7 @@
     },
     documents:{
       name:"Dokumenty i wzory",
+      order:70,
       groups:[
         {id:"violence-docs",name:"Przemoc domowa",codes:["protop","zawdrzwi","zawkoresp"]}
       ]

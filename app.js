@@ -19,7 +19,7 @@ const LAW_MANIFEST=globalThis.__LAW_MANIFEST||null;
 const DOCUMENT_MANIFEST=globalThis.__DOCUMENT_MANIFEST||null;
 const lawData=globalThis.__LAW_DATA||null;
 const META={...LEGACY_META,...Object.fromEntries(Object.entries(LAW_CONFIG.acts||{}).map(([code,meta])=>[code,[meta.short||code,meta.name||code,meta.citation||""]]))};
-let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null,CATALOG=null,DISCOVERY=null;
+let DATA=[],FIX={},ACT=null,origin=null,searchReturn=null,CATALOG=null,DISCOVERY=null,temporaryActCode="";
 const loadedDataPacks=new Map(),loadedSearchPacks=new Map(),catalogArticleMap=new Map(),catalogActArticles=new Map();
 const DATA_ACT_CACHE_LIMIT=2,dataActLru=[];
 const packages=globalThis.__LAW_PACKAGES||{isEnabled:()=>true};
@@ -45,8 +45,9 @@ const PERF=(()=>{
 })();
 globalThis.__POLICE_PERF=PERF;
 function manifestActInfo(code){return LAW_MANIFEST?.acts?.[code]||DOCUMENT_MANIFEST?.acts?.[code]||LAW_CONFIG.acts?.[code]||null}
-function allActCodes(){const codes=LAW_MANIFEST?Object.keys(LAW_MANIFEST.acts||{}):DATA.filter(act=>LAW_CONFIG.acts?.[act[0]]?.kind!=="document").map(act=>act[0]);return packages.order?.(codes)||codes}
+function allLawCodes(){return LAW_MANIFEST?Object.keys(LAW_MANIFEST.acts||{}):DATA.filter(act=>LAW_CONFIG.acts?.[act[0]]?.kind!=="document").map(act=>act[0])}
 function allDocumentCodes(){return DOCUMENT_MANIFEST?Object.keys(DOCUMENT_MANIFEST.acts||{}):DATA.filter(act=>LAW_CONFIG.acts?.[act[0]]?.kind==="document").map(act=>act[0])}
+function allActCodes(){const codes=[...allLawCodes(),...allDocumentCodes()];return packages.order?.(codes)||codes}
 function isDocumentCode(code){return !!DOCUMENT_MANIFEST?.acts?.[code]||LAW_CONFIG.acts?.[code]?.kind==="document"}
 function hasAct(code){return !!manifestActInfo(code)||DATA.some(act=>act[0]===code)}
 function articleCatalog(id){return catalogArticleMap.get(id)||null}
@@ -65,7 +66,7 @@ function setupCatalog(value){
     catalogArticles:value?.articles?.length||0,
     catalogIds:value?.ids?.length||0,
     routerBytes:LAW_MANIFEST?.routerBytes||0,
-    totalActs:Object.keys(LAW_MANIFEST?.acts||{}).length||DATA.length
+    totalActs:allActCodes().length||DATA.length
   });
 }
 let discoveryHydrationPromise=null;
@@ -279,7 +280,7 @@ function hasSearchFilters(){return searchExcluded.size>0||(searchState.active&&s
 function syncSearchFilterIndicator(){document.body.classList.toggle("search-filters-active",hasSearchFilters())}
 function searchActList(){return allActCodes().map(code=>{const meta=META[code]||[code,code,""];return{code,short:meta[0],name:meta[1],enabled:packages.isEnabled(code)&&!searchExcluded.has(code),packageEnabled:packages.isEnabled(code),hits:searchState.counts.get(code)||0}})}
 function paintSearchPills(active,counts){quickbar?.querySelectorAll("button[data-act]").forEach(button=>{
-  const code=button.dataset.act,meta=META[code]||[code,code,""],hits=counts.get(code)||0,hidden=!packages.isEnabled(code)||(active&&(searchExcluded.has(code)||!hits)),hasHit=active&&!hidden;
+  const code=button.dataset.act,meta=META[code]||[code,code,""],hits=counts.get(code)||0,available=packages.isEnabled(code)||code===temporaryActCode,hidden=!available||(active&&(searchExcluded.has(code)||!hits)),hasHit=active&&!hidden;
   if(button.hidden!==hidden)button.hidden=hidden;if(button.disabled!==hidden)button.disabled=hidden;
   if(button.classList.contains('search-has-hit')!==hasHit)button.classList.toggle('search-has-hit',hasHit);
   if(hasHit){if(button.dataset.hitCount!==String(hits))button.dataset.hitCount=String(hits)}else if(button.hasAttribute('data-hit-count'))delete button.dataset.hitCount;
@@ -373,21 +374,20 @@ function rebuildSearchIndex(rerun=true){
   window.dispatchEvent(new CustomEvent("police-law-packages-change"));
 }
 function packageGroups(){
-  const laws=new Set(allActCodes());
-  return Object.entries(LAW_CONFIG.packs||{}).filter(([id,pack])=>!pack.future&&LAW_MANIFEST?.packs?.[id]).sort(([,a],[,b])=>(a.order||0)-(b.order||0)).map(([id,pack])=>{
-    const codes=(LAW_MANIFEST.packs[id]?.acts||[]).filter(code=>laws.has(code)),used=new Set(),subgroups=(pack.subgroups||[]).map(group=>{const xs=(group.codes||[]).filter(code=>codes.includes(code));xs.forEach(code=>used.add(code));return{id:group.id,name:group.name,codes:xs}}).filter(group=>group.codes.length);
-    const rest=codes.filter(code=>!used.has(code));if(rest.length)subgroups.push({id:id+"-other",name:"Pozostałe",codes:rest});return{id,name:pack.name,codes,mandatory:!!pack.mandatory,subgroups};
+  const available=new Set(allActCodes()),groups=Object.entries(LAW_CONFIG.packs||{}).filter(([id,pack])=>!pack.future&&LAW_MANIFEST?.packs?.[id]).sort(([,a],[,b])=>(a.order||0)-(b.order||0)).map(([id,pack])=>{
+    const codes=(LAW_MANIFEST.packs[id]?.acts||[]).filter(code=>available.has(code)),used=new Set(),subgroups=(pack.subgroups||[]).map(group=>{const xs=(group.codes||[]).filter(code=>codes.includes(code));xs.forEach(code=>used.add(code));return{id:group.id,name:group.name,codes:xs}}).filter(group=>group.codes.length);
+    const rest=codes.filter(code=>!used.has(code));if(rest.length)subgroups.push({id:id+"-other",name:"Pozostałe",codes:rest});return{id,name:pack.name,codes,mandatory:!!pack.mandatory,subgroups,order:pack.order||0};
   }).filter(group=>group.codes.length);
+  const documentCodes=allDocumentCodes().filter(code=>available.has(code));
+  if(documentCodes.length){const used=new Set(),subgroups=(LAW_CONFIG.documents?.groups||[]).map(group=>{const xs=(group.codes||[]).filter(code=>documentCodes.includes(code));xs.forEach(code=>used.add(code));return{id:group.id,name:group.name,codes:xs}}).filter(group=>group.codes.length),rest=documentCodes.filter(code=>!used.has(code));if(rest.length)subgroups.push({id:"documents-other",name:"Pozostałe",codes:rest});groups.push({id:"documents",name:LAW_CONFIG.documents?.name||"Dokumenty i wzory",codes:documentCodes,mandatory:false,subgroups,order:LAW_CONFIG.documents?.order||70})}
+  return groups.sort((a,b)=>a.order-b.order);
 }
-function packageList(){const laws=allActCodes(),pins=packages.pinned?.(laws)||laws;return laws.map(code=>{const info=manifestActInfo(code),loaded=DATA.find(act=>act[0]===code),meta=META[code]||[code,loaded?.[1]||code,""],cfg=LAW_CONFIG.acts?.[code]||{};return{code,name:meta[1],short:meta[0],enabled:packages.isEnabled(code),pinned:pins.includes(code),quickbarEligible:cfg.quickbarEligible!==false,articles:info?.articles??loaded?.[3]?.length??0,pack:info?.pack||null,subgroup:cfg.uiSubgroup||null,subgroupName:cfg.uiSubgroupName||null}})}
-function documentList(){return allDocumentCodes().map(code=>{const info=manifestActInfo(code),meta=META[code]||[code,code,""];return{code,name:meta[1],short:meta[0],rows:info?.rows||0,kind:"document"}})}
-function documentGroups(){const docs=new Set(allDocumentCodes()),used=new Set(),groups=(DOCUMENT_MANIFEST?.groups||LAW_CONFIG.documents?.groups||[]).map(group=>{const codes=(group.codes||[]).filter(code=>docs.has(code));codes.forEach(code=>used.add(code));return{id:group.id,name:group.name,codes}}).filter(group=>group.codes.length);const rest=[...docs].filter(code=>!used.has(code));if(rest.length)groups.push({id:"documents-other",name:"Pozostałe",codes:rest});return groups}
-function pinnedList(){const by=new Map(packageList().map(item=>[item.code,item]));return(packages.pinned?.(allActCodes())||[]).map(code=>by.get(code)).filter(Boolean)}
-globalThis.__POLICE_PACKAGES={list:packageList,groups:packageGroups,catalogGroups:packageGroups,documents:documentList,documentGroups,pinnedList,
-  async setEnabled(code,on){if(!allActCodes().includes(code))return false;if(!packages.setEnabled?.(code,on))return false;if(prebuiltSearchMode){await syncPackActivation(lawData.packForAct(code));if(searchState.active)await search()}else rebuildSearchIndex();return true},
-  async setGroup(codes,on){const laws=allActCodes();if(!codes.length||codes.some(code=>!laws.includes(code))||!packages.setMany?.(codes,on))return false;if(prebuiltSearchMode){const packsToSync=new Set(codes.map(code=>lawData.packForAct(code)).filter(Boolean));for(const packId of packsToSync)await syncPackActivation(packId);if(searchState.active)await search()}else rebuildSearchIndex();return true},
-  setPinned(code,on){const laws=allActCodes();if(!laws.includes(code)||!packages.setPinned?.(code,on,laws))return false;buildMenu();window.dispatchEvent(new CustomEvent("police-law-pins-change"));return true},
-  setPinnedOrder(codes){const laws=allActCodes(),current=packages.pinned?.(laws)||[];if(codes.length!==current.length||codes.some(code=>!current.includes(code))||!packages.setPinnedOrder?.(codes,laws))return false;const rest=packages.order?.(laws).filter(code=>!codes.includes(code))||laws.filter(code=>!codes.includes(code));packages.setOrder?.([...codes,...rest]);buildMenu();window.dispatchEvent(new CustomEvent("police-law-pins-change"));return true},
+function packageList(){return allActCodes().map(code=>{const info=manifestActInfo(code),loaded=DATA.find(act=>act[0]===code),meta=META[code]||[code,loaded?.[1]||code,""],cfg=LAW_CONFIG.acts?.[code]||{};return{code,name:meta[1],short:meta[0],enabled:packages.isEnabled(code),articles:info?.articles??info?.rows??loaded?.[3]?.length??0,pack:isDocumentCode(code)?"documents":info?.pack||cfg.pack||null,kind:cfg.kind||"law",subgroup:cfg.uiSubgroup||null,subgroupName:cfg.uiSubgroupName||null}})}
+function documentList(){return packageList().filter(item=>item.kind==="document")}
+function documentGroups(){return packageGroups().find(group=>group.id==="documents")?.subgroups||[]}
+globalThis.__POLICE_PACKAGES={list:packageList,groups:packageGroups,catalogGroups:packageGroups,documents:documentList,documentGroups,
+  async setEnabled(code,on){if(!allActCodes().includes(code))return false;if(!packages.setEnabled?.(code,on))return false;if(on&&temporaryActCode===code)temporaryActCode="";if(prebuiltSearchMode){await syncPackActivation(lawData.packForAct(code));if(searchState.active)await search()}else rebuildSearchIndex();buildMenu();paintSearchPills(searchState.active,searchState.counts);return true},
+  async setGroup(codes,on){const available=allActCodes();if(!codes.length||codes.some(code=>!available.includes(code))||!packages.setMany?.(codes,on))return false;if(on&&temporaryActCode&&codes.includes(temporaryActCode))temporaryActCode="";if(prebuiltSearchMode){const packsToSync=new Set(codes.map(code=>lawData.packForAct(code)).filter(Boolean));for(const packId of packsToSync)await syncPackActivation(packId);if(searchState.active)await search()}else rebuildSearchIndex();buildMenu();paintSearchPills(searchState.active,searchState.counts);return true},
   setOrder(codes){const available=allActCodes();if(!Array.isArray(codes)||codes.length!==available.length||new Set(codes).size!==available.length||codes.some(code=>!available.includes(code))||!packages.setOrder?.(codes))return false;sortLoadedData();buildMenu();clearSearchReturn();if(searchState.active)search();window.dispatchEvent(new CustomEvent("police-law-order-change"));return true}
 };
 function readerRows(){return globalThis.__POLICE_READER_ROWS?.(ACT)||ACT[3]}
@@ -546,6 +546,8 @@ function renderLoadedAct(code,target=null,scroll=true){
 async function renderAct(code,target=null,scroll=true){
   if(!hasAct(code))return false;
   if(!await ensureActLoaded(code))return false;
+  const nextTemporary=packages.isEnabled(code)?"":code,menuChanged=temporaryActCode!==nextTemporary;
+  temporaryActCode=nextTemporary;if(menuChanged){buildMenu();paintSearchPills(searchState.active,searchState.counts)}
   renderLoadedAct(code,target,scroll);pruneLoadedActs(code);return true;
 }
 function canonicalLegalId(id){
@@ -580,9 +582,9 @@ function beginEmptySearchQuickbarInteraction(event){
 document.addEventListener("pointerdown",beginEmptySearchQuickbarInteraction,{capture:true,passive:true});
 document.addEventListener("touchstart",beginEmptySearchQuickbarInteraction,{capture:true,passive:true});
 function buildMenu(){
-  quickbar.innerHTML="";actgrid.innerHTML="";const laws=allActCodes(),pins=new Set(packages.pinned?.(laws)||laws);
-  for(const code of laws){const info=manifestActInfo(code),loaded=DATA.find(A=>A[0]===code),m=META[code]||[code,loaded?.[1]||code,""],articles=info?.articles??loaded?.[3]?.length??0,cfg=LAW_CONFIG.acts?.[code]||{};
-    if(pins.has(code)&&cfg.quickbarEligible!==false){const qb=document.createElement("button");qb.dataset.act=code;const label=document.createElement("span"),badge=document.createElement("span");label.className="act-pill-label";label.textContent=m[0];badge.className="act-pill-count";badge.setAttribute("aria-hidden","true");qb.append(label,badge);qb.setAttribute("aria-label",`${m[0]} — ${m[1]}`);qb.onclick=()=>activateQuickbarAct(code);quickbar.appendChild(qb)}
+  quickbar.innerHTML="";actgrid.innerHTML="";const ordered=allActCodes(),visible=ordered.filter(code=>packages.isEnabled(code));if(temporaryActCode&&!visible.includes(temporaryActCode)&&ordered.includes(temporaryActCode))visible.push(temporaryActCode);
+  for(const code of ordered){const info=manifestActInfo(code),loaded=DATA.find(A=>A[0]===code),m=META[code]||[code,loaded?.[1]||code,""],articles=info?.articles??info?.rows??loaded?.[3]?.length??0;
+    if(visible.includes(code)){const qb=document.createElement("button");qb.dataset.act=code;if(code===temporaryActCode)qb.dataset.temporary="1";const label=document.createElement("span"),badge=document.createElement("span");label.className="act-pill-label";label.textContent=m[0];badge.className="act-pill-count";badge.setAttribute("aria-hidden","true");qb.append(label,badge);qb.setAttribute("aria-label",`${m[0]} — ${m[1]}${code===temporaryActCode?" · tymczasowo":""}`);qb.onclick=()=>activateQuickbarAct(code);quickbar.appendChild(qb)}
     const jump=document.createElement("button");jump.className="act-jump";jump.dataset.act=code;jump.innerHTML=`<b>${esc(m[0])}</b>${esc(m[1])}<small>${articles} artykułów/jednostek</small>`;jump.onclick=()=>renderAct(code);actgrid.appendChild(jump);
   }window.dispatchEvent(new CustomEvent("police-law-menu-built"));
 }
@@ -593,17 +595,16 @@ function searchMoreMarkup(group){const remaining=group.rows.length-group.shown;r
 function searchGroupMarkup(group){const meta=META[group.act]||[group.act,group.act,""];return `<section class="search-group" data-search-act="${esc(group.act)}" aria-labelledby="search-act-${esc(group.act)}"><div class="search-act-heading" id="search-act-${esc(group.act)}" tabindex="-1"><span><b>${esc(meta[0])}</b><small>${esc(meta[1])}</small></span><em>${group.rows.length}</em></div>${group.rows.slice(0,group.shown).map(row=>searchItemMarkup(row,group.act)).join("")}${searchMoreMarkup(group)}</section>`}
 function discoveryItemMarkup(entry){
   const id=entry[0],act=entry[1],packId=entry[2],heading=entry[3],title=entry[4],meta=META[act]||[act,act,""],pack=LAW_CONFIG.packs?.[packId]||LAW_MANIFEST?.packs?.[packId]||{};
-  const disabled=!packages.isEnabled(act),state=disabled?`pakiet „${pack.name||packId}” wyłączony · włącz i otwórz`:"poza bieżącym filtrem · otwórz";
+  const disabled=!packages.isEnabled(act),kind=isDocumentCode(act)?"dokument":"akt",state=disabled?`${kind} wyłączony · otwórz tymczasowo`:"poza bieżącym filtrem · otwórz";
   return `<a class="search-item search-discovery-item" href="#${esc(id)}" data-a="${esc(act)}" data-discovery="1"><b>${esc(heading)} · ${esc(title)}</b><small>${esc(meta[0])} — ${esc(meta[1])} · ${esc(state)}</small></a>`;
 }
 function discoveryMarkup(entries){
   if(!entries.length)return"";
   const limit=30,shown=entries.slice(0,limit),left=entries.length-shown.length;
-  return `<section class="search-group search-discovery" aria-label="Wyniki w pozostałej bazie"><div class="search-act-heading search-discovery-heading"><span><b>Także w pozostałej bazie</b><small>Akty wyłączone lub pominięte w bieżącym wyszukiwaniu</small></span><em>${entries.length}</em></div>${shown.map(discoveryItemMarkup).join("")}${left?`<div class="search-discovery-more">+${left} dalszych wyników</div>`:""}</section>`;
+  return `<section class="search-group search-discovery" aria-label="Wyniki w pozostałej bazie"><div class="search-act-heading search-discovery-heading"><span><b>Także w pozostałej bazie</b><small>Wyłączone akty i dokumenty — otwierane bez zmiany Twoich ustawień</small></span><em>${entries.length}</em></div>${shown.map(discoveryItemMarkup).join("")}${left?`<div class="search-discovery-more">+${left} dalszych wyników</div>`:""}</section>`;
 }
 function bindSearchResultLinks(root=results){root.querySelectorAll("a.search-item:not([data-search-bound])").forEach(a=>{a.dataset.searchBound="1";a.onclick=async e=>{
   e.preventDefault();const code=a.dataset.a,id=a.getAttribute("href").slice(1),favoriteResults=searchFavoritesOnly,isDiscovery=a.dataset.discovery==="1";
-  if(isDiscovery&&!packages.isEnabled(code))await globalThis.__POLICE_PACKAGES?.setEnabled?.(code,true);
   captureSearchReturn();closeSearch(true);q.blur();
   if(favoriteResults&&globalThis.__FAVORITES_OPEN_ALL)globalThis.__FAVORITES_OPEN_ALL(code,id);
   else{

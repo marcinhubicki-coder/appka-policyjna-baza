@@ -103,8 +103,8 @@
   }
   async function runSearch(){
     const value=query.value.trim();searchWrap.classList.toggle('has-value',!!value);
-    if(norm(value).length<2){resultsBox.hidden=true;resultList.replaceChildren();recentBox.hidden=!readRecent().length;return}
-    recentBox.hidden=true;resultsBox.hidden=false;resultList.hidden=true;showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam w całej bazie…';
+    if(norm(value).length<2){resultsBox.hidden=true;resultList.replaceChildren();if(suggestions)suggestions.closest('.launcher-suggestions').hidden=false;recentBox.hidden=!readRecent().length;return}
+    if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=true;resultsBox.hidden=false;resultList.hidden=true;showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam w całej bazie…';
     const stamp=value,items=await findResults(value);if(query.value.trim()!==stamp)return;renderResults(items,value);
   }
   function scheduleSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,110)}

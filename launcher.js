@@ -1,12 +1,13 @@
 (function(){
-  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader');
+  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),suggestions=document.getElementById('launcherSuggestions'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader');
   if(!shell||!query)return;
-  const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=10;
+  const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=10,SUGGESTIONS=['Legitymowanie','Zatrzymanie','Kontrola osobista','Przeszukanie','ŚPB','Nietrzeźwy','Przemoc domowa','Nieletni','Ruch drogowy','Narkotyki'];
   const QUICK_SECTIONS=[
     {id:'legitymowanie',label:'Podstawy legitymowania',items:[
-      {label:'UoP · art. 15',target:'uop-art-15',fallback:'legitymowanie'},
-      {label:'Rozp. · § 4',target:'upraw-par-4',fallback:'ustala tożsamość osoby legitymowanej'},
-      {label:'Rozp. · § 7',target:'upraw-par-7',fallback:'dokumentuje legitymowanie'}
+      {label:'UoP · art. 15 ust. 1 pkt 1',target:'uop-art-15-ust-1-pkt-1',fallback:'legitymowanie art 15 ust 1 pkt 1'},
+      {label:'PRD · art. 129 ust. 2 pkt 1',target:'prd-art-129-ust-2-pkt-1',fallback:'art 129 ust 2 pkt 1 policja ustalanie tożsamości'},
+      {label:'Cudzoziemcy · art. 289',target:'cudz-art-289',fallback:'cudzoziemcy art 289'},
+      {label:'Cudzoziemcy · art. 293',target:'cudz-art-293',fallback:'cudzoziemcy art 293'}
     ]},
     {id:'wykroczenia',label:'Częste wykroczenia',items:[
       {label:'Zakłócanie spokoju',target:'kw-art-51',fallback:'zakłócanie spokoju'},
@@ -31,9 +32,17 @@
       {label:'Rozbój',target:'kk-art-280',fallback:'rozbój'},
       {label:'Uszkodzenie mienia',target:'kk-art-288',fallback:'niszczy uszkadza cudzą rzecz'},
       {label:'Narkotyki',target:'nark-art-62',fallback:'posiadanie środków odurzających'}
+    ]},
+    {id:'prd',label:'Ruch drogowy · PRD',items:[
+      {label:'Prędkość · art. 20',target:'prd-art-20',fallback:'prd art 20 prędkość'},
+      {label:'Piesi · art. 26',target:'prd-art-26',fallback:'prd art 26 pieszy'},
+      {label:'Wypadek · art. 44',target:'prd-art-44',fallback:'prd art 44 wypadek'},
+      {label:'Zatrzymanie / postój · art. 46',target:'prd-art-46',fallback:'prd art 46 zatrzymanie postój'},
+      {label:'Zakazy postoju · art. 49',target:'prd-art-49',fallback:'prd art 49 zatrzymanie postój'},
+      {label:'Kontrola · art. 129',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
     ]}
   ];
-  let router=null,discovery=null,articleById=new Map(),actByCode=new Map(),loadPromise=null,searchTimer=0,opened=false,openSectionId='';
+  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),loadPromise=null,searchTimer=0,opened=false,openSectionId='';
   const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/ł/g,'l').replace(/\s+/g,' ').trim();
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function isDeepLink(){try{const h=decodeURIComponent(location.hash.slice(1));return !!h&&h!=='start'}catch(_){return false}}
@@ -53,12 +62,15 @@
       return '<section class="launcher-quick-section'+(open?' is-open':'')+'" data-quick-section="'+esc(section.id)+'"><button class="launcher-quick-toggle" type="button" aria-expanded="'+String(open)+'"><span>'+esc(section.label)+'</span><span class="launcher-quick-chevron" aria-hidden="true">›</span></button><div class="launcher-quick-body"'+(open?'':' hidden')+'><div class="launcher-quick-chips">'+section.items.map((item,index)=>'<button class="launcher-chip" type="button" data-quick-item="'+esc(section.id)+'" data-quick-index="'+index+'">'+esc(item.label)+'</button>').join('')+'</div></div></section>';
     }).join('');
   }
+  function renderSuggestions(){
+    if(!suggestions)return;suggestions.innerHTML=SUGGESTIONS.map(value=>'<button class="launcher-chip" type="button" data-suggestion="'+esc(value)+'">'+esc(value)+'</button>').join('');
+  }
   async function ensureData(){
     if(router&&discovery)return{router,discovery};if(loadPromise)return loadPromise;
     loadPromise=(async()=>{
       if(!globalThis.__LAW_DATA?.loadRouter||!globalThis.__LAW_DATA?.loadDiscovery)return null;
       const values=await Promise.all([globalThis.__LAW_DATA.loadRouter(),globalThis.__LAW_DATA.loadDiscovery()]);router=values[0];discovery=values[1];
-      articleById=new Map((router?.articles||[]).map(row=>[row[0],row]));actByCode=new Map((router?.acts||[]).map(row=>[row[0],row]));return{router,discovery};
+      articleById=new Map((router?.articles||[]).map(row=>[row[0],row]));idById=new Map((router?.ids||[]).map(row=>[row[0],row]));actByCode=new Map((router?.acts||[]).map(row=>[row[0],row]));return{router,discovery};
     })().catch(error=>{console.warn('Launcher search unavailable',error);return null}).finally(()=>{loadPromise=null});
     return loadPromise;
   }
@@ -111,18 +123,19 @@
     if(isOpen())return;opened=true;globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing');document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();renderQuickSections();if(focus)setTimeout(()=>query.focus(),80);
   }
   async function openTarget(id,actHint='',rememberLabel=''){
-    await ensureData();const meta=resultMeta(id),act=meta?.act||actHint;if(!meta&&rememberLabel){query.value=rememberLabel;searchWrap.classList.add('has-value');runSearch();return}
-    const label=rememberLabel||meta?.heading||id,sub=meta?.actName||act;if(meta)remember(id,act,meta.heading+(meta.title?' · '+meta.title:''),sub);
+    await ensureData();const meta=resultMeta(id),route=idById.get(id),act=meta?.act||route?.[1]||actHint;if(!act&&rememberLabel){query.value=rememberLabel;searchWrap.classList.add('has-value');runSearch();return}
+    const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{},label=rememberLabel||meta?.heading||id,sub=meta?.actName||cfg.name||act;if(act)remember(id,act,label,sub);
     globalThis.__POLICE_LAUNCHER_RETURN?.show?.();close();await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
   }
   async function openQuickItem(sectionId,index){
     const section=QUICK_SECTIONS.find(item=>item.id===sectionId),item=section?.items?.[Number(index)];if(!item)return;
-    await ensureData();if(articleById.has(item.target)){await openTarget(item.target,'',item.label);return}
+    await ensureData();if(idById.has(item.target)){await openTarget(item.target,'',item.label);return}
     query.value=item.fallback||item.label;searchWrap.classList.add('has-value');runSearch();query.focus();
   }
-  renderQuickSections();renderRecent();
+  renderQuickSections();renderSuggestions();renderRecent();
   query.addEventListener('input',scheduleSearch);
   clear.addEventListener('click',()=>{query.value='';runSearch();query.focus()});
+  suggestions?.addEventListener('click',event=>{const button=event.target.closest('[data-suggestion]');if(!button)return;query.value=button.dataset.suggestion;searchWrap.classList.add('has-value');runSearch();query.focus()});
   quickSections.addEventListener('click',event=>{
     const toggle=event.target.closest('.launcher-quick-toggle');if(toggle){const section=toggle.closest('[data-quick-section]'),id=section?.dataset.quickSection||'';openSectionId=openSectionId===id?'':id;renderQuickSections();return}
     const item=event.target.closest('[data-quick-item]');if(item)openQuickItem(item.dataset.quickItem,item.dataset.quickIndex);

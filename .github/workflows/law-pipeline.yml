@@ -28,6 +28,9 @@ on:
       - law-data-loader.js
       - sw.js
       - index.html
+      - nav.js
+      - launcher.css
+      - launcher.js
       - settings.js
       - .github/workflows/law-pipeline.yml
   workflow_dispatch:

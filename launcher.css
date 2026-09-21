@@ -1,0 +1,62 @@
+:root{--launcher-max:760px}
+html[data-launcher-skip="1"] .launcher-shell{display:none}
+body.launcher-open{overflow:hidden}
+.launcher-shell{position:fixed;inset:0;z-index:5000;overflow:auto;overscroll-behavior:contain;background:linear-gradient(180deg,#eef6fb 0,#f7fbfd 34%,#fff 72%);color:#163f5c;-webkit-overflow-scrolling:touch}
+.launcher-shell[hidden]{display:none!important}
+.launcher-panel{width:min(var(--launcher-max),100%);min-height:100%;margin:0 auto;padding:max(22px,env(safe-area-inset-top)) 22px calc(34px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+.launcher-top{display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.launcher-brand{font-size:14px;font-weight:800;letter-spacing:.01em;color:#2b6388}
+.launcher-reader{border:0;background:transparent;color:#2b6388;font:700 13px/1.2 inherit;padding:10px 4px;display:flex;gap:5px;align-items:center}
+.launcher-intro{padding-top:clamp(42px,11vh,105px);text-align:center}
+.launcher-intro h1{margin:0;font-size:clamp(34px,8vw,56px);line-height:1.02;letter-spacing:-.045em;color:#163f5c}
+.launcher-intro p{margin:12px auto 0;max-width:520px;font-size:14px;line-height:1.45;color:#708493}
+.launcher-search{position:relative;margin:28px auto 0;width:min(100%,650px)}
+.launcher-search-box{height:58px;border:1px solid #a9c7da;border-radius:29px;background:rgba(255,255,255,.92);box-shadow:0 10px 32px rgba(33,81,112,.10);display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.launcher-search-box:focus-within{border-color:#5e9bc1;box-shadow:0 12px 36px rgba(33,81,112,.16);transform:translateY(-1px)}
+.launcher-search-icon{width:20px;height:20px;margin-left:16px;fill:none;stroke:#527b96;stroke-width:2;stroke-linecap:round}
+#launcherQuery{min-width:0;border:0;outline:0;background:transparent;color:#173e59;font:500 18px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;padding:0 7px}
+#launcherQuery::placeholder{color:#92a3ae}
+.launcher-clear{width:36px;height:36px;border:0;border-radius:18px;background:transparent;color:#4c7f9f;font-size:25px;line-height:1;opacity:0;pointer-events:none;transition:opacity .15s ease}
+.launcher-search.has-value .launcher-clear{opacity:1;pointer-events:auto}
+.launcher-hint{min-height:20px;margin:9px 12px 0;text-align:left;color:#82939f;font-size:11px}
+.launcher-shortcuts,.launcher-recent,.launcher-results{width:min(100%,650px);margin-left:auto;margin-right:auto}
+.launcher-shortcuts{margin-top:28px}
+.launcher-section-title{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 10px}
+.launcher-section-title b{font-size:13px;color:#315e7c}.launcher-section-title small{font-size:10px;color:#8b9aa5}
+.launcher-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.launcher-chip{border:1px solid #bfd3e0;background:rgba(255,255,255,.82);color:#2a6389;border-radius:999px;padding:9px 13px;font:750 12px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 2px 8px rgba(46,90,120,.04)}
+.launcher-chip:active{transform:scale(.97)}
+.launcher-recent{margin-top:26px}
+.launcher-recent-list{display:grid;gap:7px}
+.launcher-recent-item{border:1px solid #d6e3eb;background:rgba(255,255,255,.72);border-radius:15px;padding:11px 13px;text-align:left;color:#234f6c;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.launcher-recent-item b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.launcher-recent-item small{display:block;margin-top:3px;color:#83939f;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.launcher-recent-item span{color:#6e91a9;font-size:18px}
+.launcher-results{margin-top:18px}
+.launcher-result-status{padding:18px 4px;text-align:center;color:#7c8f9c;font-size:12px}
+.launcher-result-list{display:grid;gap:8px}
+.launcher-result{border:1px solid #d2e2eb;background:rgba(255,255,255,.94);border-radius:17px;padding:13px 14px;text-align:left;color:#173f5c;box-shadow:0 3px 13px rgba(34,75,104,.045)}
+.launcher-result:active{transform:scale(.992)}
+.launcher-result-head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.launcher-result-head b{font-size:14px;line-height:1.28}.launcher-result-act{flex:0 0 auto;border-radius:999px;background:#edf5fa;color:#3c7397;padding:4px 7px;font-size:9px;font-weight:800}
+.launcher-result-title{display:block;margin-top:5px;color:#627886;font-size:11px;line-height:1.35}
+.launcher-result-preview{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:7px 0 0;color:#84939d;font-size:10.5px;line-height:1.38}
+.launcher-show-all{width:100%;margin-top:10px;height:46px;border:1px solid #a9c7da;border-radius:23px;background:#fff;color:#28678f;font:800 12px/1 inherit}
+.launcher-footer{margin:auto auto 0;padding-top:36px;text-align:center;color:#9aa8b1;font-size:9.5px}
+.launcher-shell.is-closing{pointer-events:none;animation:launcherFadeOut .18s ease forwards}
+.launcher-shell:not([hidden]) .launcher-panel{animation:launcherIn .24s cubic-bezier(.2,.75,.3,1) both}
+.drawer-launcher{width:100%;display:flex;align-items:center;gap:9px;border:1px solid #c5d9e5;background:#f5fafc;color:#245f84;border-radius:12px;padding:11px 12px;font:800 12px/1.2 inherit;text-align:left}
+.drawer-launcher svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2}
+@keyframes launcherIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes launcherFadeOut{to{opacity:0}}
+@media(max-width:520px){
+  .launcher-panel{padding-left:18px;padding-right:18px}
+  .launcher-intro{padding-top:clamp(32px,9vh,76px)}
+  .launcher-intro h1{font-size:40px}
+  .launcher-search{margin-top:24px}.launcher-search-box{height:56px}
+  #launcherQuery{font-size:17px}
+  .launcher-shortcuts{margin-top:24px}
+  .launcher-chips{justify-content:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+  .launcher-shell,.launcher-panel,.launcher-search-box,.launcher-chip,.launcher-result{animation:none!important;transition:none!important}
+}

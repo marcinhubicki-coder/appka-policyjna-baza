@@ -27,7 +27,7 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 .launcher-quick-body-inner{padding:2px 12px 12px}
 .launcher-quick-chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
 .launcher-quick-more,.launcher-chip{height:34px;min-height:34px;max-height:34px;box-sizing:border-box;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1}
-.launcher-quick-more{width:auto;max-width:100%;margin:0;padding:0 14px;border:1px solid #2f78a7;background:#2f78a7;color:#fff;font:800 10.5px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 5px 14px rgba(47,120,167,.15)}
+.launcher-quick-more{width:78px;min-width:78px;max-width:78px;margin:0;padding:0 10px;border:1px solid #2f78a7;background:#2f78a7;color:#fff;font:800 10.5px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 5px 14px rgba(47,120,167,.15)}
 .launcher-quick-more:active{transform:none;filter:brightness(.97)}
 .launcher-chip.is-more-item{animation:launcherQuickChipIn .34s cubic-bezier(.22,.68,.24,1) both;animation-delay:calc(var(--quick-in,0) * 26ms)}
 @keyframes launcherQuickChipIn{0%{opacity:0;transform:translateY(9px)}100%{opacity:1;transform:none}}
@@ -109,3 +109,5 @@ body.launcher-open :is(.drawer-scroll,.toc-grid,.search-results,.search-act-filt
 
 .launcher-shell.is-navigation-freeze{pointer-events:none!important;overflow:hidden!important;touch-action:none!important;overscroll-behavior:none!important}
 .launcher-shell.is-navigation-freeze,.launcher-shell.is-navigation-freeze *{animation-play-state:paused!important;transition:none!important;caret-color:transparent!important}
+
+.launcher-quick-more-break{flex:0 0 100%;width:100%;height:0;padding:0;margin:0;border:0;pointer-events:none}

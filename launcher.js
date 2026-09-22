@@ -107,9 +107,17 @@
     quickSections.innerHTML=QUICK_SECTIONS.map(section=>{
       const open=section.id===openSectionId,moreOpen=openMoreSectionIds.has(section.id),primary=section.items.map((item,index)=>quickChip(item,section.id,index)).join('');
       const expanded=moreOpen?(section.moreItems||[]).map((item,index)=>quickChip(item,section.id,section.items.length+index,index)).join(''):'';
-      const moreControl=section.moreItems?.length?'<button class="launcher-quick-more" type="button" data-quick-more="'+esc(section.id)+'" aria-expanded="'+String(moreOpen)+'">'+(moreOpen?'Schowaj':'Pokaż więcej')+' <span aria-hidden="true">'+(moreOpen?'⌃':'⌄')+'</span></button>':'';
-      return '<section class="launcher-quick-section'+(open?' is-open':'')+'" data-quick-section="'+esc(section.id)+'"><button class="launcher-quick-toggle" type="button" aria-expanded="'+String(open)+'"><span>'+esc(section.label)+'</span><span class="launcher-quick-chevron" aria-hidden="true">›</span></button><div class="launcher-quick-body"'+(open?'':' hidden')+'><div class="launcher-quick-chips">'+primary+expanded+moreControl+'</div></div></section>';
+      const moreControl=section.moreItems?.length?'<button class="launcher-quick-more" type="button" data-quick-more="'+esc(section.id)+'" aria-expanded="'+String(moreOpen)+'">'+(moreOpen?'Schowaj':'Pokaż więcej')+'</button>':'';
+      return '<section class="launcher-quick-section'+(open?' is-open':'')+'" data-quick-section="'+esc(section.id)+'"><button class="launcher-quick-toggle" type="button" aria-expanded="'+String(open)+'"><span>'+esc(section.label)+'</span><span class="launcher-quick-chevron" aria-hidden="true">›</span></button><div class="launcher-quick-body" aria-hidden="'+String(!open)+'"><div class="launcher-quick-body-inner"><div class="launcher-quick-chips">'+primary+expanded+moreControl+'</div></div></div></section>';
     }).join('');
+  }
+  function animateQuickSection(section,opening){
+    const body=section?.querySelector('.launcher-quick-body'),toggle=section?.querySelector('.launcher-quick-toggle');if(!body||!toggle)return;
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;body.getAnimations().forEach(animation=>animation.cancel());
+    const start=body.getBoundingClientRect().height;toggle.setAttribute('aria-expanded',String(opening));body.setAttribute('aria-hidden',String(!opening));
+    if(reduced){section.classList.toggle('is-open',opening);body.style.height=opening?'auto':'0px';body.style.opacity='';return}
+    if(opening){section.classList.add('is-open');body.style.height='auto';const end=body.scrollHeight;body.style.height=start+'px';const animation=body.animate([{height:start+'px',opacity:start?1:0},{height:end+'px',opacity:1}],{duration:360,easing:'cubic-bezier(.22,.68,.24,1)'});animation.onfinish=()=>{body.style.height='auto';body.style.opacity=''}}
+    else{body.style.height=start+'px';const animation=body.animate([{height:start+'px',opacity:1},{height:'0px',opacity:0}],{duration:320,easing:'cubic-bezier(.4,0,.22,1)'});animation.onfinish=()=>{section.classList.remove('is-open');body.style.height='0px';body.style.opacity=''}}
   }
   function renderSuggestions(){
     if(!suggestions)return;suggestions.innerHTML=SUGGESTIONS.map(value=>'<button class="launcher-chip" type="button" data-suggestion="'+esc(value)+'">'+esc(value)+'</button>').join('');
@@ -246,7 +254,13 @@
   clear.addEventListener('click',()=>{query.value='';runSearch();query.focus()});
   suggestions?.addEventListener('click',event=>{const button=event.target.closest('[data-suggestion]');if(!button)return;query.value=button.dataset.suggestion;searchWrap.classList.add('has-value');runSearch();query.focus()});
   quickSections.addEventListener('click',event=>{
-    const toggle=event.target.closest('.launcher-quick-toggle');if(toggle){const section=toggle.closest('[data-quick-section]'),id=section?.dataset.quickSection||'';openSectionId=openSectionId===id?'':id;renderQuickSections();return}
+    const toggle=event.target.closest('.launcher-quick-toggle');if(toggle){
+      const section=toggle.closest('[data-quick-section]'),id=section?.dataset.quickSection||'',opening=!section?.classList.contains('is-open');
+      if(!section)return;
+      if(opening){const previous=quickSections.querySelector('.launcher-quick-section.is-open');openSectionId=id;if(previous&&previous!==section)animateQuickSection(previous,false);animateQuickSection(section,true)}
+      else{openSectionId='';animateQuickSection(section,false)}
+      return
+    }
     const more=event.target.closest('[data-quick-more]');if(more){const id=more.dataset.quickMore;if(openMoreSectionIds.has(id))openMoreSectionIds.delete(id);else openMoreSectionIds.add(id);renderQuickSections();return}
     const item=event.target.closest('[data-quick-item]');if(item)openQuickItem(item.dataset.quickItem,item.dataset.quickIndex);
   });

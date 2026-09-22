@@ -273,16 +273,23 @@
       frame=requestAnimationFrame(tick);
     });
   }
-  function launcherSnapshot(){
-    const searchFocused=searchWrap?.matches?.(':focus-within'),clone=shell.cloneNode(true);clone.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));clone.removeAttribute('id');clone.classList.remove('is-parked','is-opening-from-fab','is-revealing-reader','is-search-mode');clone.classList.add('launcher-transition-snapshot');clone.setAttribute('aria-hidden','true');clone.style.clipPath='';clone.style.webkitClipPath='';clone.style.opacity='1';clone.style.visibility='visible';clone.style.pointerEvents='auto';clone.style.touchAction='none';if(searchFocused)clone.querySelector('.launcher-search-box')?.classList.add('is-snapshot-focused');clone.__launcherCapturedAt=performance.now();document.body.append(clone);clone.scrollTop=shell.scrollTop;void clone.offsetWidth;return clone;
-  }
-  function waitForFreezePaint(snapshot){
-    return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>{void snapshot?.offsetWidth;resolve()})));
-  }
   function beginNavigation(){
-    if(navigationBusy)return null;navigationBusy=true;return launcherSnapshot();
+    if(navigationBusy)return false;
+    navigationBusy=true;
+    shell.classList.add('is-navigation-freeze');
+    shell.setAttribute('aria-busy','true');
+    const opaque='linear-gradient(#000,#000)';
+    shell.style.webkitMaskImage=opaque;shell.style.maskImage=opaque;shell.style.webkitMaskRepeat='no-repeat';shell.style.maskRepeat='no-repeat';
+    return true;
   }
-  function endNavigation(){navigationBusy=false}
+  function waitForFreezePaint(){
+    return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>{void shell.offsetWidth;resolve()})));
+  }
+  function endNavigation(){
+    navigationBusy=false;
+    shell.classList.remove('is-navigation-freeze');
+    shell.removeAttribute('aria-busy');
+  }
   function ensureTransitionGlass(){
     if(transitionGlass?.isConnected)return transitionGlass;
     transitionGlass=document.createElement('div');transitionGlass.className='launcher-transition-glass';transitionGlass.setAttribute('aria-hidden','true');document.body.append(transitionGlass);return transitionGlass;
@@ -310,14 +317,14 @@
   function restoreLauncherView(){
     fabRevealAnimation?.cancel?.();fabRevealAnimation=null;clearExitMask();
     shell.hidden=false;
-    shell.classList.remove('is-closing','is-search-mode','is-opening-from-fab','is-revealing-reader');
+    shell.classList.remove('is-closing','is-search-mode','is-opening-from-fab','is-revealing-reader','is-navigation-freeze');
     shell.style.clipPath='';shell.style.webkitClipPath='';shell.style.opacity='';shell.style.transform='';
     shell.scrollTop=0;
   }
   function parkLauncher(){
     clearFabLaunch();fabRevealAnimation?.cancel?.();fabRevealAnimation=null;clearExitMask();
     shell.style.clipPath='';shell.style.webkitClipPath='';shell.style.opacity='';shell.style.transform='';
-    shell.classList.remove('is-closing','is-opening-from-fab','is-search-mode','is-revealing-reader');
+    shell.classList.remove('is-closing','is-opening-from-fab','is-search-mode','is-revealing-reader','is-navigation-freeze');
     shell.classList.add('is-parked');shell.setAttribute('aria-hidden','true');document.body.classList.remove('launcher-open');document.documentElement.classList.remove('launcher-open-root');
   }
   function close(animate=true){
@@ -346,25 +353,46 @@
     }
     history.replaceState(null,'','#start');if(focus)setTimeout(()=>query.focus(),80);
   }
-  async function openTarget(id,actHint='',rememberLabel='',origin=null,transitionSnapshot=null,fallbackQuery=''){
-    const snapshot=transitionSnapshot||launcherSnapshot();let finished=false;
+  async function openTarget(id,actHint='',rememberLabel='',origin=null,fallbackQuery=''){
+    let prepared=false,act='',label='',sub='';
     try{
-      await waitForFreezePaint(snapshot);
-      await ensureRouter();const meta=resultMeta(id),route=idById.get(id),act=meta?.act||route?.[1]||actHint;
-      if(!act){snapshot?.remove();finished=true;query.value=fallbackQuery||rememberLabel||id;searchWrap.classList.add('has-value');runSearch();query.focus();return}
-      const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{},label=rememberLabel||meta?.heading||id,sub=meta?.actName||cfg.name||act;if(act)remember(id,act,label,sub);
-      globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();query.blur();resultObserver?.disconnect?.();
-      opened=false;globalThis.__POLICE_LAUNCHER_BOOT=false;parkLauncher();freezeReader(false);
-      await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});await waitForTargetStable(id);freezeReader(true);
-      const captured=Number(snapshot?.__launcherCapturedAt)||0,hold=Math.max(0,90-(performance.now()-captured));if(hold)await new Promise(resolve=>setTimeout(resolve,hold));
-      await revealReader(origin,snapshot);snapshot.remove();finished=true;freezeReader(false);setTimeout(()=>setFabReady(true),35);
+      await waitForFreezePaint();
+      await ensureRouter();
+      const meta=resultMeta(id),route=idById.get(id);act=meta?.act||route?.[1]||actHint;
+      if(!act){
+        endNavigation();clearExitMask();query.value=fallbackQuery||rememberLabel||id;searchWrap.classList.add('has-value');runSearch();query.focus();return
+      }
+      const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{};label=rememberLabel||meta?.heading||id;sub=meta?.actName||cfg.name||act;
+      globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();resultObserver?.disconnect?.();
+      globalThis.__POLICE_LAUNCHER_BOOT=false;
+      document.body.classList.remove('launcher-open');
+      freezeReader(false);
+      await waitForApp();
+      await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
+      await waitForTargetStable(id);
+      freezeReader(true);
+      prepared=true;
+      await new Promise(resolve=>setTimeout(resolve,15));
+      await revealReader(origin,shell);
+      opened=false;
+      shell.classList.remove('is-navigation-freeze');
+      shell.removeAttribute('aria-busy');
+      parkLauncher();
+      freezeReader(false);
+      query.blur();
+      if(act)remember(id,act,label,sub);
+      setTimeout(()=>setFabReady(true),35);
     }finally{
-      if(!finished)snapshot?.remove?.();endNavigation();
+      if(!prepared&&navigationBusy){
+        document.body.classList.add('launcher-open');
+        freezeReader(true);
+      }
+      endNavigation();
     }
   }
-  function openQuickItem(sectionId,index,origin=null,transitionSnapshot=null){
-    const section=QUICK_SECTIONS.find(item=>item.id===sectionId),items=[...(section?.items||[]),...(section?.moreItems||[])],item=items[Number(index)];if(!item){transitionSnapshot?.remove();endNavigation();return}
-    openTarget(item.target,'',quickItemLabel(item),origin,transitionSnapshot,item.fallback);
+  function openQuickItem(sectionId,index,origin=null){
+    const section=QUICK_SECTIONS.find(item=>item.id===sectionId),items=[...(section?.items||[]),...(section?.moreItems||[])],item=items[Number(index)];if(!item){endNavigation();return}
+    openTarget(item.target,'',quickItemLabel(item),origin,item.fallback);
   }
   renderQuickSections();renderSuggestions();renderRecent();
   query.addEventListener('input',scheduleSearch);query.addEventListener('focus',()=>{positionSearchAtTop();setTimeout(positionSearchAtTop,180);setTimeout(positionSearchAtTop,420)});
@@ -379,10 +407,10 @@
       return
     }
     const more=event.target.closest('[data-quick-more]');if(more){animateQuickMore(more.dataset.quickMore);return}
-    const item=event.target.closest('[data-quick-item]');if(item){const snapshot=beginNavigation();if(snapshot)openQuickItem(item.dataset.quickItem,item.dataset.quickIndex,clickPoint(event,item),snapshot);}
+    const item=event.target.closest('[data-quick-item]');if(item&&beginNavigation())openQuickItem(item.dataset.quickItem,item.dataset.quickIndex,clickPoint(event,item));
   });
-  resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button){const snapshot=beginNavigation();if(snapshot)openTarget(button.dataset.result,button.dataset.act,'',clickPoint(event,button),snapshot)}});loadMore?.addEventListener('click',scanNextResultPage);
-  recentList.addEventListener('click',event=>{const button=event.target.closest('[data-recent]');if(!button)return;const item=readRecent().find(x=>x.id===button.dataset.recent);if(item){const snapshot=beginNavigation();if(snapshot)openTarget(item.id,item.act,item.label,clickPoint(event,button),snapshot)}});
+  resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button&&beginNavigation())openTarget(button.dataset.result,button.dataset.act,'',clickPoint(event,button))});loadMore?.addEventListener('click',scanNextResultPage);
+  recentList.addEventListener('click',event=>{const button=event.target.closest('[data-recent]');if(!button)return;const item=readRecent().find(x=>x.id===button.dataset.recent);if(item&&beginNavigation())openTarget(item.id,item.act,item.label,clickPoint(event,button))});
   showAll.addEventListener('click',fullSearch);readerButton.addEventListener('click',()=>close());fab?.addEventListener('click',()=>open({fromFab:true}));
   shell.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
   document.getElementById('home')?.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();globalThis.__POLICE_SEARCH_CLEAR?.();open()},{capture:true});

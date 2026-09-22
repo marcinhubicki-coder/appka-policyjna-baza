@@ -1,5 +1,5 @@
 :root{--launcher-max:760px}
-html[data-launcher-skip="1"] .launcher-shell{display:none}
+html[data-launcher-skip="1"] .launcher-shell:not(.is-runtime-open){display:none}
 body.launcher-open{overflow:hidden}
 .launcher-shell{position:fixed;inset:0;z-index:5000;overflow:auto;overscroll-behavior:contain;background:linear-gradient(180deg,#eef6fb 0,#f7fbfd 34%,#fff 72%);color:#163f5c;-webkit-overflow-scrolling:touch}
 .launcher-shell[hidden]{display:none!important}

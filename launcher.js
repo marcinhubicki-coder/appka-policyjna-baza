@@ -99,12 +99,16 @@
   }
   function quickArticleNumber(item){const match=String(item?.target||'').match(/-art-([0-9]+[a-z]?)/i);return match?.[1]||''}
   function quickItemLabel(item){return item?.label||''}
-  function quickChip(item,sectionId,index){return '<button class="launcher-chip" type="button" data-quick-item="'+esc(sectionId)+'" data-quick-index="'+index+'">'+esc(quickItemLabel(item))+'</button>'}
+  function quickChip(item,sectionId,index,moreIndex=-1){
+    const extra=moreIndex>=0?' is-more-item':'',style=moreIndex>=0?' style="--quick-in:'+moreIndex+'"':'';
+    return '<button class="launcher-chip'+extra+'" type="button" data-quick-item="'+esc(sectionId)+'" data-quick-index="'+index+'"'+style+'>'+esc(quickItemLabel(item))+'</button>'
+  }
   function renderQuickSections(){
     quickSections.innerHTML=QUICK_SECTIONS.map(section=>{
-      const open=section.id===openSectionId,moreOpen=openMoreSectionIds.has(section.id),primary=section.items.map((item,index)=>quickChip(item,section.id,index)).join(''),more=(section.moreItems||[]).map((item,index)=>quickChip(item,section.id,section.items.length+index)).join('');
-      const moreBlock=section.moreItems?.length?(moreOpen?'<div class="launcher-quick-more-body"><div class="launcher-quick-chips">'+more+'</div></div><button class="launcher-quick-more" type="button" data-quick-more="'+esc(section.id)+'" aria-expanded="true">Pokaż mniej <span aria-hidden="true">⌃</span></button>':'<button class="launcher-quick-more" type="button" data-quick-more="'+esc(section.id)+'" aria-expanded="false">Pokaż więcej <span aria-hidden="true">⌄</span></button>'):'';
-      return '<section class="launcher-quick-section'+(open?' is-open':'')+'" data-quick-section="'+esc(section.id)+'"><button class="launcher-quick-toggle" type="button" aria-expanded="'+String(open)+'"><span>'+esc(section.label)+'</span><span class="launcher-quick-chevron" aria-hidden="true">›</span></button><div class="launcher-quick-body"'+(open?'':' hidden')+'><div class="launcher-quick-chips">'+primary+'</div>'+moreBlock+'</div></section>';
+      const open=section.id===openSectionId,moreOpen=openMoreSectionIds.has(section.id),primary=section.items.map((item,index)=>quickChip(item,section.id,index)).join('');
+      const expanded=moreOpen?(section.moreItems||[]).map((item,index)=>quickChip(item,section.id,section.items.length+index,index)).join(''):'';
+      const moreControl=section.moreItems?.length?'<button class="launcher-quick-more" type="button" data-quick-more="'+esc(section.id)+'" aria-expanded="'+String(moreOpen)+'">'+(moreOpen?'Schowaj':'Pokaż więcej')+' <span aria-hidden="true">'+(moreOpen?'⌃':'⌄')+'</span></button>':'';
+      return '<section class="launcher-quick-section'+(open?' is-open':'')+'" data-quick-section="'+esc(section.id)+'"><button class="launcher-quick-toggle" type="button" aria-expanded="'+String(open)+'"><span>'+esc(section.label)+'</span><span class="launcher-quick-chevron" aria-hidden="true">›</span></button><div class="launcher-quick-body"'+(open?'':' hidden')+'><div class="launcher-quick-chips">'+primary+expanded+moreControl+'</div></div></section>';
     }).join('');
   }
   function renderSuggestions(){

@@ -44,8 +44,12 @@
     return;
   }
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    if(controlledAtStart){reloadReady=true;pending=false;state('update','Odśwież nową wersję','Aktualizacja została pobrana i jest gotowa','↻')}
-    else cacheAll();
+    if(controlledAtStart){
+      pending=false;
+      if(globalThis.__FAVORITES_HAS_UNSAVED?.()){reloadReady=true;state('update','Odśwież nową wersję','Zapisz edycję, a potem odśwież aplikację','↻');return}
+      state('working','Aktualizuję aplikację…','Wczytuję najnowszą wersję PWA','↻');
+      setTimeout(()=>location.reload(),80);
+    }else cacheAll();
   });
   window.addEventListener('online',()=>{if(ready)markReady()});
   window.addEventListener('offline',()=>{if(ready)markReady();else markError('Połącz się raz z internetem, aby pobrać bazę')});

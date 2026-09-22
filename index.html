@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<script>try{document.documentElement.dataset.readerTheme=localStorage.getItem('reader-dark')==='on'?'dark':'light';document.documentElement.classList.toggle('reader-highlights-off',localStorage.getItem('reader-highlights')==='off');const h=decodeURIComponent(location.hash.slice(1));if(h&&h!=='start')document.documentElement.dataset.launcherSkip='1'}catch(_){}</script>
+<script>try{document.documentElement.dataset.readerTheme=localStorage.getItem('reader-dark')==='on'?'dark':'light';document.documentElement.classList.toggle('reader-highlights-off',localStorage.getItem('reader-highlights')==='off');const standalone=window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true,h=decodeURIComponent(location.hash.slice(1));if(standalone)document.documentElement.dataset.pwaStandalone='1';if(h&&h!=='start'&&!standalone)document.documentElement.dataset.launcherSkip='1'}catch(_){}</script>
 <link href="app.css" rel="stylesheet">
 <link href="nav.css" rel="stylesheet">
 <link href="menu-hotfix.css" rel="stylesheet">
@@ -89,7 +89,7 @@
 </main>
 <div class="return" id="return"><button>← Wróć do odwołania</button></div>
 <div class="search-return" id="searchReturn"><button type="button">← Wróć do wyszukiwania</button></div>
-<script>globalThis.__POLICE_BOOT_AT=performance.now();globalThis.__POLICE_LAUNCHER_BOOT=document.documentElement.dataset.launcherSkip!=='1'</script>
+<script>globalThis.__POLICE_BOOT_AT=performance.now();globalThis.__POLICE_LAUNCHER_BOOT=document.documentElement.dataset.pwaStandalone==='1'||document.documentElement.dataset.launcherSkip!=='1'</script>
 <script src="law-config.js"></script>
 <script src="law-manifest.js"></script>
 <script src="document-manifest.js"></script>

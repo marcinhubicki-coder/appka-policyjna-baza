@@ -10,32 +10,32 @@
       {label:'Cudzoziemcy · A. 293',target:'cudz-art-293',fallback:'cudzoziemcy art 293'}
     ]},
     {id:'wykroczenia',label:'Częste wykroczenia',items:[
-      {label:'Zakłócanie spokoju',target:'kw-art-51',fallback:'kw art 51',autoTitle:true},
-      {label:'Wprowadzanie w błąd',target:'kw-art-65',fallback:'kw art 65',autoTitle:true},
-      {label:'A. 65a',target:'kw-art-65a',fallback:'kw art 65a',autoTitle:true},
-      {label:'A. 86',target:'kw-art-86',fallback:'kw art 86',autoTitle:true},
-      {label:'A. 87',target:'kw-art-87',fallback:'kw art 87',autoTitle:true},
-      {label:'A. 88',target:'kw-art-88',fallback:'kw art 88',autoTitle:true},
-      {label:'A. 92',target:'kw-art-92',fallback:'kw art 92',autoTitle:true},
-      {label:'A. 97',target:'kw-art-97',fallback:'kw art 97',autoTitle:true},
-      {label:'Kradzież',target:'kw-art-119',fallback:'kw art 119',autoTitle:true},
-      {label:'Uszkodzenie mienia',target:'kw-art-124',fallback:'kw art 124',autoTitle:true},
-      {label:'Nieobyczajny wybryk',target:'kw-art-140',fallback:'kw art 140',autoTitle:true},
-      {label:'Nieprzyzwoite słowa',target:'kw-art-141',fallback:'kw art 141',autoTitle:true},
-      {label:'Zaśmiecanie',target:'kw-art-145',fallback:'kw art 145',autoTitle:true}
+      {label:'Zakłócanie spokoju',target:'kw-art-51',fallback:'kw art 51'},
+      {label:'Wprowadzanie w błąd',target:'kw-art-65',fallback:'kw art 65'},
+      {label:'Niewykonanie polecenia',target:'kw-art-65a',fallback:'kw art 65a'},
+      {label:'Zagrożenie w ruchu',target:'kw-art-86',fallback:'kw art 86'},
+      {label:'Jazda po alkoholu',target:'kw-art-87',fallback:'kw art 87'},
+      {label:'Jazda bez oświetlenia',target:'kw-art-88',fallback:'kw art 88'},
+      {label:'Znaki i polecenia',target:'kw-art-92',fallback:'kw art 92'},
+      {label:'Inne przepisy ruchu',target:'kw-art-97',fallback:'kw art 97'},
+      {label:'Kradzież / przywłaszczenie',target:'kw-art-119',fallback:'kw art 119'},
+      {label:'Uszkodzenie rzeczy',target:'kw-art-124',fallback:'kw art 124'},
+      {label:'Nieobyczajny wybryk',target:'kw-art-140',fallback:'kw art 140'},
+      {label:'Nieprzyzwoite treści',target:'kw-art-141',fallback:'kw art 141'},
+      {label:'Zaśmiecanie',target:'kw-art-145',fallback:'kw art 145'}
     ],moreItems:[
-      {label:'A. 66',target:'kw-art-66',fallback:'kw art 66',autoTitle:true},
-      {label:'A. 66b',target:'kw-art-66b',fallback:'kw art 66b',autoTitle:true},
-      {label:'A. 72',target:'kw-art-72',fallback:'kw art 72',autoTitle:true},
-      {label:'A. 94',target:'kw-art-94',fallback:'kw art 94',autoTitle:true},
-      {label:'A. 95',target:'kw-art-95',fallback:'kw art 95',autoTitle:true},
-      {label:'A. 106',target:'kw-art-106',fallback:'kw art 106',autoTitle:true},
-      {label:'A. 107',target:'kw-art-107',fallback:'kw art 107',autoTitle:true},
-      {label:'A. 121',target:'kw-art-121',fallback:'kw art 121',autoTitle:true},
-      {label:'A. 122',target:'kw-art-122',fallback:'kw art 122',autoTitle:true},
-      {label:'A. 125',target:'kw-art-125',fallback:'kw art 125',autoTitle:true},
-      {label:'A. 143',target:'kw-art-143',fallback:'kw art 143',autoTitle:true},
-      {label:'A. 144',target:'kw-art-144',fallback:'kw art 144',autoTitle:true}
+      {label:'Fałszywy alarm',target:'kw-art-66',fallback:'kw art 66'},
+      {label:'Naruszenie nakazu / zakazu',target:'kw-art-66b',fallback:'kw art 66b'},
+      {label:'Brak zabezpieczenia miejsca',target:'kw-art-72',fallback:'kw art 72'},
+      {label:'Brak uprawnień',target:'kw-art-94',fallback:'kw art 94'},
+      {label:'Brak dokumentów',target:'kw-art-95',fallback:'kw art 95'},
+      {label:'Niewłaściwy nadzór',target:'kw-art-106',fallback:'kw art 106'},
+      {label:'Złośliwe niepokojenie',target:'kw-art-107',fallback:'kw art 107'},
+      {label:'Wyłudzenie świadczenia',target:'kw-art-121',fallback:'kw art 121'},
+      {label:'Paserstwo',target:'kw-art-122',fallback:'kw art 122'},
+      {label:'Znaleziona rzecz / zwierzę',target:'kw-art-125',fallback:'kw art 125'},
+      {label:'Urządzenia publiczne',target:'kw-art-143',fallback:'kw art 143'},
+      {label:'Niszczenie zieleni',target:'kw-art-144',fallback:'kw art 144'}
     ]},
     {id:'przestepstwa',label:'Częste przestępstwa',items:[
       {label:'Groźby karalne',target:'kk-art-190',fallback:'groźba karalna'},
@@ -59,7 +59,7 @@
       {label:'Kontrola · art. 129',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
     ]}
   ];
-  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='',resultObserver=null,fabFrame=0,searchSession=null,searchToken=0,openMoreSectionIds=new Set();
+  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='',resultObserver=null,fabFrame=0,searchSession=null,searchToken=0,openMoreSectionIds=new Set(),fabRevealAnimation=null;
   const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/ł/g,'l').replace(/\s+/g,' ').trim();
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function isDeepLink(){try{const h=decodeURIComponent(location.hash.slice(1));return !!h&&h!=='start'}catch(_){return false}}
@@ -74,14 +74,7 @@
     recentList.innerHTML=items.map(item=>'<button class="launcher-recent-item" type="button" data-recent="'+esc(item.id)+'"><span><b>'+esc(item.label||item.id)+'</b><small>'+esc(item.sub||item.act)+'</small></span><span>›</span></button>').join('');
   }
   function quickArticleNumber(item){const match=String(item?.target||'').match(/-art-([0-9]+[a-z]?)/i);return match?.[1]||''}
-  function quickItemLabel(item){
-    if(!item?.autoTitle)return item?.label||'';
-    const meta=resultMeta(item.target),number=quickArticleNumber(item),title=String(meta?.title||'').trim(),heading=String(meta?.heading||'').trim();
-    if(title)return title+(number?' · A. '+number:'');
-    if(item.label&&!/^A\.\s/i.test(item.label))return item.label+(number?' · A. '+number:'');
-    if(heading)return heading.replace(/^Art\.\s*/i,'A. ');
-    return item.label||(number?'A. '+number:item.target);
-  }
+  function quickItemLabel(item){return item?.label||''}
   function quickChip(item,sectionId,index){return '<button class="launcher-chip" type="button" data-quick-item="'+esc(sectionId)+'" data-quick-index="'+index+'">'+esc(quickItemLabel(item))+'</button>'}
   function renderQuickSections(){
     quickSections.innerHTML=QUICK_SECTIONS.map(section=>{
@@ -190,16 +183,25 @@
   }
   function close(animate=true){
     if(!isOpen())return;opened=false;globalThis.__POLICE_LAUNCHER_BOOT=false;resultObserver?.disconnect?.();document.body.classList.remove('launcher-open');shell.setAttribute('aria-hidden','true');shell.classList.remove('is-search-mode');
-    const finish=()=>{shell.hidden=true;shell.classList.remove('is-closing','is-opening-from-fab','is-fab-expanded');setTimeout(()=>setFabReady(true),35)};if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){shell.classList.add('is-closing');setTimeout(finish,190)}else finish();
+    const finish=()=>{fabRevealAnimation?.cancel?.();fabRevealAnimation=null;shell.hidden=true;shell.style.clipPath='';shell.style.webkitClipPath='';shell.classList.remove('is-closing','is-opening-from-fab','is-fab-expanded');setTimeout(()=>setFabReady(true),35)};if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){shell.classList.add('is-closing');setTimeout(finish,190)}else finish();
   }
   function open({focus=false,fromFab=false}={}){
-    if(isOpen())return;opened=true;delete document.documentElement.dataset.launcherSkip;shell.classList.add('is-runtime-open');setFabReady(false);globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing','is-search-mode','is-fab-expanded');shell.scrollTop=0;
-    if(fromFab&&fab){
-      const rect=fab.getBoundingClientRect();shell.style.setProperty('--launcher-origin-x',(rect.left+rect.width/2)+'px');shell.style.setProperty('--launcher-origin-y',(rect.top+rect.height/2)+'px');shell.classList.remove('is-opening-from-fab');void shell.offsetWidth;
-      const expanded=event=>{if(event.target!==shell||event.animationName!=='launcherCircleOpen')return;shell.classList.add('is-fab-expanded');shell.removeEventListener('animationend',expanded)};
-      shell.addEventListener('animationend',expanded);requestAnimationFrame(()=>shell.classList.add('is-opening-from-fab'));
+    if(isOpen())return;opened=true;delete document.documentElement.dataset.launcherSkip;shell.classList.add('is-runtime-open');setFabReady(false);globalThis.__POLICE_LAUNCHER_BOOT=true;
+    fabRevealAnimation?.cancel?.();fabRevealAnimation=null;shell.classList.remove('is-closing','is-search-mode','is-fab-expanded','is-opening-from-fab');shell.style.clipPath='';shell.style.webkitClipPath='';shell.scrollTop=0;
+    if(fromFab&&fab&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+      const rect=fab.getBoundingClientRect(),x=rect.left+rect.width/2,y=rect.top+rect.height/2,start='circle(0px at '+x+'px '+y+'px)',mid='circle(18vmax at '+x+'px '+y+'px)',end='circle(160vmax at '+x+'px '+y+'px)';
+      shell.style.setProperty('--launcher-origin-x',x+'px');shell.style.setProperty('--launcher-origin-y',y+'px');shell.style.clipPath=start;shell.style.webkitClipPath=start;shell.classList.add('is-opening-from-fab');
+      shell.hidden=false;shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        if(!isOpen())return;
+        fabRevealAnimation=shell.animate([{clipPath:start,offset:0,easing:'cubic-bezier(.58,0,.42,1)'},{clipPath:mid,offset:.46,easing:'cubic-bezier(.18,.66,.18,1)'},{clipPath:end,offset:1}],{duration:1600,easing:'linear',fill:'forwards'});
+        fabRevealAnimation.onfinish=()=>{fabRevealAnimation=null;shell.style.clipPath='none';shell.style.webkitClipPath='none';shell.classList.add('is-fab-expanded');shell.classList.remove('is-opening-from-fab')};
+        fabRevealAnimation.oncancel=()=>{fabRevealAnimation=null};
+      }));
+    }else{
+      shell.hidden=false;shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');
     }
-    document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();renderQuickSections();if(focus)setTimeout(()=>query.focus(),80);
+    history.replaceState(null,'','#start');renderRecent();renderQuickSections();if(focus)setTimeout(()=>query.focus(),80);
   }
   async function openTarget(id,actHint='',rememberLabel=''){
     await ensureRouter();const meta=resultMeta(id),route=idById.get(id),act=meta?.act||route?.[1]||actHint;if(!act&&rememberLabel){query.value=rememberLabel;searchWrap.classList.add('has-value');runSearch();return}

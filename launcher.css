@@ -76,21 +76,22 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 @media(prefers-reduced-motion:reduce){
   .launcher-shell,.launcher-panel,.launcher-search-box,.launcher-chip,.launcher-result,.launcher-quick-chevron,.launcher-fab,.launcher-fab-icon,.launcher-load-more{animation:none!important;transition:none!important}.launcher-shell.is-opening-from-fab{clip-path:none!important}.launcher-shell.is-opening-from-fab .launcher-panel>*{animation:none!important}
 }
-.launcher-fab{--launcher-fab-lift:0px;position:fixed;z-index:146;right:max(16px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom) + var(--launcher-fab-lift));width:64px;height:64px;display:grid;place-items:center;padding:0;border:1px solid rgba(82,143,184,.38);border-radius:50%;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(18px) saturate(1.18);backdrop-filter:blur(18px) saturate(1.18);box-shadow:0 10px 28px rgba(33,78,108,.16),inset 0 1px 0 rgba(255,255,255,.74);color:#2879af;opacity:0;transform:scale(.62);pointer-events:none;-webkit-tap-highlight-color:transparent;transition:bottom .28s cubic-bezier(.2,.7,.2,1),opacity .2s ease,transform .32s cubic-bezier(.22,.72,.2,1)}
+.launcher-fab{--launcher-fab-lift:0px;position:fixed;z-index:146;right:max(16px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom) + var(--launcher-fab-lift));width:64px;height:64px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;color:#2879af;opacity:0;transform:scale(.62);pointer-events:none;-webkit-tap-highlight-color:transparent;transition:bottom .28s cubic-bezier(.2,.7,.2,1),opacity .2s ease,transform .32s cubic-bezier(.22,.72,.2,1)}
+.launcher-fab::before{content:"";position:absolute;inset:0;border:1px solid rgba(82,143,184,.38);border-radius:50%;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(18px) saturate(1.18);backdrop-filter:blur(18px) saturate(1.18);box-shadow:0 10px 28px rgba(33,78,108,.16),inset 0 1px 0 rgba(255,255,255,.74);opacity:1;transform:scale(1);pointer-events:none;transition:opacity .15s cubic-bezier(.4,0,.2,1),transform .15s cubic-bezier(.4,0,.2,1)}
 .launcher-fab.is-ready{opacity:.94;transform:scale(1);pointer-events:auto}
 .launcher-fab:active{transform:scale(.92)}
-.launcher-fab-icon{width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:translateY(2px) scale(.76);transition:opacity .18s ease .11s,transform .3s cubic-bezier(.22,.72,.2,1) .09s}
+.launcher-fab-icon{position:relative;z-index:1;width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:translateY(2px) scale(.76);transition:opacity .18s ease .11s,transform .3s cubic-bezier(.22,.72,.2,1) .09s}
 .launcher-fab.is-ready .launcher-fab-icon{opacity:1;transform:none}
 .launcher-fab-shield .launcher-shield-outer{fill:rgba(40,121,175,.07);stroke-width:1.65}
 .launcher-fab-shield .launcher-shield-inner{fill:rgba(40,121,175,.035);stroke-width:1.35}
 .launcher-fab-shield .launcher-shield-bars{fill:none;stroke-width:.95;opacity:.46}
 body.launcher-open .launcher-fab,body.settings-open .launcher-fab,body.reader-toc-active .launcher-fab,body.favorite-editing .launcher-fab{opacity:0;transform:scale(.7);pointer-events:none}
 body.launcher-open .launcher-fab.is-launching{z-index:5004!important;opacity:.94!important;transform:scale(1)!important;pointer-events:none!important}
-.launcher-fab.is-launching{transition:background-color .24s cubic-bezier(.22,.61,.36,1),border-color .24s cubic-bezier(.22,.61,.36,1),box-shadow .24s cubic-bezier(.22,.61,.36,1)!important}
-.launcher-fab.is-launching .launcher-fab-icon{opacity:1!important;transform:none!important;transition:opacity .28s cubic-bezier(.22,.61,.36,1)!important}
-.launcher-fab.is-launching.is-circle-fading{background:rgba(255,255,255,0)!important;border-color:rgba(82,143,184,0)!important;box-shadow:0 10px 28px rgba(33,78,108,0),inset 0 1px 0 rgba(255,255,255,0)!important}
-.launcher-fab.is-launching.is-icon-fading .launcher-fab-icon{opacity:0!important}
-html[data-reader-theme="dark"] .launcher-fab{background:rgba(27,43,56,.76);border-color:rgba(128,185,224,.42);color:#8ec8ee;box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08)}
+.launcher-fab.is-launching .launcher-fab-icon{opacity:1!important;transform:none!important;transition:opacity .18s cubic-bezier(.4,0,.2,1),transform .18s cubic-bezier(.4,0,.2,1)!important}
+.launcher-fab.is-launching.is-circle-fading::before{opacity:0!important;transform:scale(.96)!important}
+.launcher-fab.is-launching.is-icon-fading .launcher-fab-icon{opacity:0!important;transform:translateY(6px) scale(.94)!important}
+html[data-reader-theme="dark"] .launcher-fab{color:#8ec8ee}
+html[data-reader-theme="dark"] .launcher-fab::before{background:rgba(27,43,56,.76);border-color:rgba(128,185,224,.42);box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08)}
 .launcher-shell.is-runtime-open .launcher-panel,.launcher-shell.is-opening-from-fab .launcher-panel{animation:none!important}
 .launcher-shell.is-opening-from-fab{will-change:clip-path}
 .launcher-shell.is-search-mode{scroll-padding-top:max(8px,env(safe-area-inset-top))}
@@ -110,8 +111,3 @@ body.launcher-open :is(.drawer-scroll,.toc-grid,.search-results,.search-act-filt
 .launcher-quick-extra-chips{padding-top:0}
 .launcher-shell.is-navigation-freeze{pointer-events:none!important;overflow:hidden!important;touch-action:none!important;overscroll-behavior:none!important}
 .launcher-shell.is-navigation-freeze,.launcher-shell.is-navigation-freeze *{animation-play-state:paused!important;transition:none!important;caret-color:transparent!important}
-
-html.launcher-view-transition::view-transition-group(root){animation:none!important}
-html.launcher-view-transition::view-transition-old(root){animation:none!important;mix-blend-mode:normal;z-index:1}
-html.launcher-view-transition::view-transition-new(root){mix-blend-mode:normal;z-index:2;animation:launcherReaderReveal .76s cubic-bezier(.3,.02,.18,1) both!important}
-@keyframes launcherReaderReveal{from{clip-path:circle(0px at var(--launcher-vt-x) var(--launcher-vt-y))}to{clip-path:circle(var(--launcher-vt-r) at var(--launcher-vt-x) var(--launcher-vt-y))}}

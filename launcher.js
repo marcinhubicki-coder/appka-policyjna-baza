@@ -236,7 +236,7 @@
   function beginFabLaunch(){
     if(!fab)return;clearFabLaunch();fab.classList.add('is-ready','is-launching');fab.tabIndex=-1;fab.setAttribute('aria-hidden','true');
     fabCircleFadeTimer=setTimeout(()=>fab?.classList.add('is-circle-fading'),300);
-    fabIconFadeTimer=setTimeout(()=>fab?.classList.add('is-icon-fading'),500);
+    fabIconFadeTimer=setTimeout(()=>fab?.classList.add('is-icon-fading'),450);
   }
   function setFabReady(ready){
     if(!fab)return;if(ready)clearFabLaunch();fab.classList.toggle('is-ready',!!ready);fab.tabIndex=ready?0:-1;fab.setAttribute('aria-hidden',String(!ready));if(ready)scheduleFabPosition();
@@ -284,6 +284,19 @@
   function waitForFreezePaint(){
     return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>{void shell.offsetWidth;resolve()})));
   }
+  async function prepareReaderUnderLauncher(id){
+    await waitForApp();
+    // First pass may load/render a different act. Reader stays locked, so its
+    // attempted jump cannot move the visible page.
+    await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
+    // Now the target exists. Reposition in the same task between unlock/relock,
+    // while the unchanged launcher still covers the viewport.
+    globalThis.__READER_STATE?.lock?.('launcher',false);
+    await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
+    globalThis.__READER_STATE?.lock?.('launcher',true);
+    document.documentElement.classList.add('launcher-open-root');
+    await waitForTargetStable(id);
+  }
   function endNavigation(){
     navigationBusy=false;
     shell.classList.remove('is-navigation-freeze');
@@ -312,34 +325,6 @@
       function tick(now){const t=Math.min(1,(now-started)/duration),smooth=t*t*(3-2*t),ease=t*.34+smooth*.66;paint(radius*ease);if(t<1)exitRevealFrame=requestAnimationFrame(tick);else{exitRevealFrame=0;glass.classList.remove('is-visible');resolve()}}
       exitRevealFrame=requestAnimationFrame(tick);
     });
-  }
-  async function runReaderViewTransition(id,actHint,rememberLabel,origin,fallbackQuery){
-    if(typeof document.startViewTransition!=='function'||matchMedia('(prefers-reduced-motion: reduce)').matches)return false;
-    const x=Math.max(0,Math.min(innerWidth,origin?.x??innerWidth/2)),y=Math.max(0,Math.min(innerHeight,origin?.y??innerHeight/2)),maxX=Math.max(x,innerWidth-x),maxY=Math.max(y,innerHeight-y),radius=Math.ceil(Math.hypot(maxX,maxY)+48);
-    const root=document.documentElement;root.style.setProperty('--launcher-vt-x',x+'px');root.style.setProperty('--launcher-vt-y',y+'px');root.style.setProperty('--launcher-vt-r',radius+'px');root.classList.add('launcher-view-transition');
-    let act='',label='',sub='',fallback=false,failed=false;
-    const transition=document.startViewTransition(async()=>{
-      try{
-        await ensureRouter();
-        const meta=resultMeta(id),route=idById.get(id);act=meta?.act||route?.[1]||actHint;
-        if(!act){fallback=true;return}
-        const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{};label=rememberLabel||meta?.heading||id;sub=meta?.actName||cfg.name||act;
-        globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();resultObserver?.disconnect?.();globalThis.__POLICE_LAUNCHER_BOOT=false;
-        opened=false;parkLauncher();freezeReader(false);
-        await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});await waitForTargetStable(id);
-      }catch(error){failed=true;throw error}
-    });
-    try{
-      await transition.updateCallbackDone;
-      if(fallback){transition.skipTransition?.();restoreLauncherView();opened=true;freezeReader(true);query.value=fallbackQuery||rememberLabel||id;searchWrap.classList.add('has-value');runSearch();query.focus();return true}
-      await transition.finished;
-      query.blur();if(act)remember(id,act,label,sub);setTimeout(()=>setFabReady(true),35);return true;
-    }catch(_){
-      if(failed){restoreLauncherView();opened=true;document.body.classList.add('launcher-open');freezeReader(true)}
-      return false;
-    }finally{
-      root.classList.remove('launcher-view-transition');root.style.removeProperty('--launcher-vt-x');root.style.removeProperty('--launcher-vt-y');root.style.removeProperty('--launcher-vt-r');
-    }
   }
   function restoreLauncherView(){
     fabRevealAnimation?.cancel?.();fabRevealAnimation=null;clearExitMask();
@@ -384,7 +369,6 @@
     let prepared=false,act='',label='',sub='';
     try{
       await waitForFreezePaint();
-      if(await runReaderViewTransition(id,actHint,rememberLabel,origin,fallbackQuery)){prepared=true;return}
       await ensureRouter();
       const meta=resultMeta(id),route=idById.get(id);act=meta?.act||route?.[1]||actHint;
       if(!act){
@@ -392,12 +376,16 @@
       }
       const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{};label=rememberLabel||meta?.heading||id;sub=meta?.actName||cfg.name||act;
       globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();resultObserver?.disconnect?.();globalThis.__POLICE_LAUNCHER_BOOT=false;
-      freezeReader(false);
-      await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});await waitForTargetStable(id);freezeReader(true);
+      await prepareReaderUnderLauncher(id);
       prepared=true;
       await new Promise(resolve=>setTimeout(resolve,15));
       await revealReader(origin,shell);
-      opened=false;parkLauncher();freezeReader(false);query.blur();if(act)remember(id,act,label,sub);setTimeout(()=>setFabReady(true),35);
+      opened=false;
+      parkLauncher();
+      freezeReader(false);
+      query.blur();
+      if(act)remember(id,act,label,sub);
+      setTimeout(()=>setFabReady(true),35);
     }finally{
       if(!prepared&&navigationBusy){clearExitMask();document.body.classList.add('launcher-open');freezeReader(true)}
       endNavigation();

@@ -210,23 +210,47 @@
     document.documentElement.toggleAttribute('data-launcher-open',active);
     if(active)document.documentElement.dataset.launcherOpen='1';
     const theme=document.querySelector('meta[name="theme-color"]');
-    if(theme)theme.content=active?'#eef6fb':getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#ffffff';
+    if(theme)theme.content=active?'#ffffff':getComputedStyle(document.documentElement).getPropertyValue('--card').trim()||'#ffffff';
   }
   function cancelMotion(){
     transitionVersion++;
-    motion.forEach(animation=>animation.cancel());motion=[];
+    motion.forEach(animation=>animation.cancel());motion=[];shell.classList.remove('is-opening-from-fab');
   }
-  function animateSurface(opening){
+  function animateSurface(opening,origin){
     if(matchMedia('(prefers-reduced-motion: reduce)').matches||!shell.animate)return;
-    const options={duration:opening?420:220,easing:'cubic-bezier(.22,.72,.2,1)'};
-    motion=[shell.animate(opening?[{opacity:0},{opacity:1}]:[{opacity:1},{opacity:0}],options)];
-    if(opening)motion.push(panel.animate([{opacity:0,transform:'translateY(16px) scale(.985)'},{opacity:1,transform:'none'}],options));
+    if(opening&&origin){
+      const x=origin.x,y=origin.y,w=shell.clientWidth,h=shell.clientHeight;
+      const radius=Math.hypot(Math.max(x,w-x),Math.max(y,h-y))+4;
+      const circle=r=>'circle('+r+'px at '+x+'px '+y+'px)';
+      shell.classList.add('is-opening-from-fab');
+      motion=[shell.animate([
+        {clipPath:circle(0),offset:0,easing:'cubic-bezier(.58,0,.42,1)'},
+        {clipPath:circle(Math.max(w,h)*.18),offset:.46,easing:'cubic-bezier(.18,.66,.18,1)'},
+        {clipPath:circle(radius),offset:1}
+      ],{duration:1600,easing:'linear'})];
+      const rim=shell.querySelector('.launcher-reveal-rim');
+      if(rim){
+        rim.style.left=(x-160)+'px';rim.style.top=(y-160)+'px';
+        motion.push(rim.animate([
+          {transform:'scale(0)',opacity:.6,offset:0,easing:'cubic-bezier(.58,0,.42,1)'},
+          {transform:'scale('+(Math.max(w,h)*.18/160)+')',opacity:.6,offset:.46,easing:'cubic-bezier(.18,.66,.18,1)'},
+          {transform:'scale('+(radius/160)+')',opacity:0,offset:1}
+        ],{duration:1600,easing:'linear'}));
+      }
+      Array.from(panel.children).forEach((child,index)=>{
+        if(child.hidden)return;
+        motion.push(child.animate([{opacity:0,transform:'translateY(-24px) scale(.992)'},{opacity:1,transform:'none'}],
+          {duration:780,delay:240+Math.min(index,5)*80,easing:'cubic-bezier(.22,.62,.24,1)',fill:'backwards'}));
+      });
+    }else{
+      motion=[shell.animate([{opacity:1},{opacity:0}],{duration:220,easing:'cubic-bezier(.22,.72,.2,1)'})];
+    }
     // No forwards-filled animations: they leave WebKit compositing boundaries alive.
     const version=transitionVersion;
     const finished=Promise.all(motion.map(animation=>animation.finished));
     finished.then(()=>{
       if(version!==transitionVersion)return;
-      motion.forEach(animation=>animation.cancel());motion=[];
+      motion.forEach(animation=>animation.cancel());motion=[];shell.classList.remove('is-opening-from-fab');
     }).catch(()=>{});
     return finished;
   }
@@ -246,11 +270,13 @@
     if(isOpen())return;cancelMotion();opened=true;delete document.documentElement.dataset.launcherSkip;
     shell.classList.add('is-runtime-open');shell.classList.remove('is-closing','is-search-mode');
     if(document.activeElement instanceof HTMLElement)document.activeElement.blur();
+    const rect=fromFab&&fab?fab.getBoundingClientRect():null;
+    const origin=rect?{x:rect.left+rect.width/2,y:rect.top+rect.height/2}:null;
     setFabReady(false);globalThis.__POLICE_LAUNCHER_BOOT=true;syncCanvas(true);
     shell.hidden=false;shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');
     // Reset after display is restored; scrolling a hidden element is ignored by WebKit.
-    scroller.scrollTop=0;
-    if(fromFab)animateSurface(true);
+    scroller.scrollTop=0;shell.classList.remove('is-scrolled');
+    if(fromFab)animateSurface(true,origin);
     history.replaceState(null,'','#start');renderRecent();renderQuickSections();
     if(searchSession&&!searchSession.done)observeResultMore();
     if(focus)query.focus({preventScroll:true});
@@ -265,6 +291,7 @@
     await ensureRouter();if(idById.has(item.target)){await openTarget(item.target,'',quickItemLabel(item));return}
     query.value=item.fallback||item.label;searchWrap.classList.add('has-value');runSearch();query.focus();
   }
+  scroller.addEventListener('scroll',()=>shell.classList.toggle('is-scrolled',scroller.scrollTop>2),{passive:true});
   renderQuickSections();renderSuggestions();renderRecent();
   query.addEventListener('input',scheduleSearch);query.addEventListener('focus',()=>{positionSearchAtTop();setTimeout(positionSearchAtTop,180);setTimeout(positionSearchAtTop,420)});
   clear.addEventListener('click',()=>{query.value='';runSearch();query.focus()});

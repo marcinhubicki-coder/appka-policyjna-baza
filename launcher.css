@@ -1,12 +1,17 @@
-:root{--launcher-max:760px;--launcher-top-bg:#eef6fb}
+:root{--launcher-max:760px;--launcher-top-bg:#eef6fb;--launcher-edge-bg:#fff}
 html[data-launcher-skip="1"] .launcher-shell:not(.is-runtime-open){display:none}
 /* One opaque canvas owns both boot and return; only its contents scroll. */
-html[data-launcher-open="1"],html[data-launcher-open="1"] body{background:var(--launcher-top-bg)!important;overscroll-behavior:none}
+html[data-launcher-open="1"],html[data-launcher-open="1"] body{background:var(--launcher-edge-bg)!important;overscroll-behavior:none}
 body.launcher-open{overflow:hidden!important}
-.launcher-shell{position:fixed!important;inset:0!important;z-index:5000!important;overflow:hidden;background:var(--launcher-top-bg);color:#163f5c;isolation:isolate}
-.launcher-shell::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,var(--launcher-top-bg) 0%,var(--launcher-top-bg) 50%,#f7fbfd 76%,#fff 100%)}
+.launcher-shell{position:fixed!important;inset:0!important;z-index:5000!important;overflow:hidden;background:var(--launcher-edge-bg);color:#163f5c;isolation:isolate}
+.launcher-shell::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,var(--launcher-edge-bg) 0px,var(--launcher-edge-bg) env(safe-area-inset-top),var(--launcher-top-bg) calc(env(safe-area-inset-top) + 150px),var(--launcher-top-bg) 55%,#f7fbfd 76%,#fff 100%)}
 /* Blur launcher content at the edge, never the reader underneath the canvas. */
-.launcher-shell::after{content:"";position:absolute;inset:0 0 auto;height:calc(env(safe-area-inset-top) + 30px);z-index:2;pointer-events:none;background:linear-gradient(var(--launcher-top-bg),rgba(238,246,251,.2));-webkit-backdrop-filter:blur(18px) saturate(1.08);backdrop-filter:blur(18px) saturate(1.08);-webkit-mask-image:linear-gradient(#000 0%,#000 35%,transparent 100%);mask-image:linear-gradient(#000 0%,#000 35%,transparent 100%)}
+.launcher-shell::after{content:"";position:absolute;inset:0 0 auto;height:calc(env(safe-area-inset-top) + 30px);z-index:2;pointer-events:none;opacity:0;transition:opacity .16s ease;background:linear-gradient(#fff,rgba(255,255,255,.2));-webkit-backdrop-filter:blur(18px) saturate(1.08);backdrop-filter:blur(18px) saturate(1.08);-webkit-mask-image:linear-gradient(#000 0%,#000 35%,transparent 100%);mask-image:linear-gradient(#000 0%,#000 35%,transparent 100%)}
+.launcher-shell.is-scrolled::after{opacity:1}
+.launcher-shell.is-opening-from-fab{will-change:clip-path}
+/* A small, cached shadow scales with the reveal; its blur is never animated. */
+.launcher-reveal-rim{display:none;position:absolute;width:320px;height:320px;border-radius:50%;z-index:3;pointer-events:none;box-shadow:inset 0 0 14px 2px rgba(28,70,97,.14)}
+.launcher-shell.is-opening-from-fab .launcher-reveal-rim{display:block;will-change:transform,opacity}
 .launcher-shell[hidden]{display:none!important}
 .launcher-scroll{position:absolute;inset:0;z-index:1;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scroll-padding-top:calc(env(safe-area-inset-top) + 18px)}
 .launcher-panel{position:relative;width:min(var(--launcher-max),100%);min-height:100%;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 22px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
@@ -68,7 +73,7 @@ body.launcher-open{overflow:hidden!important}
   .launcher-search{margin-top:15px}.launcher-search-box{height:55px}
   #launcherQuery{font-size:17px}
 }
-.launcher-fab{--launcher-fab-lift:0px;position:fixed;z-index:146;right:max(16px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom) + var(--launcher-fab-lift));width:64px;height:64px;display:grid;place-items:center;padding:0;border:1px solid rgba(82,143,184,.38);border-radius:50%;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(18px) saturate(1.18);backdrop-filter:blur(18px) saturate(1.18);box-shadow:0 10px 28px rgba(33,78,108,.16),inset 0 1px 0 rgba(255,255,255,.74);color:#2879af;opacity:0;transform:translateY(12px) scale(.88);pointer-events:none;-webkit-tap-highlight-color:transparent;transition:bottom .28s cubic-bezier(.2,.7,.2,1),opacity .2s ease,transform .32s cubic-bezier(.22,.72,.2,1)}
+.launcher-fab{--launcher-fab-lift:0px;position:fixed;z-index:146;right:max(16px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom) + var(--launcher-fab-lift));width:64px;height:64px;display:grid;place-items:center;padding:0;border:1px solid rgba(82,143,184,.38);border-radius:50%;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(18px) saturate(1.18);backdrop-filter:blur(18px) saturate(1.18);box-shadow:0 10px 28px rgba(33,78,108,.16),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -4px 12px rgba(33,78,108,.075);color:#2879af;opacity:0;transform:translateY(12px) scale(.88);pointer-events:none;-webkit-tap-highlight-color:transparent;transition:bottom .28s cubic-bezier(.2,.7,.2,1),opacity .2s ease,transform .32s cubic-bezier(.22,.72,.2,1)}
 .launcher-fab.is-ready{opacity:1;transform:none;pointer-events:auto}
 .launcher-fab:active{transform:scale(.92)}
 .launcher-fab-icon{width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:translateY(2px) scale(.94);transition:opacity .18s ease .11s,transform .3s cubic-bezier(.22,.72,.2,1) .09s}
@@ -81,5 +86,5 @@ html[data-reader-theme="dark"] .launcher-fab{background:rgba(27,43,56,.76);borde
 .launcher-shell.is-search-mode .launcher-search{position:sticky;top:calc(env(safe-area-inset-top) + 8px);z-index:8;padding:5px 0 9px;background:transparent}
 .launcher-shell.is-search-mode .launcher-search-box{box-shadow:0 10px 30px rgba(33,81,112,.14)}
 @media(prefers-reduced-motion:reduce){
-  .launcher-shell,.launcher-panel,.launcher-search-box,.launcher-chip,.launcher-result,.launcher-quick-chevron,.launcher-fab,.launcher-fab-icon,.launcher-load-more{animation:none!important;transition:none!important}
+  .launcher-shell,.launcher-shell::after,.launcher-panel,.launcher-search-box,.launcher-chip,.launcher-result,.launcher-quick-chevron,.launcher-fab,.launcher-fab-icon,.launcher-load-more{animation:none!important;transition:none!important}
 }

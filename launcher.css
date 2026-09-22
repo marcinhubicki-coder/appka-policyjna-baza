@@ -83,9 +83,9 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 .launcher-fab.is-ready .launcher-fab-icon{opacity:1;transform:none}
 .launcher-fab-shield .launcher-shield-outer{fill:rgba(40,121,175,.07);stroke-width:1.65}
 .launcher-fab-shield .launcher-shield-inner{fill:rgba(40,121,175,.035);stroke-width:1.35}
-.launcher-fab-shield .launcher-shield-bars{fill:none;stroke-width:2}
+.launcher-fab-shield .launcher-shield-bars{fill:none;stroke-width:1.15;opacity:.58}
 body.launcher-open .launcher-fab,body.settings-open .launcher-fab,body.reader-toc-active .launcher-fab,body.favorite-editing .launcher-fab{opacity:0;transform:scale(.7);pointer-events:none}
-body.launcher-open .launcher-fab.is-launching{opacity:.94!important;transform:scale(1)!important;pointer-events:none!important}
+body.launcher-open .launcher-fab.is-launching{z-index:5004!important;opacity:.94!important;transform:scale(1)!important;pointer-events:none!important}
 .launcher-fab.is-launching .launcher-fab-icon{opacity:1!important;transform:none!important;transition:opacity .3s ease!important}
 .launcher-fab.is-launching.is-icon-fading .launcher-fab-icon{opacity:0!important}
 html[data-reader-theme="dark"] .launcher-fab{background:rgba(27,43,56,.76);border-color:rgba(128,185,224,.42);color:#8ec8ee;box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08)}
@@ -106,7 +106,7 @@ body.launcher-open :is(.drawer-scroll,.toc-grid,.search-results,.search-act-filt
 
 .launcher-quick-extra-pack{flex:0 0 100%;width:100%;overflow:hidden}
 .launcher-quick-extra-chips{padding-top:0}
-.launcher-transition-snapshot{z-index:6000!important;visibility:visible!important;opacity:1!important;pointer-events:none!important;overscroll-behavior:none!important}
+.launcher-transition-snapshot{z-index:6000!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;touch-action:none!important;overscroll-behavior:none!important}
 .launcher-transition-snapshot .launcher-panel{opacity:1!important}
 
 .launcher-transition-snapshot,.launcher-transition-snapshot *{animation:none!important;transition:none!important;caret-color:transparent!important}

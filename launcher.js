@@ -1,5 +1,5 @@
 (function(){
-  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),suggestions=document.getElementById('launcherSuggestions'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader');
+  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),suggestions=document.getElementById('launcherSuggestions'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),loadMore=document.getElementById('launcherLoadMore'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader'),fab=document.getElementById('launcherFab');
   if(!shell||!query)return;
   const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=10,SUGGESTIONS=['Legitymowanie','Zatrzymanie','Kontrola osobista','Przeszukanie','ŚPB','Nietrzeźwy','Przemoc domowa','Nieletni','Ruch drogowy','Narkotyki'];
   const QUICK_SECTIONS=[
@@ -42,7 +42,7 @@
       {label:'Kontrola · art. 129',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
     ]}
   ];
-  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='';
+  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='',resultItems=[],resultCursor=0,resultObserver=null,fabFrame=0;
   const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/ł/g,'l').replace(/\s+/g,' ').trim();
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function isDeepLink(){try{const h=decodeURIComponent(location.hash.slice(1));return !!h&&h!=='start'}catch(_){return false}}
@@ -103,18 +103,30 @@
       const meta=resultMeta(row[0]);if(!meta)continue;const hay=(String(row[1]||'')+' '+norm(meta.heading+' '+meta.title+' '+meta.short+' '+meta.actName+' '+(row[2]||'')));
       if(!terms.every(term=>hay.includes(term)))continue;matches.push({row,meta,score:scoreResult(row,meta,needle,terms)});
     }
-    matches.sort((a,b)=>b.score-a.score||a.meta.act.localeCompare(b.meta.act)||a.meta.id.localeCompare(b.meta.id));return matches.slice(0,MAX_RESULTS);
+    matches.sort((a,b)=>b.score-a.score||a.meta.act.localeCompare(b.meta.act)||a.meta.id.localeCompare(b.meta.id));return matches;
+  }
+  function resultMarkup({row,meta}){return '<button class="launcher-result" type="button" data-result="'+esc(meta.id)+'" data-act="'+esc(meta.act)+'"><span class="launcher-result-head"><b>'+esc(meta.heading+(meta.title?' · '+meta.title:''))+'</b><span class="launcher-result-act">'+esc(meta.short)+'</span></span><span class="launcher-result-title">'+esc(meta.actName)+'</span>'+(row[2]?'<span class="launcher-result-preview">'+esc(row[2])+'</span>':'')+'</button>'}
+  function observeResultMore(){
+    resultObserver?.disconnect?.();if(!loadMore||loadMore.hidden||typeof IntersectionObserver!=='function')return;
+    resultObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){resultObserver.disconnect();requestAnimationFrame(appendResultPage)}},{root:shell,rootMargin:'0px 0px 260px 0px',threshold:.01});
+    resultObserver.observe(loadMore);
+  }
+  function appendResultPage(){
+    if(resultCursor>=resultItems.length){if(loadMore)loadMore.hidden=true;resultObserver?.disconnect?.();return false}
+    const end=Math.min(resultItems.length,resultCursor+MAX_RESULTS),html=resultItems.slice(resultCursor,end).map(resultMarkup).join('');
+    resultList.insertAdjacentHTML('beforeend',html);resultCursor=end;
+    if(loadMore){const left=resultItems.length-resultCursor;loadMore.hidden=!left;loadMore.textContent=left?'Pokaż kolejne '+Math.min(MAX_RESULTS,left)+' · '+left+' pozostało':''}
+    resultStatus.textContent='Pokazuję '+resultCursor+' z '+resultItems.length+' trafień';observeResultMore();return true;
   }
   function renderResults(items,value){
-    resultsBox.hidden=false;resultStatus.hidden=true;resultList.hidden=false;showAll.hidden=false;
-    if(!items.length){resultList.replaceChildren();resultStatus.hidden=false;resultStatus.textContent='Brak szybkich trafień. Możesz sprawdzić pełne wyniki.';return}
-    resultList.innerHTML=items.map(({row,meta})=>'<button class="launcher-result" type="button" data-result="'+esc(meta.id)+'" data-act="'+esc(meta.act)+'"><span class="launcher-result-head"><b>'+esc(meta.heading+(meta.title?' · '+meta.title:''))+'</b><span class="launcher-result-act">'+esc(meta.short)+'</span></span><span class="launcher-result-title">'+esc(meta.actName)+'</span>'+(row[2]?'<span class="launcher-result-preview">'+esc(row[2])+'</span>':'')+'</button>').join('');
-    resultStatus.textContent=items.length+' szybkich trafień dla „'+value+'”';
+    resultObserver?.disconnect?.();resultItems=items;resultCursor=0;resultsBox.hidden=false;resultStatus.hidden=true;resultList.hidden=false;resultList.replaceChildren();showAll.hidden=false;if(loadMore)loadMore.hidden=true;
+    if(!items.length){resultStatus.hidden=false;resultStatus.textContent='Brak szybkich trafień. Możesz sprawdzić pełne wyniki.';return}
+    appendResultPage();resultStatus.textContent=items.length+' trafień dla „'+value+'”';
   }
   async function runSearch(){
     const value=query.value.trim();searchWrap.classList.toggle('has-value',!!value);
-    if(norm(value).length<2){resultsBox.hidden=true;resultList.replaceChildren();if(suggestions)suggestions.closest('.launcher-suggestions').hidden=false;recentBox.hidden=!readRecent().length;return}
-    if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=true;resultsBox.hidden=false;resultList.hidden=true;showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam w całej bazie…';
+    if(norm(value).length<2){resultObserver?.disconnect?.();resultItems=[];resultCursor=0;resultsBox.hidden=true;resultList.replaceChildren();if(loadMore)loadMore.hidden=true;if(suggestions)suggestions.closest('.launcher-suggestions').hidden=false;recentBox.hidden=!readRecent().length;return}
+    if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=true;resultsBox.hidden=false;resultList.hidden=true;if(loadMore)loadMore.hidden=true;showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam w całej bazie…';
     const stamp=value,items=await findResults(value);if(query.value.trim()!==stamp)return;if(items===null){resultList.replaceChildren();resultList.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Nie udało się wczytać szybkiej wyszukiwarki. Możesz użyć pełnych wyników.';showAll.hidden=false;return}renderResults(items,value);
   }
   function scheduleSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,110)}
@@ -125,17 +137,31 @@
     if(document.querySelector('#actview .act-head')&&typeof globalThis.__POLICE_GOTO_ID==='function')return Promise.resolve();
     return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;window.removeEventListener('police-law-rendered',finish);resolve()};window.addEventListener('police-law-rendered',finish,{once:true});setTimeout(finish,3000)});
   }
-  function close(animate=true){
-    if(!isOpen())return;opened=false;globalThis.__POLICE_LAUNCHER_BOOT=false;document.body.classList.remove('launcher-open');shell.setAttribute('aria-hidden','true');
-    const finish=()=>{shell.hidden=true;shell.classList.remove('is-closing')};if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){shell.classList.add('is-closing');setTimeout(finish,190)}else finish();
+  function setFabReady(ready){
+    if(!fab)return;fab.classList.toggle('is-ready',!!ready);fab.tabIndex=ready?0:-1;fab.setAttribute('aria-hidden',String(!ready));if(ready)scheduleFabPosition();
   }
-  function open({focus=false}={}){
-    if(isOpen())return;opened=true;globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing');document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();renderQuickSections();if(focus)setTimeout(()=>query.focus(),80);
+  function scheduleFabPosition(){if(!fab||isOpen())return;cancelAnimationFrame(fabFrame);fabFrame=requestAnimationFrame(syncFabPosition)}
+  function syncFabPosition(){
+    fabFrame=0;if(!fab||isOpen())return;const viewportHeight=globalThis.visualViewport?.height||innerHeight,edge=innerWidth-104;let top=viewportHeight;
+    document.querySelectorAll('.return.show,.search-return.show,.article-pager,.reader-toast').forEach(node=>{if(node===fab)return;const style=getComputedStyle(node),rect=node.getBoundingClientRect();if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0||rect.width<2||rect.height<2||rect.right<edge||rect.bottom<viewportHeight*.45)return;top=Math.min(top,rect.top)});
+    const lift=top<viewportHeight?Math.max(0,viewportHeight-top+10):0;fab.style.setProperty('--launcher-fab-lift',lift+'px');
+  }
+  function positionSearchAtTop(){
+    if(!isOpen()||document.activeElement!==query)return;shell.classList.add('is-search-mode');const shellBox=shell.getBoundingClientRect(),box=searchWrap.getBoundingClientRect(),topGap=10;const target=Math.max(0,shell.scrollTop+box.top-shellBox.top-topGap);shell.scrollTo({top:target,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  }
+  function close(animate=true){
+    if(!isOpen())return;opened=false;globalThis.__POLICE_LAUNCHER_BOOT=false;resultObserver?.disconnect?.();document.body.classList.remove('launcher-open');shell.setAttribute('aria-hidden','true');shell.classList.remove('is-search-mode');
+    const finish=()=>{shell.hidden=true;shell.classList.remove('is-closing','is-opening-from-fab');setTimeout(()=>setFabReady(true),35)};if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){shell.classList.add('is-closing');setTimeout(finish,190)}else finish();
+  }
+  function open({focus=false,fromFab=false}={}){
+    if(isOpen())return;opened=true;setFabReady(false);globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing','is-search-mode');shell.scrollTop=0;
+    if(fromFab&&fab){const rect=fab.getBoundingClientRect();shell.style.setProperty('--launcher-origin-x',(rect.left+rect.width/2)+'px');shell.style.setProperty('--launcher-origin-y',(rect.top+rect.height/2)+'px');shell.classList.remove('is-opening-from-fab');void shell.offsetWidth;shell.classList.add('is-opening-from-fab');setTimeout(()=>shell.classList.remove('is-opening-from-fab'),820)}
+    document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();renderQuickSections();if(focus)setTimeout(()=>query.focus(),80);
   }
   async function openTarget(id,actHint='',rememberLabel=''){
     await ensureRouter();const meta=resultMeta(id),route=idById.get(id),act=meta?.act||route?.[1]||actHint;if(!act&&rememberLabel){query.value=rememberLabel;searchWrap.classList.add('has-value');runSearch();return}
     const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{},label=rememberLabel||meta?.heading||id,sub=meta?.actName||cfg.name||act;if(act)remember(id,act,label,sub);
-    globalThis.__POLICE_LAUNCHER_RETURN?.show?.();close();await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
+    globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();close();await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
   }
   async function openQuickItem(sectionId,index){
     const section=QUICK_SECTIONS.find(item=>item.id===sectionId),item=section?.items?.[Number(index)];if(!item)return;
@@ -143,22 +169,23 @@
     query.value=item.fallback||item.label;searchWrap.classList.add('has-value');runSearch();query.focus();
   }
   renderQuickSections();renderSuggestions();renderRecent();
-  query.addEventListener('input',scheduleSearch);
+  query.addEventListener('input',scheduleSearch);query.addEventListener('focus',()=>{positionSearchAtTop();setTimeout(positionSearchAtTop,180);setTimeout(positionSearchAtTop,420)});
   clear.addEventListener('click',()=>{query.value='';runSearch();query.focus()});
   suggestions?.addEventListener('click',event=>{const button=event.target.closest('[data-suggestion]');if(!button)return;query.value=button.dataset.suggestion;searchWrap.classList.add('has-value');runSearch();query.focus()});
   quickSections.addEventListener('click',event=>{
     const toggle=event.target.closest('.launcher-quick-toggle');if(toggle){const section=toggle.closest('[data-quick-section]'),id=section?.dataset.quickSection||'';openSectionId=openSectionId===id?'':id;renderQuickSections();return}
     const item=event.target.closest('[data-quick-item]');if(item)openQuickItem(item.dataset.quickItem,item.dataset.quickIndex);
   });
-  resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button)openTarget(button.dataset.result,button.dataset.act)});
+  resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button)openTarget(button.dataset.result,button.dataset.act)});loadMore?.addEventListener('click',appendResultPage);
   recentList.addEventListener('click',event=>{const button=event.target.closest('[data-recent]');if(!button)return;const item=readRecent().find(x=>x.id===button.dataset.recent);if(item)openTarget(item.id,item.act,item.label)});
-  showAll.addEventListener('click',fullSearch);readerButton.addEventListener('click',()=>close());
+  showAll.addEventListener('click',fullSearch);readerButton.addEventListener('click',()=>close());fab?.addEventListener('click',()=>open({fromFab:true}));
   shell.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
   document.getElementById('home')?.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();globalThis.__POLICE_SEARCH_CLEAR?.();open()},{capture:true});
   window.addEventListener('police-law-rendered',event=>{if(isOpen())return;setTimeout(()=>{const act=event.detail?.act||'',hash=decodeURIComponent(location.hash.slice(1));if(!act||!hash||hash==='start')return;const meta=resultMeta(hash);if(meta)remember(hash,act,meta.heading+(meta.title?' · '+meta.title:''),meta.actName)},0)});
   globalThis.__POLICE_LAUNCHER_OPEN=options=>open(options||{});
   globalThis.__POLICE_LAUNCHER_CLOSE=()=>close();
   const initial=document.documentElement.dataset.launcherSkip!=='1'&&!isDeepLink();
-  if(initial){globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');opened=true;history.replaceState(null,'','#start')}else{shell.hidden=true;shell.setAttribute('aria-hidden','true')}
+  if(initial){globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');opened=true;setFabReady(false);history.replaceState(null,'','#start')}else{shell.hidden=true;shell.setAttribute('aria-hidden','true');requestAnimationFrame(()=>setFabReady(true))}
+  const fabObserver=new MutationObserver(scheduleFabPosition);fabObserver.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','hidden','style']});window.addEventListener('resize',scheduleFabPosition,{passive:true});globalThis.visualViewport?.addEventListener?.('resize',()=>{scheduleFabPosition();if(document.activeElement===query)setTimeout(positionSearchAtTop,40)},{passive:true});
   const warm=()=>ensureData();if('requestIdleCallback'in window)requestIdleCallback(warm,{timeout:1600});else setTimeout(warm,500);
 })();

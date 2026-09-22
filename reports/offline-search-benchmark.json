@@ -14,22 +14,22 @@
     {
       "scale": 1,
       "articles": 5034,
-      "runtimeIndexMs": 84.17,
-      "prebuiltSearchMs": 26.82,
+      "runtimeIndexMs": 85,
+      "prebuiltSearchMs": 26.9,
       "hits": 1996
     },
     {
       "scale": 2,
       "articles": 10068,
-      "runtimeIndexMs": 166.38,
-      "prebuiltSearchMs": 53.35,
+      "runtimeIndexMs": 170.96,
+      "prebuiltSearchMs": 53.66,
       "hits": 3992
     },
     {
       "scale": 4,
       "articles": 20136,
-      "runtimeIndexMs": 319.09,
-      "prebuiltSearchMs": 106.5,
+      "runtimeIndexMs": 316.24,
+      "prebuiltSearchMs": 106.52,
       "hits": 7984
     }
   ]

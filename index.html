@@ -51,11 +51,19 @@
       <div class="launcher-section-title"><b>Najtrafniejsze</b><small>z całej bazy</small></div>
       <div class="launcher-result-status" id="launcherResultStatus"></div>
       <div class="launcher-result-list" id="launcherResultList"></div>
+      <button class="launcher-load-more" id="launcherLoadMore" type="button" hidden>Pokaż kolejne 10</button>
       <button class="launcher-show-all" id="launcherShowAll" type="button">Pokaż wszystkie wyniki</button>
     </section>
     <div class="launcher-footer">Pełna baza pozostaje dostępna offline po pierwszym pobraniu.</div>
   </div>
 </section>
+<button class="launcher-fab" id="launcherFab" type="button" aria-label="Otwórz ekran startowy" aria-hidden="true" tabindex="-1">
+  <svg class="launcher-fab-icon" viewBox="0 0 32 32" aria-hidden="true">
+    <path d="M16 3.5c3.9 3.1 6 7.1 6 11.8v3.2l-3.1 3.2h-5.8L10 18.5v-3.2c0-4.7 2.1-8.7 6-11.8Z"/>
+    <circle cx="16" cy="12.1" r="2.25"/>
+    <path d="M10.1 14.9 6 18v5.2l5-2.2M21.9 14.9 26 18v5.2l-5-2.2M13.7 22.2l-1 5.3 3.3-2.1 3.3 2.1-1-5.3"/>
+  </svg>
+</button>
 <header class="top"><div class="top-inner">
 <div class="topline"><a class="home" href="#start" id="home">Policyjna baza prawa</a><div class="search-wrap"><input aria-controls="results" autocomplete="off" id="q" placeholder="Szukaj: art. 15, zatrzymanie…" type="search"><button aria-label="Wyczyść" class="clear" id="clear">×</button><div aria-label="Wyniki wyszukiwania" class="search-results" id="results" role="region"></div></div><button aria-controls="settingsPanel" aria-expanded="false" aria-label="Otwórz ustawienia" class="settings-button" id="settingsButton" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.09a2 2 0 0 1 1 1.74v.5a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
 <nav class="quickbar" id="quickbar"></nav>

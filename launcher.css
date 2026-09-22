@@ -20,10 +20,11 @@ body.launcher-open{overflow:hidden}
 .launcher-quick-section.is-open .launcher-quick-chevron{transform:rotate(-90deg)}
 .launcher-quick-body{padding:2px 12px 12px}
 .launcher-quick-chips{display:flex;flex-wrap:wrap;gap:7px}
-.launcher-quick-more{width:max-content;max-width:100%;min-height:34px;margin:12px auto 0;padding:8px 14px;border:1px solid #2f78a7;border-radius:999px;background:#2f78a7;color:#fff;font:800 10.5px/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 5px 14px rgba(47,120,167,.15)}
+.launcher-quick-more{width:auto;max-width:100%;min-height:34px;margin:0;padding:8px 14px;border:1px solid #2f78a7;border-radius:999px;background:#2f78a7;color:#fff;font:800 10.5px/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 5px 14px rgba(47,120,167,.15)}
 .launcher-quick-more:active{transform:scale(.97)}
 .launcher-quick-more span{font-size:13px}
-.launcher-quick-more-body{padding-top:9px}
+.launcher-chip.is-more-item{animation:launcherQuickChipIn .34s cubic-bezier(.22,.68,.24,1) both;animation-delay:calc(var(--quick-in,0) * 26ms)}
+@keyframes launcherQuickChipIn{0%{opacity:0;transform:translateY(9px) scale(.975)}100%{opacity:1;transform:none}}
 .launcher-chip{border:1px solid #bdd3e0;background:#f9fcfe;color:#2a6389;border-radius:999px;padding:8px 11px;font:750 11px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 2px 7px rgba(46,90,120,.035)}
 .launcher-chip:active{transform:scale(.97)}
 .launcher-search{position:relative;margin-top:17px}

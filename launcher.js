@@ -227,9 +227,9 @@
       batch.sort((a,b)=>b.score-a.score||a.meta.act.localeCompare(b.meta.act)||a.meta.id.localeCompare(b.meta.id));
       if(batch.length){resultList.insertAdjacentHTML('beforeend',batch.map(resultMarkup).join(''));session.shown+=batch.length}
       session.done=session.cursor>=rows.length;
-      resultList.hidden=false;resultStatus.hidden=false;showAll.hidden=false;recentBox.hidden=!readRecent().length;
-      if(!session.shown&&session.done){resultStatus.textContent='Brak szybkich trafień. Możesz sprawdzić pełne wyniki.'}
-      else resultStatus.textContent=session.done?'Pokazuję '+session.shown+' trafień':'Pokazuję '+session.shown+' trafień · kolejne będą doczytane przy przewijaniu';
+      resultList.hidden=false;showAll.hidden=false;recentBox.hidden=!readRecent().length;
+      if(!session.shown&&session.done){resultStatus.hidden=false;resultStatus.textContent='Brak szybkich trafień. Możesz sprawdzić pełne wyniki.'}
+      else{resultStatus.hidden=true;resultStatus.textContent=''};
       if(loadMore){loadMore.hidden=session.done;loadMore.disabled=false;loadMore.textContent='Pokaż kolejne 10'}
       if(!session.done)observeResultMore();else resultObserver?.disconnect?.();
       return !!batch.length;
@@ -241,7 +241,7 @@
     const value=query.value.trim(),needle=norm(value);searchWrap.classList.toggle('has-value',!!value);
     if(needle.length<2){resetSearchSession();resultsBox.hidden=true;resultList.replaceChildren();if(suggestions)suggestions.closest('.launcher-suggestions').hidden=false;recentBox.hidden=!readRecent().length;return}
     resetSearchSession();const token=searchToken;
-    if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=!readRecent().length;resultsBox.hidden=false;resultList.hidden=true;resultList.replaceChildren();showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam pierwszych 10 trafień…';
+    if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=!readRecent().length;resultsBox.hidden=false;resultList.hidden=true;resultList.replaceChildren();showAll.hidden=true;resultStatus.hidden=true;resultStatus.textContent='';
     const ready=await ensureData();if(token!==searchToken||query.value.trim()!==value)return;
     if(!ready){resultStatus.textContent='Nie udało się wczytać szybkiej wyszukiwarki. Możesz użyć pełnych wyników.';showAll.hidden=false;return}
     searchSession={token,value,needle,terms:needle.split(/\s+/).filter(Boolean),cursor:0,shown:0,done:false,loading:false};
@@ -274,8 +274,19 @@
     document.querySelectorAll('.return.show,.search-return.show,.article-pager,.reader-toast').forEach(node=>{if(node===fab)return;const style=getComputedStyle(node),rect=node.getBoundingClientRect();if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0||rect.width<2||rect.height<2||rect.right<edge||rect.bottom<viewportBottom*.45)return;top=Math.min(top,rect.top)});
     const lift=top<viewportBottom?Math.max(0,viewportBottom-top+8-baseBottom):0,next=lift+'px';if(fab.style.getPropertyValue('--launcher-fab-lift')!==next)fab.style.setProperty('--launcher-fab-lift',next);
   }
-  function positionSearchAtTop(){
-    if(!isOpen()||document.activeElement!==query)return;shell.classList.add('is-search-mode');const shellBox=shell.getBoundingClientRect(),box=searchWrap.getBoundingClientRect(),topGap=10;const target=Math.max(0,shell.scrollTop+box.top-shellBox.top-topGap);shell.scrollTo({top:target,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  function positionSearchAtTop(force=false){
+    if(!isOpen()||!force&&document.activeElement!==query)return;
+    shell.classList.add('is-search-mode');
+    const shellBox=shell.getBoundingClientRect(),box=searchWrap.getBoundingClientRect(),topGap=10,target=Math.max(0,shell.scrollTop+box.top-shellBox.top-topGap);
+    shell.scrollTo({top:target,behavior:'auto'});
+  }
+  function enterSearchView({focus=false}={}){
+    if(focus){try{query.focus({preventScroll:true})}catch(_){query.focus()}}
+    else query.blur();
+    positionSearchAtTop(true);
+    requestAnimationFrame(()=>positionSearchAtTop(true));
+    setTimeout(()=>positionSearchAtTop(true),focus?180:80);
+    if(focus)setTimeout(()=>positionSearchAtTop(true),420);
   }
   function clickPoint(event,node){
     const rect=node?.getBoundingClientRect?.(),x=Number(event?.clientX),y=Number(event?.clientY);
@@ -422,9 +433,9 @@
     openTarget(item.target,'',quickItemLabel(item),origin,item.fallback);
   }
   renderQuickSections();renderSuggestions();renderRecent();
-  query.addEventListener('input',scheduleSearch);query.addEventListener('focus',()=>{positionSearchAtTop();setTimeout(positionSearchAtTop,180);setTimeout(positionSearchAtTop,420)});
-  clear.addEventListener('click',()=>{query.value='';runSearch();query.focus()});
-  suggestions?.addEventListener('click',event=>{const button=event.target.closest('[data-suggestion]');if(!button)return;query.value=button.dataset.suggestion;searchWrap.classList.add('has-value');runSearch();query.focus()});
+  query.addEventListener('input',scheduleSearch);query.addEventListener('focus',()=>enterSearchView({focus:true}));
+  clear.addEventListener('click',()=>{query.value='';runSearch();enterSearchView({focus:true})});
+  suggestions?.addEventListener('click',event=>{const button=event.target.closest('[data-suggestion]');if(!button)return;query.value=button.dataset.suggestion;searchWrap.classList.add('has-value');enterSearchView({focus:false});runSearch().then(()=>positionSearchAtTop(true))});
   quickSections.addEventListener('click',event=>{
     const toggle=event.target.closest('.launcher-quick-toggle');if(toggle){
       const section=toggle.closest('[data-quick-section]'),id=section?.dataset.quickSection||'',opening=!section?.classList.contains('is-open');

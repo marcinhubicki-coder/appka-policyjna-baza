@@ -83,7 +83,7 @@
       {label:'Kontrola · art. 129',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
     ]}
   ];
-  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='',resultObserver=null,fabFrame=0,searchSession=null,searchToken=0,openMoreSectionIds=new Set(),fabRevealAnimation=null,exitRevealFrame=0,transitionGlass=null,fabIconFadeTimer=0,navigationBusy=false;
+  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='',resultObserver=null,fabFrame=0,searchSession=null,searchToken=0,openMoreSectionIds=new Set(),fabRevealAnimation=null,exitRevealFrame=0,transitionGlass=null,fabCircleFadeTimer=0,fabIconFadeTimer=0,navigationBusy=false;
   const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/ł/g,'l').replace(/\s+/g,' ').trim();
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function isDeepLink(){try{const h=decodeURIComponent(location.hash.slice(1));return !!h&&h!=='start'}catch(_){return false}}
@@ -230,12 +230,13 @@
     return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;window.removeEventListener('police-law-rendered',finish);resolve()};window.addEventListener('police-law-rendered',finish,{once:true});setTimeout(finish,3000)});
   }
   function clearFabLaunch(){
-    clearTimeout(fabIconFadeTimer);fabIconFadeTimer=0;
-    if(!fab)return;fab.classList.remove('is-launching','is-icon-fading');
+    clearTimeout(fabCircleFadeTimer);clearTimeout(fabIconFadeTimer);fabCircleFadeTimer=0;fabIconFadeTimer=0;
+    if(!fab)return;fab.classList.remove('is-launching','is-circle-fading','is-icon-fading');
   }
   function beginFabLaunch(){
     if(!fab)return;clearFabLaunch();fab.classList.add('is-ready','is-launching');fab.tabIndex=-1;fab.setAttribute('aria-hidden','true');
-    fabIconFadeTimer=setTimeout(()=>fab?.classList.add('is-icon-fading'),300);
+    fabCircleFadeTimer=setTimeout(()=>fab?.classList.add('is-circle-fading'),300);
+    fabIconFadeTimer=setTimeout(()=>fab?.classList.add('is-icon-fading'),500);
   }
   function setFabReady(ready){
     if(!fab)return;if(ready)clearFabLaunch();fab.classList.toggle('is-ready',!!ready);fab.tabIndex=ready?0:-1;fab.setAttribute('aria-hidden',String(!ready));if(ready)scheduleFabPosition();
@@ -278,8 +279,6 @@
     navigationBusy=true;
     shell.classList.add('is-navigation-freeze');
     shell.setAttribute('aria-busy','true');
-    const opaque='linear-gradient(#000,#000)';
-    shell.style.webkitMaskImage=opaque;shell.style.maskImage=opaque;shell.style.webkitMaskRepeat='no-repeat';shell.style.maskRepeat='no-repeat';
     return true;
   }
   function waitForFreezePaint(){
@@ -313,6 +312,34 @@
       function tick(now){const t=Math.min(1,(now-started)/duration),smooth=t*t*(3-2*t),ease=t*.34+smooth*.66;paint(radius*ease);if(t<1)exitRevealFrame=requestAnimationFrame(tick);else{exitRevealFrame=0;glass.classList.remove('is-visible');resolve()}}
       exitRevealFrame=requestAnimationFrame(tick);
     });
+  }
+  async function runReaderViewTransition(id,actHint,rememberLabel,origin,fallbackQuery){
+    if(typeof document.startViewTransition!=='function'||matchMedia('(prefers-reduced-motion: reduce)').matches)return false;
+    const x=Math.max(0,Math.min(innerWidth,origin?.x??innerWidth/2)),y=Math.max(0,Math.min(innerHeight,origin?.y??innerHeight/2)),maxX=Math.max(x,innerWidth-x),maxY=Math.max(y,innerHeight-y),radius=Math.ceil(Math.hypot(maxX,maxY)+48);
+    const root=document.documentElement;root.style.setProperty('--launcher-vt-x',x+'px');root.style.setProperty('--launcher-vt-y',y+'px');root.style.setProperty('--launcher-vt-r',radius+'px');root.classList.add('launcher-view-transition');
+    let act='',label='',sub='',fallback=false,failed=false;
+    const transition=document.startViewTransition(async()=>{
+      try{
+        await ensureRouter();
+        const meta=resultMeta(id),route=idById.get(id);act=meta?.act||route?.[1]||actHint;
+        if(!act){fallback=true;return}
+        const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{};label=rememberLabel||meta?.heading||id;sub=meta?.actName||cfg.name||act;
+        globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();resultObserver?.disconnect?.();globalThis.__POLICE_LAUNCHER_BOOT=false;
+        opened=false;parkLauncher();freezeReader(false);
+        await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});await waitForTargetStable(id);
+      }catch(error){failed=true;throw error}
+    });
+    try{
+      await transition.updateCallbackDone;
+      if(fallback){transition.skipTransition?.();restoreLauncherView();opened=true;freezeReader(true);query.value=fallbackQuery||rememberLabel||id;searchWrap.classList.add('has-value');runSearch();query.focus();return true}
+      await transition.finished;
+      query.blur();if(act)remember(id,act,label,sub);setTimeout(()=>setFabReady(true),35);return true;
+    }catch(_){
+      if(failed){restoreLauncherView();opened=true;document.body.classList.add('launcher-open');freezeReader(true)}
+      return false;
+    }finally{
+      root.classList.remove('launcher-view-transition');root.style.removeProperty('--launcher-vt-x');root.style.removeProperty('--launcher-vt-y');root.style.removeProperty('--launcher-vt-r');
+    }
   }
   function restoreLauncherView(){
     fabRevealAnimation?.cancel?.();fabRevealAnimation=null;clearExitMask();
@@ -357,37 +384,22 @@
     let prepared=false,act='',label='',sub='';
     try{
       await waitForFreezePaint();
+      if(await runReaderViewTransition(id,actHint,rememberLabel,origin,fallbackQuery)){prepared=true;return}
       await ensureRouter();
       const meta=resultMeta(id),route=idById.get(id);act=meta?.act||route?.[1]||actHint;
       if(!act){
-        endNavigation();clearExitMask();query.value=fallbackQuery||rememberLabel||id;searchWrap.classList.add('has-value');runSearch();query.focus();return
+        endNavigation();query.value=fallbackQuery||rememberLabel||id;searchWrap.classList.add('has-value');runSearch();query.focus();return
       }
       const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{};label=rememberLabel||meta?.heading||id;sub=meta?.actName||cfg.name||act;
-      globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();resultObserver?.disconnect?.();
-      globalThis.__POLICE_LAUNCHER_BOOT=false;
-      document.body.classList.remove('launcher-open');
+      globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();resultObserver?.disconnect?.();globalThis.__POLICE_LAUNCHER_BOOT=false;
       freezeReader(false);
-      await waitForApp();
-      await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
-      await waitForTargetStable(id);
-      freezeReader(true);
+      await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});await waitForTargetStable(id);freezeReader(true);
       prepared=true;
       await new Promise(resolve=>setTimeout(resolve,15));
       await revealReader(origin,shell);
-      opened=false;
-      shell.classList.remove('is-navigation-freeze');
-      shell.removeAttribute('aria-busy');
-      parkLauncher();
-      freezeReader(false);
-      query.blur();
-      if(act)remember(id,act,label,sub);
-      setTimeout(()=>setFabReady(true),35);
+      opened=false;parkLauncher();freezeReader(false);query.blur();if(act)remember(id,act,label,sub);setTimeout(()=>setFabReady(true),35);
     }finally{
-      if(!prepared&&navigationBusy){
-        clearExitMask();
-        document.body.classList.add('launcher-open');
-        freezeReader(true);
-      }
+      if(!prepared&&navigationBusy){clearExitMask();document.body.classList.add('launcher-open');freezeReader(true)}
       endNavigation();
     }
   }

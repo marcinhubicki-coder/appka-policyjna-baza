@@ -71,7 +71,7 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
   .launcher-intro h1{font-size:38px}
   .launcher-quick-sections{margin-top:17px}
   .launcher-search{margin-top:15px}.launcher-search-box{height:55px}
-  #launcherQuery{font-size:17px}
+  .launcher-query{font-size:17px}
 }
 @media(prefers-reduced-motion:reduce){
   .launcher-shell,.launcher-panel,.launcher-search-box,.launcher-chip,.launcher-result,.launcher-quick-chevron,.launcher-fab,.launcher-fab-icon,.launcher-load-more{animation:none!important;transition:none!important}.launcher-shell.is-opening-from-fab{clip-path:none!important}.launcher-shell.is-opening-from-fab .launcher-panel>*{animation:none!important}

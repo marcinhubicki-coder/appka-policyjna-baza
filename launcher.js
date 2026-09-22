@@ -4,10 +4,10 @@
   const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=10,SUGGESTIONS=['Legitymowanie','Zatrzymanie','Kontrola osobista','Przeszukanie','ŚPB','Nietrzeźwy','Przemoc domowa','Nieletni','Ruch drogowy','Narkotyki'];
   const QUICK_SECTIONS=[
     {id:'legitymowanie',label:'Podstawy legitymowania',items:[
-      {label:'UoP · art. 15 ust. 1 pkt 1',target:'uop-art-15-ust-1-pkt-1',fallback:'legitymowanie art 15 ust 1 pkt 1'},
-      {label:'PRD · art. 129 ust. 2 pkt 1',target:'prd-art-129-ust-2-pkt-1',fallback:'art 129 ust 2 pkt 1 policja ustalanie tożsamości'},
-      {label:'Cudzoziemcy · art. 289',target:'cudz-art-289',fallback:'cudzoziemcy art 289'},
-      {label:'Cudzoziemcy · art. 293',target:'cudz-art-293',fallback:'cudzoziemcy art 293'}
+      {label:'UoP · A. 15 u. 1 p. 1',target:'uop-art-15-ust-1-pkt-1',fallback:'legitymowanie art 15 ust 1 pkt 1'},
+      {label:'PRD · A. 129 u. 2 p. 1',target:'prd-art-129-ust-2-pkt-1',fallback:'art 129 ust 2 pkt 1 policja ustalanie tożsamości'},
+      {label:'Cudzoziemcy · A. 289',target:'cudz-art-289',fallback:'cudzoziemcy art 289'},
+      {label:'Cudzoziemcy · A. 293',target:'cudz-art-293',fallback:'cudzoziemcy art 293'}
     ]},
     {id:'wykroczenia',label:'Częste wykroczenia',items:[
       {label:'Zakłócanie spokoju',target:'kw-art-51',fallback:'zakłócanie spokoju'},
@@ -166,7 +166,7 @@
   }
   function open({focus=false,fromFab=false}={}){
     if(isOpen())return;opened=true;delete document.documentElement.dataset.launcherSkip;shell.classList.add('is-runtime-open');setFabReady(false);globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing','is-search-mode');shell.scrollTop=0;
-    if(fromFab&&fab){const rect=fab.getBoundingClientRect();shell.style.setProperty('--launcher-origin-x',(rect.left+rect.width/2)+'px');shell.style.setProperty('--launcher-origin-y',(rect.top+rect.height/2)+'px');shell.classList.remove('is-opening-from-fab');void shell.offsetWidth;shell.classList.add('is-opening-from-fab');setTimeout(()=>shell.classList.remove('is-opening-from-fab'),820)}
+    if(fromFab&&fab){const rect=fab.getBoundingClientRect();shell.style.setProperty('--launcher-origin-x',(rect.left+rect.width/2)+'px');shell.style.setProperty('--launcher-origin-y',(rect.top+rect.height/2)+'px');shell.classList.remove('is-opening-from-fab');void shell.offsetWidth;shell.classList.add('is-opening-from-fab');setTimeout(()=>shell.classList.remove('is-opening-from-fab'),1650)}
     document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();renderQuickSections();if(focus)setTimeout(()=>query.focus(),80);
   }
   async function openTarget(id,actHint='',rememberLabel=''){
@@ -195,8 +195,9 @@
   window.addEventListener('police-law-rendered',event=>{if(isOpen())return;setTimeout(()=>{const act=event.detail?.act||'',hash=decodeURIComponent(location.hash.slice(1));if(!act||!hash||hash==='start')return;const meta=resultMeta(hash);if(meta)remember(hash,act,meta.heading+(meta.title?' · '+meta.title:''),meta.actName)},0)});
   globalThis.__POLICE_LAUNCHER_OPEN=options=>open(options||{});
   globalThis.__POLICE_LAUNCHER_CLOSE=()=>close();
-  const initial=document.documentElement.dataset.launcherSkip!=='1'&&!isDeepLink();
-  if(initial){globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');opened=true;setFabReady(false);history.replaceState(null,'','#start')}else{shell.hidden=true;shell.setAttribute('aria-hidden','true');requestAnimationFrame(()=>setFabReady(true))}
+  const standalone=document.documentElement.dataset.pwaStandalone==='1'||window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true;
+  const initial=standalone||(document.documentElement.dataset.launcherSkip!=='1'&&!isDeepLink());
+  if(initial){delete document.documentElement.dataset.launcherSkip;shell.classList.add('is-runtime-open');globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');opened=true;setFabReady(false);history.replaceState(null,'','#start')}else{shell.hidden=true;shell.setAttribute('aria-hidden','true');requestAnimationFrame(()=>setFabReady(true))}
   const fabObserver=new MutationObserver(scheduleFabPosition);fabObserver.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','hidden','style']});window.addEventListener('resize',scheduleFabPosition,{passive:true});globalThis.visualViewport?.addEventListener?.('resize',()=>{scheduleFabPosition();if(document.activeElement===query)setTimeout(positionSearchAtTop,40)},{passive:true});
   const warm=()=>ensureRouter();if('requestIdleCallback'in window)requestIdleCallback(warm,{timeout:1600});else setTimeout(warm,500);
 })();

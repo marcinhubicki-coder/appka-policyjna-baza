@@ -2,9 +2,8 @@
 html[data-launcher-skip="1"] .launcher-shell:not(.is-runtime-open){visibility:hidden;pointer-events:none}
 html.launcher-open-root{overflow:hidden!important;overscroll-behavior:none!important}
 body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
-.launcher-shell{position:fixed!important;inset:0!important;z-index:5000!important;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:linear-gradient(180deg,#eef6fb 0,#eef6fb 72%,#f3f8fb 88%,#f9fbfc 100%)!important;color:#163f5c;-webkit-overflow-scrolling:touch;isolation:isolate;transform:translateZ(0);scrollbar-width:none}
+.launcher-shell{position:fixed!important;inset:0!important;z-index:5000!important;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:linear-gradient(180deg,#fff 0,#fff 16%,#f7fafc 38%,#eef6fb 60%,#f7fafc 82%,#fff 100%)!important;color:#163f5c;-webkit-overflow-scrolling:touch;isolation:isolate;transform:translateZ(0);scrollbar-width:none}
 .launcher-shell::-webkit-scrollbar{display:none}
-.launcher-shell::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,#eef6fb 0,#eef6fb 72%,#f3f8fb 88%,#f9fbfc 100%);-webkit-backdrop-filter:none;backdrop-filter:none;transform:translateZ(0)}
 .launcher-panel{position:relative;z-index:1}
 .launcher-shell[hidden]{display:none!important}
 .launcher-shell.is-parked{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
@@ -96,3 +95,8 @@ body.launcher-open :is(.drawer-scroll,.toc-grid,.search-results,.search-act-filt
 
 .launcher-transition-glass{position:fixed;z-index:5002;left:50%;top:50%;width:0;height:0;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:0;border:10px solid rgba(238,246,251,.18);box-shadow:0 0 18px 7px rgba(238,246,251,.34),inset 0 0 18px 5px rgba(255,255,255,.24);filter:blur(.35px);will-change:width,height,opacity}
 .launcher-transition-glass.is-visible{opacity:.82}
+
+.launcher-quick-extra-pack{flex:0 0 100%;width:100%;overflow:hidden}
+.launcher-quick-extra-chips{padding-top:0}
+.launcher-transition-snapshot{z-index:6000!important;visibility:visible!important;opacity:1!important;pointer-events:none!important;overscroll-behavior:none!important}
+.launcher-transition-snapshot .launcher-panel{opacity:1!important}

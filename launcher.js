@@ -141,7 +141,7 @@
       batch.sort((a,b)=>b.score-a.score||a.meta.act.localeCompare(b.meta.act)||a.meta.id.localeCompare(b.meta.id));
       if(batch.length){resultList.insertAdjacentHTML('beforeend',batch.map(resultMarkup).join(''));session.shown+=batch.length}
       session.done=session.cursor>=rows.length;
-      resultList.hidden=false;resultStatus.hidden=false;showAll.hidden=false;
+      resultList.hidden=false;resultStatus.hidden=false;showAll.hidden=false;recentBox.hidden=!readRecent().length;
       if(!session.shown&&session.done){resultStatus.textContent='Brak szybkich trafień. Możesz sprawdzić pełne wyniki.'}
       else resultStatus.textContent=session.done?'Pokazuję '+session.shown+' trafień':'Pokazuję '+session.shown+' trafień · kolejne będą doczytane przy przewijaniu';
       if(loadMore){loadMore.hidden=session.done;loadMore.disabled=false;loadMore.textContent='Pokaż kolejne 10'}
@@ -155,7 +155,7 @@
     const value=query.value.trim(),needle=norm(value);searchWrap.classList.toggle('has-value',!!value);
     if(needle.length<2){resetSearchSession();resultsBox.hidden=true;resultList.replaceChildren();if(suggestions)suggestions.closest('.launcher-suggestions').hidden=false;recentBox.hidden=!readRecent().length;return}
     resetSearchSession();const token=searchToken;
-    if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=true;resultsBox.hidden=false;resultList.hidden=true;resultList.replaceChildren();showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam pierwszych 10 trafień…';
+    if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=!readRecent().length;resultsBox.hidden=false;resultList.hidden=true;resultList.replaceChildren();showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam pierwszych 10 trafień…';
     const ready=await ensureData();if(token!==searchToken||query.value.trim()!==value)return;
     if(!ready){resultStatus.textContent='Nie udało się wczytać szybkiej wyszukiwarki. Możesz użyć pełnych wyników.';showAll.hidden=false;return}
     searchSession={token,value,needle,terms:needle.split(/\s+/).filter(Boolean),cursor:0,shown:0,done:false,loading:false};

@@ -183,13 +183,14 @@
     optimizePlainChipCloud(suggestions);
   }
   function optimizeQuickExtraLayout(section){
-    const wrap=section?.querySelector('.launcher-quick-body-inner>.launcher-quick-chips'),breakNode=wrap?.querySelector('[data-quick-more-break]'),extra=wrap?[...wrap.querySelectorAll('.launcher-chip.is-more-item')]:[],width=wrap?.clientWidth||0;
+    const wrap=section?.querySelector('.launcher-quick-body-inner>.launcher-quick-chips'),breakNode=wrap?.querySelector('[data-quick-more-break]'),control=wrap?.querySelector('[data-quick-more]'),extra=wrap?[...wrap.querySelectorAll('.launcher-chip.is-more-item')]:[],width=wrap?.clientWidth||0;
     if(!wrap||!breakNode||!extra.length||width<120)return;
     extra.forEach(node=>setQuickVariant(node,quickVariants(node)[0]));
     const rows=planQuickRows(extra,width),frag=document.createDocumentFragment();
     rows.forEach(plan=>plan.nodes.forEach(node=>frag.append(node)));
     wrap.append(frag);
     rows.forEach(applyQuickRowPlan);
+    if(control?.getAttribute('aria-expanded')==='true')wrap.append(control);
   }
   function optimizeQuickLayout(section){
     const wrap=section?.querySelector('.launcher-quick-body-inner>.launcher-quick-chips');if(!wrap)return;

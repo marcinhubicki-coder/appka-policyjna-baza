@@ -31,7 +31,7 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 .launcher-quick-more:active{transform:none;filter:brightness(.97)}
 .launcher-chip.is-more-item{animation:launcherQuickChipIn .34s cubic-bezier(.22,.68,.24,1) both;animation-delay:calc(var(--quick-in,0) * 26ms)}
 @keyframes launcherQuickChipIn{0%{opacity:0;transform:translateY(9px)}100%{opacity:1;transform:none}}
-.launcher-chip{border:1px solid #bdd3e0;background:#f9fcfe;color:#2a6389;padding:0 9px;font:750 10.7px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 2px 7px rgba(46,90,120,.035);transition:background-color .12s ease,border-color .12s ease,color .12s ease,box-shadow .12s ease}
+.launcher-chip{border:1px solid #bdd3e0;background:#f9fcfe;color:#2a6389;padding:0 calc(9px + var(--quick-pad-x,0px));font:750 10.7px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 2px 7px rgba(46,90,120,.035);transition:background-color .12s ease,border-color .12s ease,color .12s ease,box-shadow .12s ease}
 .launcher-chip:active{transform:none;background:#f9fcfe;border-color:#bdd3e0;color:#2a6389;box-shadow:0 2px 7px rgba(46,90,120,.035)}
 .launcher-search{position:relative;margin-top:17px}
 .launcher-search-box{height:58px;border:1px solid #9fbfd2;border-radius:29px;background:rgba(255,255,255,.94);box-shadow:0 10px 32px rgba(33,81,112,.10);display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}

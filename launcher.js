@@ -42,7 +42,7 @@
       {label:'Kontrola · art. 129',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
     ]}
   ];
-  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),loadPromise=null,searchTimer=0,opened=false,openSectionId='';
+  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='';
   const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/ł/g,'l').replace(/\s+/g,' ').trim();
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function isDeepLink(){try{const h=decodeURIComponent(location.hash.slice(1));return !!h&&h!=='start'}catch(_){return false}}
@@ -65,14 +65,24 @@
   function renderSuggestions(){
     if(!suggestions)return;suggestions.innerHTML=SUGGESTIONS.map(value=>'<button class="launcher-chip" type="button" data-suggestion="'+esc(value)+'">'+esc(value)+'</button>').join('');
   }
+  function indexRouter(value){
+    router=value;articleById=new Map((router?.articles||[]).map(row=>[row[0],row]));idById=new Map((router?.ids||[]).map(row=>[row[0],row]));actByCode=new Map((router?.acts||[]).map(row=>[row[0],row]));return router;
+  }
+  async function ensureRouter(){
+    if(router)return router;if(routerPromise)return routerPromise;
+    if(!globalThis.__LAW_DATA?.loadRouter)return null;
+    routerPromise=globalThis.__LAW_DATA.loadRouter().then(indexRouter).catch(error=>{console.warn('Launcher routes unavailable',error);return null}).finally(()=>{routerPromise=null});
+    return routerPromise;
+  }
+  async function ensureDiscovery(){
+    if(discovery)return discovery;if(discoveryPromise)return discoveryPromise;
+    if(!globalThis.__LAW_DATA?.loadDiscovery)return null;
+    discoveryPromise=globalThis.__LAW_DATA.loadDiscovery().then(value=>discovery=value).catch(error=>{console.warn('Launcher search unavailable',error);return null}).finally(()=>{discoveryPromise=null});
+    return discoveryPromise;
+  }
   async function ensureData(){
-    if(router&&discovery)return{router,discovery};if(loadPromise)return loadPromise;
-    loadPromise=(async()=>{
-      if(!globalThis.__LAW_DATA?.loadRouter||!globalThis.__LAW_DATA?.loadDiscovery)return null;
-      const values=await Promise.all([globalThis.__LAW_DATA.loadRouter(),globalThis.__LAW_DATA.loadDiscovery()]);router=values[0];discovery=values[1];
-      articleById=new Map((router?.articles||[]).map(row=>[row[0],row]));idById=new Map((router?.ids||[]).map(row=>[row[0],row]));actByCode=new Map((router?.acts||[]).map(row=>[row[0],row]));return{router,discovery};
-    })().catch(error=>{console.warn('Launcher search unavailable',error);return null}).finally(()=>{loadPromise=null});
-    return loadPromise;
+    const values=await Promise.all([ensureRouter(),ensureDiscovery()]);
+    return values[0]&&values[1]?{router:values[0],discovery:values[1]}:null;
   }
   function resultMeta(id){
     const article=articleById.get(id);if(!article)return null;
@@ -87,7 +97,7 @@
   }
   async function findResults(value){
     const needle=norm(value);if(needle.length<2)return[];
-    const ready=await ensureData();if(!ready)return[];
+    const ready=await ensureData();if(!ready)return null;
     const terms=needle.split(/\s+/).filter(Boolean),matches=[];
     for(const row of discovery||[]){
       const meta=resultMeta(row[0]);if(!meta)continue;const hay=(String(row[1]||'')+' '+norm(meta.heading+' '+meta.title+' '+meta.short+' '+meta.actName+' '+(row[2]||'')));
@@ -105,7 +115,7 @@
     const value=query.value.trim();searchWrap.classList.toggle('has-value',!!value);
     if(norm(value).length<2){resultsBox.hidden=true;resultList.replaceChildren();if(suggestions)suggestions.closest('.launcher-suggestions').hidden=false;recentBox.hidden=!readRecent().length;return}
     if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=true;resultsBox.hidden=false;resultList.hidden=true;showAll.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Szukam w całej bazie…';
-    const stamp=value,items=await findResults(value);if(query.value.trim()!==stamp)return;renderResults(items,value);
+    const stamp=value,items=await findResults(value);if(query.value.trim()!==stamp)return;if(items===null){resultList.replaceChildren();resultList.hidden=true;resultStatus.hidden=false;resultStatus.textContent='Nie udało się wczytać szybkiej wyszukiwarki. Możesz użyć pełnych wyników.';showAll.hidden=false;return}renderResults(items,value);
   }
   function scheduleSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,110)}
   function fullSearch(){
@@ -123,13 +133,13 @@
     if(isOpen())return;opened=true;globalThis.__POLICE_LAUNCHER_BOOT=true;shell.hidden=false;shell.setAttribute('aria-hidden','false');shell.classList.remove('is-closing');document.body.classList.add('launcher-open');history.replaceState(null,'','#start');renderRecent();renderQuickSections();if(focus)setTimeout(()=>query.focus(),80);
   }
   async function openTarget(id,actHint='',rememberLabel=''){
-    await ensureData();const meta=resultMeta(id),route=idById.get(id),act=meta?.act||route?.[1]||actHint;if(!act&&rememberLabel){query.value=rememberLabel;searchWrap.classList.add('has-value');runSearch();return}
+    await ensureRouter();const meta=resultMeta(id),route=idById.get(id),act=meta?.act||route?.[1]||actHint;if(!act&&rememberLabel){query.value=rememberLabel;searchWrap.classList.add('has-value');runSearch();return}
     const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{},label=rememberLabel||meta?.heading||id,sub=meta?.actName||cfg.name||act;if(act)remember(id,act,label,sub);
     globalThis.__POLICE_LAUNCHER_RETURN?.show?.();close();await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});
   }
   async function openQuickItem(sectionId,index){
     const section=QUICK_SECTIONS.find(item=>item.id===sectionId),item=section?.items?.[Number(index)];if(!item)return;
-    await ensureData();if(idById.has(item.target)){await openTarget(item.target,'',item.label);return}
+    await ensureRouter();if(idById.has(item.target)){await openTarget(item.target,'',item.label);return}
     query.value=item.fallback||item.label;searchWrap.classList.add('has-value');runSearch();query.focus();
   }
   renderQuickSections();renderSuggestions();renderRecent();

@@ -1,8 +1,9 @@
 :root{--launcher-max:760px;--launcher-top-bg:#eef6fb}
 html[data-launcher-skip="1"] .launcher-shell:not(.is-runtime-open){visibility:hidden;pointer-events:none}
-body.launcher-open{overflow:hidden}
-.launcher-shell{position:fixed!important;inset:0!important;z-index:5000!important;overflow:auto;overscroll-behavior:contain;background:var(--launcher-top-bg)!important;color:#163f5c;-webkit-overflow-scrolling:touch;isolation:isolate}
-.launcher-shell::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,rgba(238,246,251,.97) 0,rgba(238,246,251,.97) 50%,rgba(247,251,253,.965) 73%,rgba(255,255,255,.985) 100%);-webkit-backdrop-filter:blur(18px) saturate(1.08);backdrop-filter:blur(18px) saturate(1.08);transform:translateZ(0)}
+html.launcher-open-root{overflow:hidden!important;overscroll-behavior:none!important}
+body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
+.launcher-shell{position:fixed!important;inset:0!important;z-index:5000!important;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:var(--launcher-top-bg)!important;color:#163f5c;-webkit-overflow-scrolling:touch;isolation:isolate;transform:translateZ(0)}
+.launcher-shell::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,#eef6fb 0,#eef6fb 52%,#f7fbfd 76%,#fff 100%);-webkit-backdrop-filter:none;backdrop-filter:none;transform:translateZ(0)}
 .launcher-panel{position:relative;z-index:1}
 .launcher-shell[hidden]{display:none!important}
 .launcher-shell.is-parked{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
@@ -96,3 +97,7 @@ html[data-reader-theme="dark"] .launcher-fab{background:rgba(27,43,56,.76);borde
 @keyframes launcherDrop{0%{opacity:0;transform:translateY(-24px) scale(.992)}100%{opacity:1;transform:none}}
 
 .launcher-shell.is-search-mode .launcher-search{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+
+.launcher-shell.is-revealing-reader{pointer-events:none!important;overflow:hidden!important}
+body.launcher-open :is(.drawer-scroll,.toc-grid,.search-results,.search-act-filters,.reader-toc-scroll,.settings-panel){scrollbar-width:none!important}
+body.launcher-open :is(.drawer-scroll,.toc-grid,.search-results,.search-act-filters,.reader-toc-scroll,.settings-panel)::-webkit-scrollbar{display:none!important}

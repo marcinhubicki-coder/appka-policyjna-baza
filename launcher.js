@@ -183,25 +183,32 @@
     optimizePlainChipCloud(suggestions);
   }
   function optimizeQuickExtraLayout(section){
-    const wrap=section?.querySelector('.launcher-quick-body-inner>.launcher-quick-chips'),breakNode=wrap?.querySelector('[data-quick-more-break]'),control=wrap?.querySelector('[data-quick-more]'),extra=wrap?[...wrap.querySelectorAll('.launcher-chip.is-more-item')]:[],width=wrap?.clientWidth||0;
-    if(!wrap||!breakNode||!extra.length||width<120)return;
+    const wrap=section?.querySelector('.launcher-quick-body-inner>.launcher-quick-chips'),control=wrap?.querySelector('[data-quick-more]'),primary=wrap?[...wrap.querySelectorAll('.launcher-chip:not(.is-more-item)')]:[],extra=wrap?[...wrap.querySelectorAll('.launcher-chip.is-more-item')]:[],width=wrap?.clientWidth||0;
+    if(!wrap||!extra.length||width<120)return;
     extra.forEach(node=>setQuickVariant(node,quickVariants(node)[0]));
-    const rows=planQuickRows(extra,width),frag=document.createDocumentFragment();
-    rows.forEach(plan=>plan.nodes.forEach(node=>frag.append(node)));
-    wrap.append(frag);
-    rows.forEach(applyQuickRowPlan);
+    const gap=parseFloat(getComputedStyle(wrap).columnGap||getComputedStyle(wrap).gap)||7,left=[...extra],rows=[];
+    if(primary.length&&left.length){
+      const lastTop=Math.max(...primary.map(node=>Math.round(node.offsetTop))),lastRow=primary.filter(node=>Math.abs(Math.round(node.offsetTop)-lastTop)<=1),used=lastRow.reduce((sum,node)=>sum+node.getBoundingClientRect().width,0)+gap*Math.max(0,lastRow.length-1),remaining=Math.max(0,width-used-(lastRow.length?gap:0));
+      if(remaining>54){
+        const pool=left.slice(0,Math.min(8,left.length));let first=null;
+        [Math.min(2,pool.length),1].filter(Boolean).forEach(size=>quickCombinations(pool,size,row=>{
+          const plan=chooseQuickVariants(row,remaining,new Map(row.map(node=>[node,measureQuickVariants(node)])),gap);if(!plan)return;
+          const score=plan.richness*9-plan.residual*2.2+plan.total*.01;
+          if(!first||score>first.score)first={...plan,score};
+        }));
+        if(first){rows.push(first);first.nodes.forEach(node=>left.splice(left.indexOf(node),1))}
+      }
+    }
+    rows.push(...planQuickRows(left,width,gap));
+    const frag=document.createDocumentFragment();rows.forEach(plan=>plan.nodes.forEach(node=>frag.append(node)));wrap.append(frag);rows.forEach(applyQuickRowPlan);
     if(control?.getAttribute('aria-expanded')==='true')wrap.append(control);
   }
   function optimizeQuickLayout(section){
     const wrap=section?.querySelector('.launcher-quick-body-inner>.launcher-quick-chips');if(!wrap)return;
-    const control=wrap.querySelector('[data-quick-more]'),breakNode=wrap.querySelector('[data-quick-more-break]'),primary=[...wrap.querySelectorAll('.launcher-chip:not(.is-more-item)')],extra=[...wrap.querySelectorAll('.launcher-chip.is-more-item')],width=wrap.clientWidth;if(width<120)return;
+    const control=wrap.querySelector('[data-quick-more]'),primary=[...wrap.querySelectorAll('.launcher-chip:not(.is-more-item)')],extra=[...wrap.querySelectorAll('.launcher-chip.is-more-item')],width=wrap.clientWidth;if(width<120)return;
     primary.forEach(node=>setQuickVariant(node,quickVariants(node)[0]));
     const primaryRows=planQuickRows(primary,width),frag=document.createDocumentFragment();
-    primaryRows.forEach(plan=>plan.nodes.forEach(node=>frag.append(node)));
-    if(control)frag.append(control);
-    if(breakNode)frag.append(breakNode);
-    extra.forEach(node=>frag.append(node));
-    wrap.append(frag);
+    primaryRows.forEach(plan=>plan.nodes.forEach(node=>frag.append(node)));extra.forEach(node=>frag.append(node));if(control)frag.append(control);wrap.append(frag);
     primaryRows.forEach(applyQuickRowPlan);
     if(extra.length)optimizeQuickExtraLayout(section);
   }
@@ -209,7 +216,7 @@
     quickSections.innerHTML=QUICK_SECTIONS.map(section=>{
       const open=section.id===openSectionId,moreOpen=openMoreSectionIds.has(section.id),primary=section.items.map((item,index)=>quickChip(item,section.id,index)).join('');
       const more=(section.moreItems||[]).map((item,index)=>quickChip(item,section.id,section.items.length+index,index)).join('');
-      const morePart=section.moreItems?.length?(moreOpen?moreControl(section.id,true)+'<span class="launcher-quick-more-break" data-quick-more-break aria-hidden="true"></span>'+more:moreControl(section.id,false)):'';
+      const morePart=section.moreItems?.length?(moreOpen?more+moreControl(section.id,true):moreControl(section.id,false)):'';
       return '<section class="launcher-quick-section'+(open?' is-open':'')+'" data-quick-section="'+esc(section.id)+'"><button class="launcher-quick-toggle" type="button" aria-expanded="'+String(open)+'"><span>'+esc(section.label)+'</span><span class="launcher-quick-chevron" aria-hidden="true">›</span></button><div class="launcher-quick-body" aria-hidden="'+String(!open)+'"><div class="launcher-quick-body-inner"><div class="launcher-quick-chips">'+primary+morePart+'</div></div></div></section>';
     }).join('');
     quickSections.querySelectorAll('[data-quick-section]').forEach(optimizeQuickLayout);
@@ -220,18 +227,17 @@
     const row=section.querySelector('.launcher-quick-body-inner>.launcher-quick-chips'),control=row?.querySelector('[data-quick-more]');if(!row||!control)return;
     if(!wasOpen){
       openMoreSectionIds.add(id);control.textContent='Schowaj';control.setAttribute('aria-expanded','true');
-      const breakNode=document.createElement('span');breakNode.className='launcher-quick-more-break';breakNode.dataset.quickMoreBreak='';breakNode.setAttribute('aria-hidden','true');
-      const frag=document.createDocumentFragment();frag.append(breakNode);
+      const frag=document.createDocumentFragment();
       config.moreItems.forEach((item,index)=>{const template=document.createElement('template');template.innerHTML=quickChip(item,id,config.items.length+index,index);frag.append(template.content.firstElementChild)});
-      control.after(frag);row.append(control);optimizeQuickExtraLayout(section);
+      control.before(frag);row.append(control);optimizeQuickExtraLayout(section);
       if(!reduced)[...row.querySelectorAll('.launcher-chip.is-more-item')].forEach((node,index)=>node.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:260,delay:Math.min(index,10)*22,easing:'cubic-bezier(.22,.68,.24,1)',fill:'both'}));
       return
     }
-    openMoreSectionIds.delete(id);const extras=[...row.querySelectorAll('.launcher-chip.is-more-item')],breakNode=row.querySelector('[data-quick-more-break]');
-    const finish=()=>{extras.forEach(node=>node.remove());breakNode?.remove();control.textContent='Więcej';control.setAttribute('aria-expanded','false');row.append(control)};
+    openMoreSectionIds.delete(id);const extras=[...row.querySelectorAll('.launcher-chip.is-more-item')];
+    const finish=()=>{extras.forEach(node=>node.remove());control.textContent='Więcej';control.setAttribute('aria-expanded','false');row.append(control)};
     if(reduced){finish();return}
     let pending=extras.length;if(!pending){finish();return}
-    extras.forEach((node,index)=>{const animation=node.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-4px)'}],{duration:150,delay:Math.min(extras.length-1-index,8)*12,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'});animation.onfinish=()=>{node.remove();pending--;if(!pending){breakNode?.remove();control.textContent='Więcej';control.setAttribute('aria-expanded','false');row.append(control)}}});
+    extras.forEach((node,index)=>{const animation=node.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-4px)'}],{duration:150,delay:Math.min(extras.length-1-index,8)*12,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'});animation.onfinish=()=>{node.remove();pending--;if(!pending){control.textContent='Więcej';control.setAttribute('aria-expanded','false');row.append(control)}}});
   }
   function animateQuickSection(section,opening){
     const body=section?.querySelector('.launcher-quick-body'),toggle=section?.querySelector('.launcher-quick-toggle');if(!body||!toggle)return;

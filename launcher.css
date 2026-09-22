@@ -2,7 +2,7 @@
 html[data-launcher-skip="1"] .launcher-shell:not(.is-runtime-open){visibility:hidden;pointer-events:none}
 html.launcher-open-root{overflow:hidden!important;overscroll-behavior:none!important}
 body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
-.launcher-shell{position:fixed!important;inset:0!important;z-index:5000!important;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:linear-gradient(180deg,#fff 0,#fff 16%,#f7fafc 38%,#eef6fb 60%,#f7fafc 82%,#fff 100%)!important;color:#163f5c;-webkit-overflow-scrolling:touch;isolation:isolate;transform:translateZ(0);scrollbar-width:none}
+.launcher-shell{position:fixed!important;inset:0!important;z-index:5000!important;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:linear-gradient(180deg,#fff 0,#fff 20%,#f8fafc 40%,#f0f6fa 60%,#f8fafc 80%,#fff 100%)!important;color:#163f5c;-webkit-overflow-scrolling:touch;isolation:isolate;transform:translateZ(0);scrollbar-width:none}
 .launcher-shell::-webkit-scrollbar{display:none}
 .launcher-panel{position:relative;z-index:1}
 .launcher-shell[hidden]{display:none!important}
@@ -26,12 +26,13 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 .launcher-quick-section.is-open .launcher-quick-body{height:auto;opacity:1}
 .launcher-quick-body-inner{padding:2px 12px 12px}
 .launcher-quick-chips{display:flex;flex-wrap:wrap;gap:7px}
-.launcher-quick-more{width:auto;max-width:100%;min-height:34px;margin:0;padding:8px 14px;border:1px solid #2f78a7;border-radius:999px;background:#2f78a7;color:#fff;font:800 10.5px/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 5px 14px rgba(47,120,167,.15)}
-.launcher-quick-more:active{transform:scale(.97)}
+.launcher-quick-more,.launcher-chip{height:34px;min-height:34px;max-height:34px;box-sizing:border-box;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1}
+.launcher-quick-more{width:auto;max-width:100%;margin:0;padding:0 14px;border:1px solid #2f78a7;background:#2f78a7;color:#fff;font:800 10.5px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 5px 14px rgba(47,120,167,.15)}
+.launcher-quick-more:active{transform:none;filter:brightness(.97)}
 .launcher-chip.is-more-item{animation:launcherQuickChipIn .34s cubic-bezier(.22,.68,.24,1) both;animation-delay:calc(var(--quick-in,0) * 26ms)}
-@keyframes launcherQuickChipIn{0%{opacity:0;transform:translateY(9px) scale(.975)}100%{opacity:1;transform:none}}
-.launcher-chip{border:1px solid #bdd3e0;background:#f9fcfe;color:#2a6389;border-radius:999px;padding:8px 11px;font:750 11px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 2px 7px rgba(46,90,120,.035)}
-.launcher-chip:active{transform:scale(.97)}
+@keyframes launcherQuickChipIn{0%{opacity:0;transform:translateY(9px)}100%{opacity:1;transform:none}}
+.launcher-chip{border:1px solid #bdd3e0;background:#f9fcfe;color:#2a6389;padding:0 11px;font:750 11px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 2px 7px rgba(46,90,120,.035);transition:background-color .12s ease,border-color .12s ease,color .12s ease,box-shadow .12s ease}
+.launcher-chip:active,.launcher-chip.is-launching{transform:none;background:#2f78a7;border-color:#2f78a7;color:#fff;box-shadow:0 5px 14px rgba(47,120,167,.15)}
 .launcher-search{position:relative;margin-top:17px}
 .launcher-search-box{height:58px;border:1px solid #9fbfd2;border-radius:29px;background:rgba(255,255,255,.94);box-shadow:0 10px 32px rgba(33,81,112,.10);display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
 .launcher-search-box:focus-within{border-color:#5e9bc1;box-shadow:0 12px 36px rgba(33,81,112,.16);transform:translateY(-1px)}

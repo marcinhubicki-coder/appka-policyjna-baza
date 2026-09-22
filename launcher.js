@@ -104,6 +104,7 @@
     return '<button class="launcher-chip'+extra+'" type="button" data-quick-item="'+esc(sectionId)+'" data-quick-index="'+index+'"'+style+'>'+esc(quickItemLabel(item))+'</button>'
   }
   function moreControl(sectionId,expanded){return '<button class="launcher-quick-more" type="button" data-quick-more="'+esc(sectionId)+'" aria-expanded="'+String(expanded)+'">'+(expanded?'Schowaj':'Pokaż więcej')+'</button>'}
+  function moreControlNode(sectionId,expanded){const template=document.createElement('template');template.innerHTML=moreControl(sectionId,expanded);return template.content.firstElementChild}
   function renderQuickSections(){
     quickSections.innerHTML=QUICK_SECTIONS.map(section=>{
       const open=section.id===openSectionId,moreOpen=openMoreSectionIds.has(section.id),primary=section.items.map((item,index)=>quickChip(item,section.id,index)).join('');
@@ -114,23 +115,25 @@
   }
   function quickSectionNode(id){return [...quickSections.querySelectorAll('[data-quick-section]')].find(node=>node.dataset.quickSection===id)||null}
   function animateQuickMore(id){
-    const section=quickSectionNode(id),wasOpen=openMoreSectionIds.has(id),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;if(!section)return;
-    if(reduced){if(wasOpen)openMoreSectionIds.delete(id);else openMoreSectionIds.add(id);renderQuickSections();return}
+    const section=quickSectionNode(id),config=QUICK_SECTIONS.find(item=>item.id===id),wasOpen=openMoreSectionIds.has(id),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;if(!section||!config?.moreItems?.length)return;
     if(!wasOpen){
-      openMoreSectionIds.add(id);renderQuickSections();
-      const next=quickSectionNode(id),pack=next?.querySelector('[data-quick-extra-pack]'),inner=pack?.firstElementChild;if(!pack||!inner)return;
-      const target=inner.scrollHeight;pack.style.height='0px';pack.style.opacity='0';pack.style.overflow='hidden';
+      const control=section.querySelector('[data-quick-more]');if(!control)return;
+      const pack=document.createElement('div');pack.className='launcher-quick-extra-pack';pack.dataset.quickExtraPack='';
+      pack.innerHTML='<div class="launcher-quick-chips launcher-quick-extra-chips">'+config.moreItems.map((item,index)=>quickChip(item,id,config.items.length+index,index)).join('')+moreControl(id,true)+'</div>';
+      openMoreSectionIds.add(id);control.replaceWith(pack);
+      if(reduced)return;
+      const target=pack.firstElementChild?.scrollHeight||0;pack.style.height='0px';pack.style.opacity='0';pack.style.overflow='hidden';
       const animation=pack.animate([{height:'0px',opacity:0},{height:target+'px',opacity:1}],{duration:360,easing:'cubic-bezier(.22,.68,.24,1)'});
       animation.onfinish=()=>{pack.style.height='auto';pack.style.opacity='';pack.style.overflow=''};
       return
     }
-    const pack=section.querySelector('[data-quick-extra-pack]'),inner=pack?.firstElementChild;if(!pack||!inner){openMoreSectionIds.delete(id);renderQuickSections();return}
+    const pack=section.querySelector('[data-quick-extra-pack]');if(!pack)return;
+    if(reduced){openMoreSectionIds.delete(id);pack.replaceWith(moreControlNode(id,false));return}
     const start=pack.getBoundingClientRect().height;pack.style.height=start+'px';pack.style.overflow='hidden';
-    const chips=[...pack.querySelectorAll('.launcher-chip.is-more-item')],control=pack.querySelector('[data-quick-more]');
-    chips.forEach(node=>node.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-5px) scale(.985)'}],{duration:235,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'}));
-    control?.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-4px) scale(.985)'}],{duration:210,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'});
-    const animation=pack.animate([{height:start+'px',opacity:1},{height:'0px',opacity:.18}],{duration:300,easing:'cubic-bezier(.4,0,.22,1)',fill:'forwards'});
-    animation.onfinish=()=>{openMoreSectionIds.delete(id);renderQuickSections()};
+    pack.querySelectorAll('.launcher-chip.is-more-item').forEach(node=>node.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-5px)'}],{duration:240,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'}));
+    pack.querySelector('[data-quick-more]')?.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-4px)'}],{duration:220,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'});
+    const animation=pack.animate([{height:start+'px',opacity:1},{height:'0px',opacity:.12}],{duration:300,easing:'cubic-bezier(.4,0,.22,1)',fill:'forwards'});
+    animation.onfinish=()=>{openMoreSectionIds.delete(id);pack.replaceWith(moreControlNode(id,false))};
   }
   function animateQuickSection(section,opening){
     const body=section?.querySelector('.launcher-quick-body'),toggle=section?.querySelector('.launcher-quick-toggle');if(!body||!toggle)return;
@@ -231,9 +234,10 @@
   }
   function scheduleFabPosition(){if(!fab||isOpen())return;cancelAnimationFrame(fabFrame);fabFrame=requestAnimationFrame(syncFabPosition)}
   function syncFabPosition(){
-    fabFrame=0;if(!fab||isOpen())return;const viewportHeight=globalThis.visualViewport?.height||innerHeight,edge=innerWidth-104;let top=viewportHeight;
-    document.querySelectorAll('.return.show,.search-return.show,.article-pager,.reader-toast').forEach(node=>{if(node===fab)return;const style=getComputedStyle(node),rect=node.getBoundingClientRect();if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0||rect.width<2||rect.height<2||rect.right<edge||rect.bottom<viewportHeight*.45)return;top=Math.min(top,rect.top)});
-    const lift=top<viewportHeight?Math.max(0,viewportHeight-top+10):0,next=lift+'px';if(fab.style.getPropertyValue('--launcher-fab-lift')!==next)fab.style.setProperty('--launcher-fab-lift',next);
+    fabFrame=0;if(!fab||isOpen())return;
+    const vv=globalThis.visualViewport,viewportBottom=(vv?.offsetTop||0)+(vv?.height||innerHeight),edge=innerWidth-104,currentLift=parseFloat(fab.style.getPropertyValue('--launcher-fab-lift'))||0,fabRect=fab.getBoundingClientRect(),baseBottom=Math.max(0,viewportBottom-fabRect.bottom-currentLift);let top=viewportBottom;
+    document.querySelectorAll('.return.show,.search-return.show,.article-pager,.reader-toast').forEach(node=>{if(node===fab)return;const style=getComputedStyle(node),rect=node.getBoundingClientRect();if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0||rect.width<2||rect.height<2||rect.right<edge||rect.bottom<viewportBottom*.45)return;top=Math.min(top,rect.top)});
+    const lift=top<viewportBottom?Math.max(0,viewportBottom-top+8-baseBottom):0,next=lift+'px';if(fab.style.getPropertyValue('--launcher-fab-lift')!==next)fab.style.setProperty('--launcher-fab-lift',next);
   }
   function positionSearchAtTop(){
     if(!isOpen()||document.activeElement!==query)return;shell.classList.add('is-search-mode');const shellBox=shell.getBoundingClientRect(),box=searchWrap.getBoundingClientRect(),topGap=10;const target=Math.max(0,shell.scrollTop+box.top-shellBox.top-topGap);shell.scrollTo({top:target,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
@@ -343,7 +347,7 @@
       return
     }
     const more=event.target.closest('[data-quick-more]');if(more){animateQuickMore(more.dataset.quickMore);return}
-    const item=event.target.closest('[data-quick-item]');if(item)openQuickItem(item.dataset.quickItem,item.dataset.quickIndex,clickPoint(event,item));
+    const item=event.target.closest('[data-quick-item]');if(item){item.classList.add('is-launching');openQuickItem(item.dataset.quickItem,item.dataset.quickIndex,clickPoint(event,item));}
   });
   resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button)openTarget(button.dataset.result,button.dataset.act,'',clickPoint(event,button))});loadMore?.addEventListener('click',scanNextResultPage);
   recentList.addEventListener('click',event=>{const button=event.target.closest('[data-recent]');if(!button)return;const item=readRecent().find(x=>x.id===button.dataset.recent);if(item)openTarget(item.id,item.act,item.label,clickPoint(event,button))});

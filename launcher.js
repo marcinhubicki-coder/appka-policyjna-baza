@@ -384,6 +384,7 @@
       setTimeout(()=>setFabReady(true),35);
     }finally{
       if(!prepared&&navigationBusy){
+        clearExitMask();
         document.body.classList.add('launcher-open');
         freezeReader(true);
       }

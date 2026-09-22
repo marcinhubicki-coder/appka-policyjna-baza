@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#eef6fb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Baza prawa">
@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<script>try{document.documentElement.dataset.readerTheme=localStorage.getItem('reader-dark')==='on'?'dark':'light';document.documentElement.classList.toggle('reader-highlights-off',localStorage.getItem('reader-highlights')==='off');const standalone=window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true,h=decodeURIComponent(location.hash.slice(1));if(standalone)document.documentElement.dataset.pwaStandalone='1';if(h&&h!=='start'&&!standalone)document.documentElement.dataset.launcherSkip='1'}catch(_){}</script>
+<script>try{document.documentElement.dataset.readerTheme=localStorage.getItem('reader-dark')==='on'?'dark':'light';document.documentElement.classList.toggle('reader-highlights-off',localStorage.getItem('reader-highlights')==='off');const standalone=window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true,h=decodeURIComponent(location.hash.slice(1));if(standalone)document.documentElement.dataset.pwaStandalone='1';if(h&&h!=='start'&&!standalone){document.documentElement.dataset.launcherSkip='1';document.querySelector('meta[name=theme-color]').content=document.documentElement.dataset.readerTheme==='dark'?'#17212b':'#ffffff'}else document.documentElement.dataset.launcherOpen='1'}catch(_){}</script>
 <link href="app.css" rel="stylesheet">
 <link href="nav.css" rel="stylesheet">
 <link href="menu-hotfix.css" rel="stylesheet">
@@ -23,6 +23,7 @@
 </head>
 <body>
 <section class="launcher-shell" id="launcherShell" aria-hidden="false" aria-labelledby="launcherTitle">
+  <div class="launcher-scroll" id="launcherScroll">
   <div class="launcher-panel">
     <div class="launcher-top">
       <div class="launcher-brand">Policyjna baza prawa</div>
@@ -56,12 +57,16 @@
     </section>
     <div class="launcher-footer">Pełna baza pozostaje dostępna offline po pierwszym pobraniu.</div>
   </div>
+  </div>
 </section>
 <button class="launcher-fab" id="launcherFab" type="button" aria-label="Otwórz ekran startowy" aria-hidden="true" tabindex="-1">
   <svg class="launcher-fab-icon" viewBox="0 0 32 32" aria-hidden="true">
-    <path d="M16 3.5c3.9 3.1 6 7.1 6 11.8v3.2l-3.1 3.2h-5.8L10 18.5v-3.2c0-4.7 2.1-8.7 6-11.8Z"/>
-    <circle cx="16" cy="12.1" r="2.25"/>
-    <path d="M10.1 14.9 6 18v5.2l5-2.2M21.9 14.9 26 18v5.2l-5-2.2M13.7 22.2l-1 5.3 3.3-2.1 3.3 2.1-1-5.3"/>
+    <g transform="rotate(32 16 16)">
+      <path class="rocket-hull" d="M16 3c-3.6 3.5-5.5 7.6-5.5 12.1v4.2l3 3.2h5l3-3.2v-4.2C21.5 10.6 19.6 6.5 16 3Z"/>
+      <circle class="rocket-window" cx="16" cy="12" r="2.5"/>
+      <path d="m10.5 15-4 4v4.5l4.8-2M21.5 15l4 4v4.5l-4.8-2"/>
+      <path class="rocket-flame" d="M13.5 25c0 2 2.5 4 2.5 4s2.5-2 2.5-4"/>
+    </g>
   </svg>
 </button>
 <header class="top"><div class="top-inner">

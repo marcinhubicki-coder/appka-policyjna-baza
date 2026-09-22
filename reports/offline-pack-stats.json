@@ -1,15 +1,15 @@
 {
   "version": 3,
-  "sourceHash": "2c07576a29ebea98",
-  "runtimeVersion": "3131d539ef6aedc2",
+  "sourceHash": "a4f6a7d1d360470e",
+  "runtimeVersion": "e266e8cc33d52e7a",
   "sourceBytes": 1888494,
-  "routerCompressedBytes": 309722,
+  "routerCompressedBytes": 309723,
   "discoveryCompressedBytes": 1039204,
   "totals": {
     "acts": 28,
     "articles": 5034,
     "units": 29159,
-    "dataCompressedBytes": 1436196,
+    "dataCompressedBytes": 1436197,
     "searchCompressedBytes": 1309791
   },
   "documents": {
@@ -49,7 +49,7 @@
         "searchable": 1628
       },
       "bytes": {
-        "data": 496546,
+        "data": 496550,
         "search": 441211
       },
       "acts": [
@@ -73,7 +73,7 @@
         "searchable": 675
       },
       "bytes": {
-        "data": 261539,
+        "data": 261537,
         "search": 222025
       },
       "acts": [
@@ -109,7 +109,7 @@
         "searchable": 118
       },
       "bytes": {
-        "data": 38743,
+        "data": 38742,
         "search": 35551
       },
       "acts": [

@@ -144,7 +144,7 @@
   function syncFabPosition(){
     fabFrame=0;if(!fab||isOpen())return;const viewportHeight=globalThis.visualViewport?.height||innerHeight,edge=innerWidth-104;let top=viewportHeight;
     document.querySelectorAll('.return.show,.search-return.show,.article-pager,.reader-toast').forEach(node=>{if(node===fab)return;const style=getComputedStyle(node),rect=node.getBoundingClientRect();if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0||rect.width<2||rect.height<2||rect.right<edge||rect.bottom<viewportHeight*.45)return;top=Math.min(top,rect.top)});
-    const lift=top<viewportHeight?Math.max(0,viewportHeight-top+10):0;fab.style.setProperty('--launcher-fab-lift',lift+'px');
+    const lift=top<viewportHeight?Math.max(0,viewportHeight-top+10):0,next=lift+'px';if(fab.style.getPropertyValue('--launcher-fab-lift')!==next)fab.style.setProperty('--launcher-fab-lift',next);
   }
   function positionSearchAtTop(){
     if(!isOpen()||document.activeElement!==query)return;shell.classList.add('is-search-mode');const shellBox=shell.getBoundingClientRect(),box=searchWrap.getBoundingClientRect(),topGap=10;const target=Math.max(0,shell.scrollTop+box.top-shellBox.top-topGap);shell.scrollTo({top:target,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});

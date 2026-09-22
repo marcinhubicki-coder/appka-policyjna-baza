@@ -102,3 +102,6 @@ body.launcher-open :is(.drawer-scroll,.toc-grid,.search-results,.search-act-filt
 .launcher-quick-extra-chips{padding-top:0}
 .launcher-transition-snapshot{z-index:6000!important;visibility:visible!important;opacity:1!important;pointer-events:none!important;overscroll-behavior:none!important}
 .launcher-transition-snapshot .launcher-panel{opacity:1!important}
+
+.launcher-transition-snapshot,.launcher-transition-snapshot *{animation:none!important;transition:none!important;caret-color:transparent!important}
+.launcher-transition-snapshot .launcher-search-box.is-snapshot-focused{border-color:#5e9bc1;box-shadow:0 12px 36px rgba(33,81,112,.16);transform:translateY(-1px)}

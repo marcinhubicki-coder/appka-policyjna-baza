@@ -254,7 +254,7 @@
     return new Promise(resolve=>{const started=performance.now();function tick(){if(!globalThis.__READER_STATE?.busy||performance.now()-started>=timeout){resolve();return}requestAnimationFrame(tick)}requestAnimationFrame(tick)});
   }
   function launcherSnapshot(){
-    const clone=shell.cloneNode(true);clone.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));clone.removeAttribute('id');clone.classList.remove('is-parked','is-opening-from-fab','is-fab-expanded','is-revealing-reader','is-search-mode');clone.classList.add('launcher-transition-snapshot');clone.setAttribute('aria-hidden','true');clone.style.clipPath='';clone.style.webkitClipPath='';clone.style.opacity='1';clone.style.visibility='visible';clone.style.pointerEvents='none';document.body.append(clone);clone.scrollTop=shell.scrollTop;return clone;
+    const searchFocused=searchWrap?.matches?.(':focus-within'),clone=shell.cloneNode(true);clone.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));clone.removeAttribute('id');clone.classList.remove('is-parked','is-opening-from-fab','is-fab-expanded','is-revealing-reader','is-search-mode');clone.classList.add('launcher-transition-snapshot');clone.setAttribute('aria-hidden','true');clone.style.clipPath='';clone.style.webkitClipPath='';clone.style.opacity='1';clone.style.visibility='visible';clone.style.pointerEvents='none';if(searchFocused)clone.querySelector('.launcher-search-box')?.classList.add('is-snapshot-focused');document.body.append(clone);clone.scrollTop=shell.scrollTop;return clone;
   }
   function ensureTransitionGlass(){
     if(transitionGlass?.isConnected)return transitionGlass;
@@ -320,19 +320,20 @@
     }
     history.replaceState(null,'','#start');if(focus)setTimeout(()=>query.focus(),80);
   }
-  async function openTarget(id,actHint='',rememberLabel='',origin=null){
-    await ensureRouter();const meta=resultMeta(id),route=idById.get(id),act=meta?.act||route?.[1]||actHint;if(!act&&rememberLabel){query.value=rememberLabel;searchWrap.classList.add('has-value');runSearch();return}
+  async function openTarget(id,actHint='',rememberLabel='',origin=null,transitionSnapshot=null){
+    const snapshot=transitionSnapshot||launcherSnapshot();
+    await ensureRouter();const meta=resultMeta(id),route=idById.get(id),act=meta?.act||route?.[1]||actHint;if(!act&&rememberLabel){snapshot?.remove();query.value=rememberLabel;searchWrap.classList.add('has-value');runSearch();query.focus();return}
     const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{},label=rememberLabel||meta?.heading||id,sub=meta?.actName||cfg.name||act;if(act)remember(id,act,label,sub);
     globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();query.blur();resultObserver?.disconnect?.();
-    const snapshot=launcherSnapshot();opened=false;globalThis.__POLICE_LAUNCHER_BOOT=false;parkLauncher();
+    opened=false;globalThis.__POLICE_LAUNCHER_BOOT=false;parkLauncher();
     freezeReader(false);await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});await waitForReaderSettled();freezeReader(true);
     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     await revealReader(origin,snapshot);snapshot.remove();freezeReader(false);setTimeout(()=>setFabReady(true),35);
   }
-  async function openQuickItem(sectionId,index,origin=null){
-    const section=QUICK_SECTIONS.find(item=>item.id===sectionId),items=[...(section?.items||[]),...(section?.moreItems||[])],item=items[Number(index)];if(!item)return;
-    await ensureRouter();if(idById.has(item.target)){await openTarget(item.target,'',quickItemLabel(item),origin);return}
-    query.value=item.fallback||item.label;searchWrap.classList.add('has-value');runSearch();query.focus();
+  async function openQuickItem(sectionId,index,origin=null,transitionSnapshot=null){
+    const section=QUICK_SECTIONS.find(item=>item.id===sectionId),items=[...(section?.items||[]),...(section?.moreItems||[])],item=items[Number(index)];if(!item){transitionSnapshot?.remove();return}
+    await ensureRouter();if(idById.has(item.target)){await openTarget(item.target,'',quickItemLabel(item),origin,transitionSnapshot);return}
+    transitionSnapshot?.remove();query.value=item.fallback||item.label;searchWrap.classList.add('has-value');runSearch();query.focus();
   }
   renderQuickSections();renderSuggestions();renderRecent();
   query.addEventListener('input',scheduleSearch);query.addEventListener('focus',()=>{positionSearchAtTop();setTimeout(positionSearchAtTop,180);setTimeout(positionSearchAtTop,420)});
@@ -347,10 +348,10 @@
       return
     }
     const more=event.target.closest('[data-quick-more]');if(more){animateQuickMore(more.dataset.quickMore);return}
-    const item=event.target.closest('[data-quick-item]');if(item){item.classList.add('is-launching');openQuickItem(item.dataset.quickItem,item.dataset.quickIndex,clickPoint(event,item));}
+    const item=event.target.closest('[data-quick-item]');if(item){item.classList.add('is-launching');const snapshot=launcherSnapshot();openQuickItem(item.dataset.quickItem,item.dataset.quickIndex,clickPoint(event,item),snapshot);}
   });
-  resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button)openTarget(button.dataset.result,button.dataset.act,'',clickPoint(event,button))});loadMore?.addEventListener('click',scanNextResultPage);
-  recentList.addEventListener('click',event=>{const button=event.target.closest('[data-recent]');if(!button)return;const item=readRecent().find(x=>x.id===button.dataset.recent);if(item)openTarget(item.id,item.act,item.label,clickPoint(event,button))});
+  resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button){const snapshot=launcherSnapshot();openTarget(button.dataset.result,button.dataset.act,'',clickPoint(event,button),snapshot)}});loadMore?.addEventListener('click',scanNextResultPage);
+  recentList.addEventListener('click',event=>{const button=event.target.closest('[data-recent]');if(!button)return;const item=readRecent().find(x=>x.id===button.dataset.recent);if(item){const snapshot=launcherSnapshot();openTarget(item.id,item.act,item.label,clickPoint(event,button),snapshot)}});
   showAll.addEventListener('click',fullSearch);readerButton.addEventListener('click',()=>close());fab?.addEventListener('click',()=>open({fromFab:true}));
   shell.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
   document.getElementById('home')?.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();globalThis.__POLICE_SEARCH_CLEAR?.();open()},{capture:true});

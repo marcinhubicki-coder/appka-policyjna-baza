@@ -1,5 +1,5 @@
 (function(){
-  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),suggestions=document.getElementById('launcherSuggestions'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),loadMore=document.getElementById('launcherLoadMore'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader'),fab=document.getElementById('launcherFab');
+  const shell=document.getElementById('launcherShell'),panel=shell?.querySelector('.launcher-panel'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),suggestions=document.getElementById('launcherSuggestions'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),loadMore=document.getElementById('launcherLoadMore'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader'),fab=document.getElementById('launcherFab');
   if(!shell||!query)return;
   const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=10,SUGGESTIONS=['Legitymowanie','Zatrzymanie','Kontrola osobista','Przeszukanie','ŚPB','Nietrzeźwy','Przemoc domowa','Nieletni','Ruch drogowy','Narkotyki'];
   const QUICK_SECTIONS=[
@@ -83,7 +83,7 @@
       {label:'Kontrola · art. 129',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
     ]}
   ];
-  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='',resultObserver=null,fabFrame=0,searchSession=null,searchToken=0,openMoreSectionIds=new Set(),fabRevealAnimation=null,exitRevealFrame=0;
+  let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='',resultObserver=null,fabFrame=0,searchSession=null,searchToken=0,openMoreSectionIds=new Set(),fabRevealAnimation=null,fabContentAnimation=null,exitRevealFrame=0,transitionGlass=null;
   const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/ł/g,'l').replace(/\s+/g,' ').trim();
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function isDeepLink(){try{const h=decodeURIComponent(location.hash.slice(1));return !!h&&h!=='start'}catch(_){return false}}
@@ -112,21 +112,29 @@
     }).join('');
   }
   function quickSectionNode(id){return [...quickSections.querySelectorAll('[data-quick-section]')].find(node=>node.dataset.quickSection===id)||null}
+  function measureCollapsedQuickSection(section){
+    if(!section)return 0;const clone=section.cloneNode(true),rect=section.getBoundingClientRect();
+    clone.querySelectorAll('.launcher-chip.is-more-item').forEach(node=>node.remove());
+    const control=clone.querySelector('[data-quick-more]');if(control){control.textContent='Pokaż więcej';control.setAttribute('aria-expanded','false')}
+    Object.assign(clone.style,{position:'fixed',visibility:'hidden',pointerEvents:'none',left:'-10000px',top:'0',width:rect.width+'px',height:'auto',overflow:'visible'});
+    document.body.append(clone);const height=clone.getBoundingClientRect().height;clone.remove();return height;
+  }
   function animateQuickMore(id){
     const section=quickSectionNode(id),wasOpen=openMoreSectionIds.has(id),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,fromHeight=section?.getBoundingClientRect().height||0;
-    const commit=()=>{
+    if(!wasOpen||reduced||!section){
       if(wasOpen)openMoreSectionIds.delete(id);else openMoreSectionIds.add(id);
       renderQuickSections();
-      const next=quickSectionNode(id);if(!next||reduced||!fromHeight)return;
-      const toHeight=next.getBoundingClientRect().height;next.style.height=fromHeight+'px';next.style.overflow='hidden';
-      const animation=next.animate([{height:fromHeight+'px'},{height:toHeight+'px'}],{duration:wasOpen?330:360,easing:wasOpen?'cubic-bezier(.4,0,.22,1)':'cubic-bezier(.22,.68,.24,1)'});
-      animation.onfinish=()=>{next.style.height='';next.style.overflow=''}
+      if(!reduced&&fromHeight){const next=quickSectionNode(id),toHeight=next?.getBoundingClientRect().height||fromHeight;if(next){next.style.height=fromHeight+'px';next.style.overflow='hidden';const animation=next.animate([{height:fromHeight+'px'},{height:toHeight+'px'}],{duration:360,easing:'cubic-bezier(.22,.68,.24,1)'});animation.onfinish=()=>{next.style.height='';next.style.overflow=''}}}
+      return
+    }
+    const toHeight=measureCollapsedQuickSection(section)||fromHeight,extras=[...section.querySelectorAll('.launcher-chip.is-more-item')],control=section.querySelector('[data-quick-more]');
+    section.style.height=fromHeight+'px';section.style.overflow='hidden';
+    const boxAnimation=section.animate([{height:fromHeight+'px'},{height:toHeight+'px'}],{duration:320,easing:'cubic-bezier(.32,0,.24,1)',fill:'forwards'});
+    extras.forEach((node,index)=>node.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(7px) scale(.98)'}],{duration:190,delay:Math.min(index,5)*10,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'}));
+    control?.animate([{opacity:1},{opacity:.25}],{duration:150,easing:'ease-out',fill:'forwards'});
+    boxAnimation.onfinish=()=>{
+      openMoreSectionIds.delete(id);renderQuickSections();const next=quickSectionNode(id);if(next){next.style.height='';next.style.overflow=''}
     };
-    if(!wasOpen||reduced||!section){commit();return}
-    const extras=[...section.querySelectorAll('.launcher-chip.is-more-item')].reverse(),control=section.querySelector('[data-quick-more]'),animations=[];
-    extras.forEach((node,index)=>{const animation=node.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(8px) scale(.975)'}],{duration:210,delay:index*20,easing:'cubic-bezier(.4,0,.22,1)',fill:'forwards'});animations.push(animation.finished.catch(()=>{}))});
-    if(control){const animation=control.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(5px) scale(.98)'}],{duration:180,easing:'ease-in',fill:'forwards'});animations.push(animation.finished.catch(()=>{}))}
-    Promise.all(animations).then(commit);
   }
   function animateQuickSection(section,opening){
     const body=section?.querySelector('.launcher-quick-body'),toggle=section?.querySelector('.launcher-quick-toggle');if(!body||!toggle)return;
@@ -245,30 +253,39 @@
   function waitForReaderSettled(timeout=720){
     return new Promise(resolve=>{const started=performance.now();function tick(){if(!globalThis.__READER_STATE?.busy||performance.now()-started>=timeout){resolve();return}requestAnimationFrame(tick)}requestAnimationFrame(tick)});
   }
+  function ensureTransitionGlass(){
+    if(transitionGlass?.isConnected)return transitionGlass;
+    transitionGlass=document.createElement('div');transitionGlass.className='launcher-transition-glass';transitionGlass.setAttribute('aria-hidden','true');document.body.append(transitionGlass);return transitionGlass;
+  }
   function clearExitMask(){
     cancelAnimationFrame(exitRevealFrame);exitRevealFrame=0;
     shell.style.removeProperty('-webkit-mask-image');shell.style.removeProperty('mask-image');shell.style.removeProperty('-webkit-mask-repeat');shell.style.removeProperty('mask-repeat');shell.classList.remove('is-revealing-reader');
+    if(transitionGlass){transitionGlass.classList.remove('is-visible');transitionGlass.style.width='0px';transitionGlass.style.height='0px'}
   }
   function revealReader(point){
     if(matchMedia('(prefers-reduced-motion: reduce)').matches)return Promise.resolve();
     return new Promise(resolve=>{
-      const x=Math.max(0,Math.min(innerWidth,point?.x??innerWidth/2)),y=Math.max(0,Math.min(innerHeight,point?.y??innerHeight/2)),maxX=Math.max(x,innerWidth-x),maxY=Math.max(y,innerHeight-y),radius=Math.hypot(maxX,maxY)+36,duration=760,started=performance.now();
-      shell.classList.add('is-revealing-reader');
-      function paint(r){const mask='radial-gradient(circle at '+x+'px '+y+'px,transparent 0 '+r+'px,#000 '+(r+1)+'px 100%)';shell.style.webkitMaskImage=mask;shell.style.maskImage=mask;shell.style.webkitMaskRepeat='no-repeat';shell.style.maskRepeat='no-repeat'}
-      paint(0);
-      function tick(now){const t=Math.min(1,(now-started)/duration),ease=t*t*(3-2*t);paint(radius*ease);if(t<1)exitRevealFrame=requestAnimationFrame(tick);else{exitRevealFrame=0;resolve()}}
+      const x=Math.max(0,Math.min(innerWidth,point?.x??innerWidth/2)),y=Math.max(0,Math.min(innerHeight,point?.y??innerHeight/2)),maxX=Math.max(x,innerWidth-x),maxY=Math.max(y,innerHeight-y),radius=Math.hypot(maxX,maxY)+44,duration=760,started=performance.now(),glass=ensureTransitionGlass(),feather=22;
+      shell.classList.add('is-revealing-reader');glass.style.left=x+'px';glass.style.top=y+'px';glass.classList.add('is-visible');
+      function paint(r){
+        const mask='radial-gradient(circle at '+x+'px '+y+'px,transparent 0 '+Math.max(0,r-feather)+'px,rgba(0,0,0,.22) '+Math.max(0,r-feather*.55)+'px,#000 '+r+'px 100%)';
+        shell.style.webkitMaskImage=mask;shell.style.maskImage=mask;shell.style.webkitMaskRepeat='no-repeat';shell.style.maskRepeat='no-repeat';
+        const size=Math.max(18,r*2);glass.style.width=size+'px';glass.style.height=size+'px';glass.style.opacity=String(Math.max(0,.82-r/radius*.62));
+      }
+      paint(8);
+      function tick(now){const t=Math.min(1,(now-started)/duration),smooth=t*t*(3-2*t),ease=t*.34+smooth*.66;paint(8+(radius-8)*ease);if(t<1)exitRevealFrame=requestAnimationFrame(tick);else{exitRevealFrame=0;glass.classList.remove('is-visible');resolve()}}
       exitRevealFrame=requestAnimationFrame(tick);
     });
   }
   function restoreLauncherView(){
-    fabRevealAnimation?.cancel?.();fabRevealAnimation=null;clearExitMask();
+    fabRevealAnimation?.cancel?.();fabRevealAnimation=null;fabContentAnimation?.cancel?.();fabContentAnimation=null;if(panel)panel.style.opacity='';clearExitMask();
     shell.hidden=false;
     shell.classList.remove('is-closing','is-search-mode','is-fab-expanded','is-opening-from-fab','is-revealing-reader');
     shell.style.clipPath='';shell.style.webkitClipPath='';shell.style.opacity='';shell.style.transform='';
     shell.scrollTop=0;
   }
   function parkLauncher(){
-    fabRevealAnimation?.cancel?.();fabRevealAnimation=null;clearExitMask();
+    fabRevealAnimation?.cancel?.();fabRevealAnimation=null;fabContentAnimation?.cancel?.();fabContentAnimation=null;if(panel)panel.style.opacity='';clearExitMask();
     shell.style.clipPath='';shell.style.webkitClipPath='';shell.style.opacity='';shell.style.transform='';
     shell.classList.remove('is-closing','is-opening-from-fab','is-fab-expanded','is-search-mode','is-revealing-reader');
     shell.classList.add('is-parked');shell.setAttribute('aria-hidden','true');document.body.classList.remove('launcher-open');document.documentElement.classList.remove('launcher-open-root');
@@ -283,14 +300,17 @@
     opened=true;delete document.documentElement.dataset.launcherSkip;shell.classList.add('is-runtime-open');globalThis.__POLICE_LAUNCHER_BOOT=true;
     freezeReader(true);restoreLauncherView();renderRecent();renderQuickSections();setFabReady(false);
     if(fabRect&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
-      const x=fabRect.left+fabRect.width/2,y=fabRect.top+fabRect.height/2,start='circle(0px at '+x+'px '+y+'px)',mid='circle(18vmax at '+x+'px '+y+'px)',end='circle(160vmax at '+x+'px '+y+'px)';
+      const x=fabRect.left+fabRect.width/2,y=fabRect.top+fabRect.height/2,start='circle(32px at '+x+'px '+y+'px)',mid='circle(18vmax at '+x+'px '+y+'px)',end='circle(160vmax at '+x+'px '+y+'px)',duration=1600;
       shell.style.setProperty('--launcher-origin-x',x+'px');shell.style.setProperty('--launcher-origin-y',y+'px');shell.style.clipPath=start;shell.style.webkitClipPath=start;shell.classList.add('is-opening-from-fab');
+      if(panel)panel.style.opacity='0';
       shell.classList.remove('is-parked');shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
         if(!isOpen())return;
-        fabRevealAnimation=shell.animate([{clipPath:start,offset:0,easing:'cubic-bezier(.58,0,.42,1)'},{clipPath:mid,offset:.46,easing:'cubic-bezier(.18,.66,.18,1)'},{clipPath:end,offset:1}],{duration:1600,easing:'linear',fill:'forwards'});
-        fabRevealAnimation.onfinish=()=>{fabRevealAnimation=null;shell.style.clipPath='none';shell.style.webkitClipPath='none';shell.classList.add('is-fab-expanded');shell.classList.remove('is-opening-from-fab')};
-        fabRevealAnimation.oncancel=()=>{fabRevealAnimation=null};
+        const radial=shell.animate([{clipPath:start,offset:0},{clipPath:start,offset:.085},{clipPath:mid,offset:.48},{clipPath:end,offset:1}],{duration,easing:'cubic-bezier(.36,.02,.2,1)',fill:'forwards'});
+        fabRevealAnimation=radial;
+        if(panel){const content=panel.animate([{opacity:0,offset:0},{opacity:0,offset:.18},{opacity:1,offset:.56},{opacity:1,offset:1}],{duration,easing:'linear',fill:'forwards'});fabContentAnimation=content;content.onfinish=()=>{panel.style.opacity='1';content.cancel();if(fabContentAnimation===content)fabContentAnimation=null};content.oncancel=()=>{if(fabContentAnimation===content)fabContentAnimation=null}}
+        radial.onfinish=()=>{shell.style.clipPath='none';shell.style.webkitClipPath='none';shell.classList.add('is-fab-expanded');shell.classList.remove('is-opening-from-fab');radial.cancel();if(fabRevealAnimation===radial)fabRevealAnimation=null};
+        radial.oncancel=()=>{if(fabRevealAnimation===radial)fabRevealAnimation=null};
       }));
     }else{
       shell.classList.remove('is-parked');shell.setAttribute('aria-hidden','false');document.body.classList.add('launcher-open');

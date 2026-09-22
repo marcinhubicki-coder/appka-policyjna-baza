@@ -120,54 +120,56 @@
     node.textContent=previous;if(previousLevel)node.dataset.quickVariant=previousLevel;else delete node.dataset.quickVariant;
     return result
   }
-  function packQuickRows(nodes,width,gap=7){
-    const left=[...nodes],rows=[],fits=row=>row.reduce((sum,node)=>sum+node.getBoundingClientRect().width,0)+gap*Math.max(0,row.length-1)<=width+.5;
-    while(left.length>=3){
-      let best=null,bestScore=-Infinity;
-      for(let a=0;a<left.length-2;a++)for(let b=a+1;b<left.length-1;b++)for(let c=b+1;c<left.length;c++){
-        const row=[left[a],left[b],left[c]];if(!fits(row))continue;
-        const used=row.reduce((sum,node)=>sum+node.getBoundingClientRect().width,0)+gap*2,score=used-(a+b+c)*.12;
-        if(score>bestScore){best=[a,b,c];bestScore=score}
-      }
-      if(!best)break;
-      const row=best.map(index=>left[index]);rows.push(row);best.slice().sort((a,b)=>b-a).forEach(index=>left.splice(index,1));
-    }
-    while(left.length>=2){
-      let best=null,bestScore=-Infinity;
-      for(let a=0;a<left.length-1;a++)for(let b=a+1;b<left.length;b++){
-        const row=[left[a],left[b]];if(!fits(row))continue;
-        const used=row.reduce((sum,node)=>sum+node.getBoundingClientRect().width,0)+gap,score=used-(a+b)*.08;
-        if(score>bestScore){best=[a,b];bestScore=score}
-      }
-      if(!best)break;
-      const row=best.map(index=>left[index]);rows.push(row);best.slice().sort((a,b)=>b-a).forEach(index=>left.splice(index,1));
-    }
-    left.forEach(node=>rows.push([node]));return rows;
-  }
-  function fitQuickRow(row,width,gap=7){
-    if(!row.length)return;
-    row.forEach(node=>setQuickVariant(node,quickVariants(node)[0]));
-    const options=row.map(measureQuickVariants),available=width-gap*Math.max(0,row.length-1);let best=null;
+  function chooseQuickVariants(row,width,metrics,gap=7){
+    const available=width-gap*Math.max(0,row.length-1),options=row.map(node=>metrics.get(node)||measureQuickVariants(node));let best=null;
     function visit(index,choice,total,richness){
       if(total>available+.5)return;
-      if(index===options.length){const score=total+richness*5;if(!best||score>best.score)best={choice:[...choice],total,score};return}
+      if(index===options.length){
+        const shortened=choice.map((variant,i)=>variant.text!==(row[i].dataset.qfull||variant.text)),eligible=shortened.filter(Boolean).length,spare=Math.max(0,available-total),padEach=eligible?Math.min(10,Math.max(0,(spare-5)/eligible)):0,residual=Math.max(0,spare-padEach*eligible);
+        const score=richness*10-residual*2.15-padEach*.22+total*.012;
+        if(!best||score>best.score)best={nodes:row,choice:[...choice],total,richness,padEach,residual,score,shortened};
+        return
+      }
       options[index].forEach(variant=>{choice.push(variant);visit(index+1,choice,total+variant.width,richness+variant.level);choice.pop()});
     }
-    visit(0,[],0,0);if(!best)return;
-    best.choice.forEach((variant,index)=>setQuickVariant(row[index],variant));
-    const spare=Math.max(0,available-best.total),eligible=row.filter((node,index)=>best.choice[index].level<2);
-    if(row.length>=2&&eligible.length&&spare>4){
-      const addTotal=Math.min(10,(spare-4)/eligible.length),perSide=Math.max(0,addTotal/2);
-      eligible.forEach(node=>node.style.setProperty('--quick-pad-x',perSide.toFixed(2)+'px'));
+    visit(0,[],0,0);return best;
+  }
+  function quickCombinations(pool,size,visit,start=0,chosen=[]){
+    if(chosen.length===size){visit([...chosen]);return}
+    for(let i=start;i<=pool.length-(size-chosen.length);i++){chosen.push(pool[i]);quickCombinations(pool,size,visit,i+1,chosen);chosen.pop()}
+  }
+  function planQuickRows(nodes,width,gap=7){
+    const left=[...nodes],rows=[];left.forEach(node=>setQuickVariant(node,quickVariants(node)[0]));
+    const metrics=new Map(left.map(node=>[node,measureQuickVariants(node)]));
+    while(left.length){
+      if(left.length===1){const node=left.shift(),plan=chooseQuickVariants([node],width,metrics,gap);rows.push(plan||{nodes:[node],choice:[quickVariants(node)[0]],padEach:0,shortened:[false]});continue}
+      const pool=left.slice(0,Math.min(9,left.length)),sizes=left.length>=3?[3,2]:[2];let best=null;
+      sizes.forEach(size=>quickCombinations(pool,size,row=>{
+        const plan=chooseQuickVariants(row,width,metrics,gap);if(!plan)return;
+        const indexes=row.map(node=>left.indexOf(node)),orderPenalty=indexes.reduce((sum,index)=>sum+index,0)*.34,rowBonus=size===3?54:20,nearFull=plan.residual<=12?10:plan.residual<=24?4:0,score=rowBonus+nearFull+plan.score-orderPenalty;
+        if(!best||score>best.score)best={...plan,score,indexes};
+      }));
+      if(!best){
+        const node=left.shift(),plan=chooseQuickVariants([node],width,metrics,gap);rows.push(plan||{nodes:[node],choice:[quickVariants(node)[0]],padEach:0,shortened:[false]});continue
+      }
+      best.nodes.forEach(node=>left.splice(left.indexOf(node),1));rows.push(best);
     }
+    return rows;
+  }
+  function applyQuickRowPlan(plan){
+    if(!plan)return;
+    plan.nodes.forEach((node,index)=>{
+      setQuickVariant(node,plan.choice[index]);
+      if(plan.shortened?.[index]&&plan.padEach>0)node.style.setProperty('--quick-pad-x',(plan.padEach/2).toFixed(2)+'px');
+    });
   }
   function optimizeQuickLayout(section){
     const wrap=section?.querySelector('.launcher-quick-body-inner>.launcher-quick-chips');if(!wrap)return;
     const control=wrap.querySelector('[data-quick-more]'),primary=[...wrap.querySelectorAll('.launcher-chip:not(.is-more-item)')],extra=[...wrap.querySelectorAll('.launcher-chip.is-more-item')],width=wrap.clientWidth;if(width<120)return;
     [...primary,...extra].forEach(node=>setQuickVariant(node,quickVariants(node)[0]));
-    const primaryRows=packQuickRows(primary,width),extraRows=packQuickRows(extra,width),frag=document.createDocumentFragment();
-    primaryRows.flat().forEach(node=>frag.append(node));extraRows.flat().forEach(node=>frag.append(node));if(control)frag.append(control);wrap.append(frag);
-    primaryRows.forEach(row=>fitQuickRow(row,width));extraRows.forEach(row=>fitQuickRow(row,width));
+    const primaryRows=planQuickRows(primary,width),extraRows=planQuickRows(extra,width),frag=document.createDocumentFragment();
+    primaryRows.forEach(plan=>plan.nodes.forEach(node=>frag.append(node)));extraRows.forEach(plan=>plan.nodes.forEach(node=>frag.append(node)));if(control)frag.append(control);wrap.append(frag);
+    primaryRows.forEach(applyQuickRowPlan);extraRows.forEach(applyQuickRowPlan);
   }
   function renderQuickSections(){
     quickSections.innerHTML=QUICK_SECTIONS.map(section=>{

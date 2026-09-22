@@ -253,6 +253,21 @@
   function waitForReaderSettled(timeout=720){
     return new Promise(resolve=>{const started=performance.now();function tick(){if(!globalThis.__READER_STATE?.busy||performance.now()-started>=timeout){resolve();return}requestAnimationFrame(tick)}requestAnimationFrame(tick)});
   }
+  function waitForTargetStable(id,timeout=760){
+    return new Promise(resolve=>{
+      const started=performance.now(),view=document.getElementById('actview');let stable=0,last='',frame=0,dirty=false;
+      const observer=view?new MutationObserver(()=>{dirty=true;stable=0}):null;observer?.observe(view,{childList:true,subtree:true});
+      const finish=()=>{cancelAnimationFrame(frame);observer?.disconnect();resolve()};
+      function tick(){
+        const node=document.getElementById(id),rect=node?.getBoundingClientRect?.(),state=node?[Math.round(rect.top*2)/2,Math.round(rect.height*2)/2,Math.round(scrollY*2)/2,document.documentElement.scrollHeight].join('|'):'';
+        if(node&&!dirty&&state===last&&!globalThis.__READER_STATE?.busy)stable++;else stable=0;
+        dirty=false;last=state;
+        if(stable>=5||performance.now()-started>=timeout){finish();return}
+        frame=requestAnimationFrame(tick);
+      }
+      frame=requestAnimationFrame(tick);
+    });
+  }
   function launcherSnapshot(){
     const searchFocused=searchWrap?.matches?.(':focus-within'),clone=shell.cloneNode(true);clone.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));clone.removeAttribute('id');clone.classList.remove('is-parked','is-opening-from-fab','is-fab-expanded','is-revealing-reader','is-search-mode');clone.classList.add('launcher-transition-snapshot');clone.setAttribute('aria-hidden','true');clone.style.clipPath='';clone.style.webkitClipPath='';clone.style.opacity='1';clone.style.visibility='visible';clone.style.pointerEvents='none';if(searchFocused)clone.querySelector('.launcher-search-box')?.classList.add('is-snapshot-focused');document.body.append(clone);clone.scrollTop=shell.scrollTop;return clone;
   }
@@ -326,8 +341,8 @@
     const cfg=globalThis.__LAW_CONFIG?.acts?.[act]||{},label=rememberLabel||meta?.heading||id,sub=meta?.actName||cfg.name||act;if(act)remember(id,act,label,sub);
     globalThis.__POLICE_LAUNCHER_RETURN?.clear?.();query.blur();resultObserver?.disconnect?.();
     opened=false;globalThis.__POLICE_LAUNCHER_BOOT=false;parkLauncher();
-    freezeReader(false);await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});await waitForReaderSettled();freezeReader(true);
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    freezeReader(false);await waitForApp();await globalThis.__POLICE_GOTO_ID?.(id,{smooth:false,alignTop:true});await waitForReaderSettled();await waitForTargetStable(id);freezeReader(true);
+    await new Promise(resolve=>requestAnimationFrame(resolve));
     await revealReader(origin,snapshot);snapshot.remove();freezeReader(false);setTimeout(()=>setFabReady(true),35);
   }
   async function openQuickItem(sectionId,index,origin=null,transitionSnapshot=null){

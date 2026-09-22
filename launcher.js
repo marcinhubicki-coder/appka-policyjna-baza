@@ -38,17 +38,41 @@
       {label:'Niszczenie zieleni',target:'kw-art-144',fallback:'kw art 144'}
     ]},
     {id:'przestepstwa',label:'Częste przestępstwa',items:[
-      {label:'Groźby karalne',target:'kk-art-190',fallback:'groźba karalna'},
-      {label:'Uszkodzenie ciała',target:'kk-art-157',fallback:'naruszenie czynności narządu ciała'},
-      {label:'Bójka / pobicie',target:'kk-art-158',fallback:'bójka pobicie'},
-      {label:'Nietrzeźwy kierujący',target:'kk-art-178a',fallback:'prowadzi pojazd w stanie nietrzeźwości'},
-      {label:'Naruszenie nietykalności',target:'kk-art-217',fallback:'narusza nietykalność cielesną'},
-      {label:'Znieważenie funkcjonariusza',target:'kk-art-226',fallback:'znieważa funkcjonariusza'},
-      {label:'Kradzież',target:'kk-art-278',fallback:'kradzież'},
-      {label:'Kradzież z włamaniem',target:'kk-art-279',fallback:'kradzież z włamaniem'},
-      {label:'Rozbój',target:'kk-art-280',fallback:'rozbój'},
-      {label:'Uszkodzenie mienia',target:'kk-art-288',fallback:'niszczy uszkadza cudzą rzecz'},
-      {label:'Narkotyki',target:'nark-art-62',fallback:'posiadanie środków odurzających'}
+      {label:'Uszkodzenie ciała',target:'kk-art-157',fallback:'kk art 157'},
+      {label:'Bójka / pobicie',target:'kk-art-158',fallback:'kk art 158'},
+      {label:'Nietrzeźwy kierujący',target:'kk-art-178a',fallback:'kk art 178a'},
+      {label:'Groźby karalne',target:'kk-art-190',fallback:'kk art 190'},
+      {label:'Stalking',target:'kk-art-190a',fallback:'kk art 190a'},
+      {label:'Zmuszanie',target:'kk-art-191',fallback:'kk art 191'},
+      {label:'Mir domowy',target:'kk-art-193',fallback:'kk art 193'},
+      {label:'Znęcanie',target:'kk-art-207',fallback:'kk art 207'},
+      {label:'Naruszenie nietykalności',target:'kk-art-217',fallback:'kk art 217'},
+      {label:'Nietykalność funkcjonariusza',target:'kk-art-222',fallback:'kk art 222'},
+      {label:'Czynna napaść',target:'kk-art-223',fallback:'kk art 223'},
+      {label:'Znieważenie funkcjonariusza',target:'kk-art-226',fallback:'kk art 226'},
+      {label:'Kradzież',target:'kk-art-278',fallback:'kk art 278'},
+      {label:'Kradzież z włamaniem',target:'kk-art-279',fallback:'kk art 279'},
+      {label:'Rozbój',target:'kk-art-280',fallback:'kk art 280'},
+      {label:'Oszustwo',target:'kk-art-286',fallback:'kk art 286'},
+      {label:'Zniszczenie mienia',target:'kk-art-288',fallback:'kk art 288'}
+    ],moreItems:[
+      {label:'Zabójstwo',target:'kk-art-148',fallback:'kk art 148'},
+      {label:'Ciężki uszczerbek',target:'kk-art-156',fallback:'kk art 156'},
+      {label:'Broń w bójce / pobiciu',target:'kk-art-159',fallback:'kk art 159'},
+      {label:'Narażenie na niebezpieczeństwo',target:'kk-art-160',fallback:'kk art 160'},
+      {label:'Jazda mimo cofnięcia uprawnień',target:'kk-art-180a',fallback:'kk art 180a'},
+      {label:'Zgwałcenie',target:'kk-art-197',fallback:'kk art 197'},
+      {label:'Rozpijanie małoletniego',target:'kk-art-208',fallback:'kk art 208'},
+      {label:'Nietykalność interweniującego',target:'kk-art-217a',fallback:'kk art 217a'},
+      {label:'Fałszywy alarm',target:'kk-art-224a',fallback:'kk art 224a'},
+      {label:'Fałszywe zeznania',target:'kk-art-233',fallback:'kk art 233'},
+      {label:'Fałszywe oskarżenie',target:'kk-art-234',fallback:'kk art 234'},
+      {label:'Fałszywe zawiadomienie',target:'kk-art-238',fallback:'kk art 238'},
+      {label:'Poplecznictwo',target:'kk-art-239',fallback:'kk art 239'},
+      {label:'Kradzież rozbójnicza',target:'kk-art-281',fallback:'kk art 281'},
+      {label:'Wymuszenie rozbójnicze',target:'kk-art-282',fallback:'kk art 282'},
+      {label:'Przywłaszczenie',target:'kk-art-284',fallback:'kk art 284'},
+      {label:'Zabór pojazdu',target:'kk-art-289',fallback:'kk art 289'}
     ]},
     {id:'prd',label:'Ruch drogowy · PRD',items:[
       {label:'Prędkość · art. 20',target:'prd-art-20',fallback:'prd art 20 prędkość'},
@@ -79,7 +103,7 @@
   function renderQuickSections(){
     quickSections.innerHTML=QUICK_SECTIONS.map(section=>{
       const open=section.id===openSectionId,moreOpen=openMoreSectionIds.has(section.id),primary=section.items.map((item,index)=>quickChip(item,section.id,index)).join(''),more=(section.moreItems||[]).map((item,index)=>quickChip(item,section.id,section.items.length+index)).join('');
-      const moreBlock=section.moreItems?.length?'<button class="launcher-quick-more" type="button" data-quick-more="'+esc(section.id)+'" aria-expanded="'+String(moreOpen)+'">'+(moreOpen?'Pokaż mniej':'Pokaż więcej')+'<span aria-hidden="true">⌄</span></button><div class="launcher-quick-more-body"'+(moreOpen?'':' hidden')+'><div class="launcher-quick-chips">'+more+'</div></div>':'';
+      const moreBlock=section.moreItems?.length?(moreOpen?'<div class="launcher-quick-more-body"><div class="launcher-quick-chips">'+more+'</div></div><button class="launcher-quick-more" type="button" data-quick-more="'+esc(section.id)+'" aria-expanded="true">Pokaż mniej <span aria-hidden="true">⌃</span></button>':'<button class="launcher-quick-more" type="button" data-quick-more="'+esc(section.id)+'" aria-expanded="false">Pokaż więcej <span aria-hidden="true">⌄</span></button>'):'';
       return '<section class="launcher-quick-section'+(open?' is-open':'')+'" data-quick-section="'+esc(section.id)+'"><button class="launcher-quick-toggle" type="button" aria-expanded="'+String(open)+'"><span>'+esc(section.label)+'</span><span class="launcher-quick-chevron" aria-hidden="true">›</span></button><div class="launcher-quick-body"'+(open?'':' hidden')+'><div class="launcher-quick-chips">'+primary+'</div>'+moreBlock+'</div></section>';
     }).join('');
   }

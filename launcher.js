@@ -1,5 +1,5 @@
 (function(){
-  const shell=document.getElementById('launcherShell'),panel=shell?.querySelector('.launcher-panel'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),suggestions=document.getElementById('launcherSuggestions'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),loadMore=document.getElementById('launcherLoadMore'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader'),fab=document.getElementById('launcherFab');
+  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),suggestions=document.getElementById('launcherSuggestions'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),loadMore=document.getElementById('launcherLoadMore'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader'),fab=document.getElementById('launcherFab');
   if(!shell||!query)return;
   const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=10,SUGGESTIONS=['Legitymowanie','Zatrzymanie','Kontrola osobista','Przeszukanie','ŚPB','Nietrzeźwy','Przemoc domowa','Nieletni','Ruch drogowy','Narkotyki'];
   const QUICK_SECTIONS=[
@@ -275,7 +275,7 @@
     });
   }
   function launcherSnapshot(target=null){
-    const searchFocused=searchWrap?.matches?.(':focus-within'),clone=shell.cloneNode(true);clone.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));clone.removeAttribute('id');clone.classList.remove('is-parked','is-opening-from-fab','is-fab-expanded','is-revealing-reader','is-search-mode');clone.classList.add('launcher-transition-snapshot');clone.setAttribute('aria-hidden','true');clone.style.clipPath='';clone.style.webkitClipPath='';clone.style.opacity='1';clone.style.visibility='visible';clone.style.pointerEvents='auto';clone.style.touchAction='none';if(searchFocused)clone.querySelector('.launcher-search-box')?.classList.add('is-snapshot-focused');clone.__launcherCapturedAt=performance.now();document.body.append(clone);clone.scrollTop=shell.scrollTop;
+    const searchFocused=searchWrap?.matches?.(':focus-within'),clone=shell.cloneNode(true);clone.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));clone.removeAttribute('id');clone.classList.remove('is-parked','is-opening-from-fab','is-revealing-reader','is-search-mode');clone.classList.add('launcher-transition-snapshot');clone.setAttribute('aria-hidden','true');clone.style.clipPath='';clone.style.webkitClipPath='';clone.style.opacity='1';clone.style.visibility='visible';clone.style.pointerEvents='auto';clone.style.touchAction='none';if(searchFocused)clone.querySelector('.launcher-search-box')?.classList.add('is-snapshot-focused');clone.__launcherCapturedAt=performance.now();document.body.append(clone);clone.scrollTop=shell.scrollTop;
     if(target){const key=launchTargetKey(target),mirror=[...clone.querySelectorAll('[data-quick-item],[data-result],[data-recent]')].find(node=>launchTargetKey(node)===key);mirror?.classList.add('is-launching')}
     void clone.offsetWidth;return clone;
   }
@@ -313,14 +313,14 @@
   function restoreLauncherView(){
     fabRevealAnimation?.cancel?.();fabRevealAnimation=null;clearExitMask();
     shell.hidden=false;
-    shell.classList.remove('is-closing','is-search-mode','is-fab-expanded','is-opening-from-fab','is-revealing-reader');
+    shell.classList.remove('is-closing','is-search-mode','is-opening-from-fab','is-revealing-reader');
     shell.style.clipPath='';shell.style.webkitClipPath='';shell.style.opacity='';shell.style.transform='';
     shell.scrollTop=0;
   }
   function parkLauncher(){
     clearFabLaunch();fabRevealAnimation?.cancel?.();fabRevealAnimation=null;clearExitMask();
     shell.style.clipPath='';shell.style.webkitClipPath='';shell.style.opacity='';shell.style.transform='';
-    shell.classList.remove('is-closing','is-opening-from-fab','is-fab-expanded','is-search-mode','is-revealing-reader');
+    shell.classList.remove('is-closing','is-opening-from-fab','is-search-mode','is-revealing-reader');
     shell.classList.add('is-parked');shell.setAttribute('aria-hidden','true');document.body.classList.remove('launcher-open');document.documentElement.classList.remove('launcher-open-root');
   }
   function close(animate=true){

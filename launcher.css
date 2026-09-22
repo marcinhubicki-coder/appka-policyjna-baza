@@ -25,13 +25,13 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 .launcher-quick-body{height:0;opacity:0;overflow:hidden}
 .launcher-quick-section.is-open .launcher-quick-body{height:auto;opacity:1}
 .launcher-quick-body-inner{padding:2px 12px 12px}
-.launcher-quick-chips{display:flex;flex-wrap:wrap;gap:7px}
+.launcher-quick-chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
 .launcher-quick-more,.launcher-chip{height:34px;min-height:34px;max-height:34px;box-sizing:border-box;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1}
 .launcher-quick-more{width:auto;max-width:100%;margin:0;padding:0 14px;border:1px solid #2f78a7;background:#2f78a7;color:#fff;font:800 10.5px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 5px 14px rgba(47,120,167,.15)}
 .launcher-quick-more:active{transform:none;filter:brightness(.97)}
 .launcher-chip.is-more-item{animation:launcherQuickChipIn .34s cubic-bezier(.22,.68,.24,1) both;animation-delay:calc(var(--quick-in,0) * 26ms)}
 @keyframes launcherQuickChipIn{0%{opacity:0;transform:translateY(9px)}100%{opacity:1;transform:none}}
-.launcher-chip{border:1px solid #bdd3e0;background:#f9fcfe;color:#2a6389;padding:0 11px;font:750 11px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 2px 7px rgba(46,90,120,.035);transition:background-color .12s ease,border-color .12s ease,color .12s ease,box-shadow .12s ease}
+.launcher-chip{border:1px solid #bdd3e0;background:#f9fcfe;color:#2a6389;padding:0 9px;font:750 10.7px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 2px 7px rgba(46,90,120,.035);transition:background-color .12s ease,border-color .12s ease,color .12s ease,box-shadow .12s ease}
 .launcher-chip:active{transform:none;background:#f9fcfe;border-color:#bdd3e0;color:#2a6389;box-shadow:0 2px 7px rgba(46,90,120,.035)}
 .launcher-search{position:relative;margin-top:17px}
 .launcher-search-box{height:58px;border:1px solid #9fbfd2;border-radius:29px;background:rgba(255,255,255,.94);box-shadow:0 10px 32px rgba(33,81,112,.10);display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
@@ -87,7 +87,7 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 .launcher-fab-shield .launcher-shield-bars{fill:none;stroke-width:.95;opacity:.46}
 body.launcher-open .launcher-fab,body.settings-open .launcher-fab,body.reader-toc-active .launcher-fab,body.favorite-editing .launcher-fab{opacity:0;transform:scale(.7);pointer-events:none}
 body.launcher-open .launcher-fab.is-launching{z-index:5004!important;opacity:.94!important;transform:scale(1)!important;pointer-events:none!important}
-.launcher-fab.is-launching .launcher-fab-icon{opacity:1!important;transform:none!important;transition:opacity .18s cubic-bezier(.4,0,.2,1),transform .18s cubic-bezier(.4,0,.2,1)!important}
+.launcher-fab.is-launching .launcher-fab-icon{opacity:1!important;transform:none!important;transition:opacity .30s cubic-bezier(.4,0,.2,1),transform .30s cubic-bezier(.4,0,.2,1)!important}
 .launcher-fab.is-launching.is-circle-fading::before{opacity:0!important;transform:scale(.96)!important}
 .launcher-fab.is-launching.is-icon-fading .launcher-fab-icon{opacity:0!important;transform:translateY(6px) scale(.94)!important}
 html[data-reader-theme="dark"] .launcher-fab{color:#8ec8ee}
@@ -107,7 +107,5 @@ body.launcher-open :is(.drawer-scroll,.toc-grid,.search-results,.search-act-filt
 .launcher-transition-glass{position:fixed;z-index:5002;left:50%;top:50%;width:0;height:0;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:0;border:10px solid rgba(238,246,251,.18);box-shadow:0 0 18px 7px rgba(238,246,251,.34),inset 0 0 18px 5px rgba(255,255,255,.24);filter:blur(.35px);will-change:width,height,opacity}
 .launcher-transition-glass.is-visible{opacity:.82}
 
-.launcher-quick-extra-pack{flex:0 0 100%;width:100%;overflow:hidden}
-.launcher-quick-extra-chips{padding-top:0}
 .launcher-shell.is-navigation-freeze{pointer-events:none!important;overflow:hidden!important;touch-action:none!important;overscroll-behavior:none!important}
 .launcher-shell.is-navigation-freeze,.launcher-shell.is-navigation-freeze *{animation-play-state:paused!important;transition:none!important;caret-color:transparent!important}

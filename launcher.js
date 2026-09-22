@@ -4,83 +4,83 @@
   const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=10,SUGGESTIONS=['Legitymowanie','Zatrzymanie','Kontrola osobista','Przeszukanie','ŚPB','Nietrzeźwy','Przemoc domowa','Nieletni','Ruch drogowy','Narkotyki'];
   const QUICK_SECTIONS=[
     {id:'legitymowanie',label:'Podstawy legitymowania',items:[
-      {label:'UoP · A. 15 u. 1 p. 1',target:'uop-art-15-ust-1-pkt-1',fallback:'legitymowanie art 15 ust 1 pkt 1'},
-      {label:'PRD · A. 129 u. 2 p. 1',target:'prd-art-129-ust-2-pkt-1',fallback:'art 129 ust 2 pkt 1 policja ustalanie tożsamości'},
-      {label:'Cudzoziemcy · A. 289',target:'cudz-art-289',fallback:'cudzoziemcy art 289'},
-      {label:'Cudzoziemcy · A. 293',target:'cudz-art-293',fallback:'cudzoziemcy art 293'}
+      {label:'UoP · A. 15 u. 1 p. 1',short:'UoP · A.15/1/1',target:'uop-art-15-ust-1-pkt-1',fallback:'legitymowanie art 15 ust 1 pkt 1'},
+      {label:'PRD · A. 129 u. 2 p. 1',short:'PRD · A.129/2/1',target:'prd-art-129-ust-2-pkt-1',fallback:'art 129 ust 2 pkt 1 policja ustalanie tożsamości'},
+      {label:'Cudzoziemcy · A. 289',short:'Cudz. · A.289',target:'cudz-art-289',fallback:'cudzoziemcy art 289'},
+      {label:'Cudzoziemcy · A. 293',short:'Cudz. · A.293',target:'cudz-art-293',fallback:'cudzoziemcy art 293'}
     ]},
     {id:'wykroczenia',label:'Częste wykroczenia',items:[
-      {label:'Zakłócanie spokoju',target:'kw-art-51',fallback:'kw art 51'},
-      {label:'Wprowadzanie w błąd',target:'kw-art-65',fallback:'kw art 65'},
-      {label:'Niewykonanie polecenia',target:'kw-art-65a',fallback:'kw art 65a'},
-      {label:'Zagrożenie w ruchu',target:'kw-art-86',fallback:'kw art 86'},
-      {label:'Jazda po alkoholu',target:'kw-art-87',fallback:'kw art 87'},
-      {label:'Jazda bez oświetlenia',target:'kw-art-88',fallback:'kw art 88'},
-      {label:'Znaki i polecenia',target:'kw-art-92',fallback:'kw art 92'},
-      {label:'Inne przepisy ruchu',target:'kw-art-97',fallback:'kw art 97'},
-      {label:'Kradzież / przywłaszczenie',target:'kw-art-119',fallback:'kw art 119'},
-      {label:'Uszkodzenie rzeczy',target:'kw-art-124',fallback:'kw art 124'},
-      {label:'Nieobyczajny wybryk',target:'kw-art-140',fallback:'kw art 140'},
-      {label:'Nieprzyzwoite treści',target:'kw-art-141',fallback:'kw art 141'},
+      {label:'Zakłócanie spokoju',short:'Zakłóc. spokoju',target:'kw-art-51',fallback:'kw art 51'},
+      {label:'Wprowadzanie w błąd',short:'Wprow. w błąd',target:'kw-art-65',fallback:'kw art 65'},
+      {label:'Niewykonanie polecenia',short:'Niewyk. polecenia',target:'kw-art-65a',fallback:'kw art 65a'},
+      {label:'Zagrożenie w ruchu',short:'Zagroż. w ruchu',target:'kw-art-86',fallback:'kw art 86'},
+      {label:'Jazda po alkoholu',short:'Jazda po alkoholu',target:'kw-art-87',fallback:'kw art 87'},
+      {label:'Jazda bez oświetlenia',short:'Brak oświetlenia',target:'kw-art-88',fallback:'kw art 88'},
+      {label:'Znaki i polecenia',short:'Znaki / polecenia',target:'kw-art-92',fallback:'kw art 92'},
+      {label:'Inne przepisy ruchu',short:'Inne przep. ruchu',target:'kw-art-97',fallback:'kw art 97'},
+      {label:'Kradzież / przywłaszczenie',short:'Kradzież / przywł.',target:'kw-art-119',fallback:'kw art 119'},
+      {label:'Uszkodzenie rzeczy',short:'Uszkodz. rzeczy',target:'kw-art-124',fallback:'kw art 124'},
+      {label:'Nieobyczajny wybryk',short:'Nieobycz. wybryk',target:'kw-art-140',fallback:'kw art 140'},
+      {label:'Nieprzyzwoite treści',short:'Nieprzyzw. treści',target:'kw-art-141',fallback:'kw art 141'},
       {label:'Zaśmiecanie',target:'kw-art-145',fallback:'kw art 145'}
     ],moreItems:[
       {label:'Fałszywy alarm',target:'kw-art-66',fallback:'kw art 66'},
-      {label:'Naruszenie nakazu / zakazu',target:'kw-art-66b',fallback:'kw art 66b'},
-      {label:'Brak zabezpieczenia miejsca',target:'kw-art-72',fallback:'kw art 72'},
+      {label:'Naruszenie nakazu / zakazu',short:'Nakaz / zakaz',target:'kw-art-66b',fallback:'kw art 66b'},
+      {label:'Brak zabezpieczenia miejsca',short:'Brak zabezp.',target:'kw-art-72',fallback:'kw art 72'},
       {label:'Brak uprawnień',target:'kw-art-94',fallback:'kw art 94'},
       {label:'Brak dokumentów',target:'kw-art-95',fallback:'kw art 95'},
-      {label:'Niewłaściwy nadzór',target:'kw-art-106',fallback:'kw art 106'},
-      {label:'Złośliwe niepokojenie',target:'kw-art-107',fallback:'kw art 107'},
-      {label:'Wyłudzenie świadczenia',target:'kw-art-121',fallback:'kw art 121'},
+      {label:'Niewłaściwy nadzór',short:'Nadzór',target:'kw-art-106',fallback:'kw art 106'},
+      {label:'Złośliwe niepokojenie',short:'Złośl. niepokojenie',target:'kw-art-107',fallback:'kw art 107'},
+      {label:'Wyłudzenie świadczenia',short:'Wyłudz. świadczenia',target:'kw-art-121',fallback:'kw art 121'},
       {label:'Paserstwo',target:'kw-art-122',fallback:'kw art 122'},
-      {label:'Znaleziona rzecz / zwierzę',target:'kw-art-125',fallback:'kw art 125'},
-      {label:'Urządzenia publiczne',target:'kw-art-143',fallback:'kw art 143'},
+      {label:'Znaleziona rzecz / zwierzę',short:'Rzecz / zwierzę',target:'kw-art-125',fallback:'kw art 125'},
+      {label:'Urządzenia publiczne',short:'Urządz. publiczne',target:'kw-art-143',fallback:'kw art 143'},
       {label:'Niszczenie zieleni',target:'kw-art-144',fallback:'kw art 144'}
     ]},
     {id:'przestepstwa',label:'Częste przestępstwa',items:[
-      {label:'Uszkodzenie ciała',target:'kk-art-157',fallback:'kk art 157'},
+      {label:'Uszkodzenie ciała',short:'Uszkodz. ciała',target:'kk-art-157',fallback:'kk art 157'},
       {label:'Bójka / pobicie',target:'kk-art-158',fallback:'kk art 158'},
-      {label:'Nietrzeźwy kierujący',target:'kk-art-178a',fallback:'kk art 178a'},
-      {label:'Groźby karalne',target:'kk-art-190',fallback:'kk art 190'},
+      {label:'Nietrzeźwy kierujący',short:'Nietrzeźwy kier.',target:'kk-art-178a',fallback:'kk art 178a'},
+      {label:'Groźby karalne',short:'Groźby',target:'kk-art-190',fallback:'kk art 190'},
       {label:'Stalking',target:'kk-art-190a',fallback:'kk art 190a'},
       {label:'Zmuszanie',target:'kk-art-191',fallback:'kk art 191'},
       {label:'Mir domowy',target:'kk-art-193',fallback:'kk art 193'},
       {label:'Znęcanie',target:'kk-art-207',fallback:'kk art 207'},
-      {label:'Naruszenie nietykalności',target:'kk-art-217',fallback:'kk art 217'},
-      {label:'Nietykalność funkcjonariusza',target:'kk-art-222',fallback:'kk art 222'},
+      {label:'Naruszenie nietykalności',short:'Nietykalność',target:'kk-art-217',fallback:'kk art 217'},
+      {label:'Nietykalność funkcjonariusza',short:'Nietykaln. funkcj.',target:'kk-art-222',fallback:'kk art 222'},
       {label:'Czynna napaść',target:'kk-art-223',fallback:'kk art 223'},
-      {label:'Znieważenie funkcjonariusza',target:'kk-art-226',fallback:'kk art 226'},
+      {label:'Znieważenie funkcjonariusza',short:'Znieważ. funkcj.',target:'kk-art-226',fallback:'kk art 226'},
       {label:'Kradzież',target:'kk-art-278',fallback:'kk art 278'},
-      {label:'Kradzież z włamaniem',target:'kk-art-279',fallback:'kk art 279'},
+      {label:'Kradzież z włamaniem',short:'Włamanie',target:'kk-art-279',fallback:'kk art 279'},
       {label:'Rozbój',target:'kk-art-280',fallback:'kk art 280'},
       {label:'Oszustwo',target:'kk-art-286',fallback:'kk art 286'},
-      {label:'Zniszczenie mienia',target:'kk-art-288',fallback:'kk art 288'}
+      {label:'Zniszczenie mienia',short:'Zniszcz. mienia',target:'kk-art-288',fallback:'kk art 288'}
     ],moreItems:[
       {label:'Zabójstwo',target:'kk-art-148',fallback:'kk art 148'},
       {label:'Ciężki uszczerbek',target:'kk-art-156',fallback:'kk art 156'},
-      {label:'Broń w bójce / pobiciu',target:'kk-art-159',fallback:'kk art 159'},
-      {label:'Narażenie na niebezpieczeństwo',target:'kk-art-160',fallback:'kk art 160'},
-      {label:'Jazda mimo cofnięcia uprawnień',target:'kk-art-180a',fallback:'kk art 180a'},
+      {label:'Broń w bójce / pobiciu',short:'Bójka + broń',target:'kk-art-159',fallback:'kk art 159'},
+      {label:'Narażenie na niebezpieczeństwo',short:'Naraż. na niebezp.',target:'kk-art-160',fallback:'kk art 160'},
+      {label:'Jazda mimo cofnięcia uprawnień',short:'Cofnięte uprawn.',target:'kk-art-180a',fallback:'kk art 180a'},
       {label:'Zgwałcenie',target:'kk-art-197',fallback:'kk art 197'},
-      {label:'Rozpijanie małoletniego',target:'kk-art-208',fallback:'kk art 208'},
-      {label:'Nietykalność interweniującego',target:'kk-art-217a',fallback:'kk art 217a'},
+      {label:'Rozpijanie małoletniego',short:'Rozpijanie małolet.',target:'kk-art-208',fallback:'kk art 208'},
+      {label:'Nietykalność interweniującego',short:'Nietykaln. interw.',target:'kk-art-217a',fallback:'kk art 217a'},
       {label:'Fałszywy alarm',target:'kk-art-224a',fallback:'kk art 224a'},
       {label:'Fałszywe zeznania',target:'kk-art-233',fallback:'kk art 233'},
-      {label:'Fałszywe oskarżenie',target:'kk-art-234',fallback:'kk art 234'},
-      {label:'Fałszywe zawiadomienie',target:'kk-art-238',fallback:'kk art 238'},
+      {label:'Fałszywe oskarżenie',short:'Fałszywe oskarż.',target:'kk-art-234',fallback:'kk art 234'},
+      {label:'Fałszywe zawiadomienie',short:'Fałszywe zawiad.',target:'kk-art-238',fallback:'kk art 238'},
       {label:'Poplecznictwo',target:'kk-art-239',fallback:'kk art 239'},
-      {label:'Kradzież rozbójnicza',target:'kk-art-281',fallback:'kk art 281'},
-      {label:'Wymuszenie rozbójnicze',target:'kk-art-282',fallback:'kk art 282'},
+      {label:'Kradzież rozbójnicza',short:'Kradzież rozb.',target:'kk-art-281',fallback:'kk art 281'},
+      {label:'Wymuszenie rozbójnicze',short:'Wymuszenie rozb.',target:'kk-art-282',fallback:'kk art 282'},
       {label:'Przywłaszczenie',target:'kk-art-284',fallback:'kk art 284'},
       {label:'Zabór pojazdu',target:'kk-art-289',fallback:'kk art 289'}
     ]},
     {id:'prd',label:'Ruch drogowy · PRD',items:[
-      {label:'Prędkość · art. 20',target:'prd-art-20',fallback:'prd art 20 prędkość'},
-      {label:'Piesi · art. 26',target:'prd-art-26',fallback:'prd art 26 pieszy'},
-      {label:'Wypadek · art. 44',target:'prd-art-44',fallback:'prd art 44 wypadek'},
-      {label:'Zatrzymanie / postój · art. 46',target:'prd-art-46',fallback:'prd art 46 zatrzymanie postój'},
-      {label:'Zakazy postoju · art. 49',target:'prd-art-49',fallback:'prd art 49 zatrzymanie postój'},
-      {label:'Kontrola · art. 129',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
+      {label:'Prędkość · art. 20',short:'Prędkość · A.20',target:'prd-art-20',fallback:'prd art 20 prędkość'},
+      {label:'Piesi · art. 26',short:'Piesi · A.26',target:'prd-art-26',fallback:'prd art 26 pieszy'},
+      {label:'Wypadek · art. 44',short:'Wypadek · A.44',target:'prd-art-44',fallback:'prd art 44 wypadek'},
+      {label:'Zatrzymanie / postój · art. 46',short:'Postój · A.46',target:'prd-art-46',fallback:'prd art 46 zatrzymanie postój'},
+      {label:'Zakazy postoju · art. 49',short:'Zakazy · A.49',target:'prd-art-49',fallback:'prd art 49 zatrzymanie postój'},
+      {label:'Kontrola · art. 129',short:'Kontrola · A.129',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
     ]}
   ];
   let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='',resultObserver=null,fabFrame=0,searchSession=null,searchToken=0,openMoreSectionIds=new Set(),fabRevealAnimation=null,exitRevealFrame=0,transitionGlass=null,fabCircleFadeTimer=0,fabIconFadeTimer=0,navigationBusy=false;
@@ -98,42 +98,68 @@
     recentList.innerHTML=items.map(item=>'<button class="launcher-recent-item" type="button" data-recent="'+esc(item.id)+'"><span><b>'+esc(item.label||item.id)+'</b><small>'+esc(item.sub||item.act)+'</small></span><span>›</span></button>').join('');
   }
   function quickArticleNumber(item){const match=String(item?.target||'').match(/-art-([0-9]+[a-z]?)/i);return match?.[1]||''}
-  function quickItemLabel(item){return item?.label||''}
+  function quickItemLabel(item){return item?.short||item?.label||''}
   function quickChip(item,sectionId,index,moreIndex=-1){
-    const extra=moreIndex>=0?' is-more-item':'',style=moreIndex>=0?' style="--quick-in:'+moreIndex+'"':'';
-    return '<button class="launcher-chip'+extra+'" type="button" data-quick-item="'+esc(sectionId)+'" data-quick-index="'+index+'"'+style+'>'+esc(quickItemLabel(item))+'</button>'
+    const extra=moreIndex>=0?' is-more-item':'',style=moreIndex>=0?' style="--quick-in:'+moreIndex+'"':'',full=item?.label||quickItemLabel(item);
+    return '<button class="launcher-chip'+extra+'" type="button" data-quick-item="'+esc(sectionId)+'" data-quick-index="'+index+'" aria-label="'+esc(full)+'" title="'+esc(full)+'"'+style+'>'+esc(quickItemLabel(item))+'</button>'
   }
-  function moreControl(sectionId,expanded){return '<button class="launcher-quick-more" type="button" data-quick-more="'+esc(sectionId)+'" aria-expanded="'+String(expanded)+'">'+(expanded?'Schowaj':'Pokaż więcej')+'</button>'}
+  function moreControl(sectionId,expanded){return '<button class="launcher-quick-more" type="button" data-quick-more="'+esc(sectionId)+'" aria-expanded="'+String(expanded)+'">'+(expanded?'Schowaj':'Więcej')+'</button>'}
   function moreControlNode(sectionId,expanded){const template=document.createElement('template');template.innerHTML=moreControl(sectionId,expanded);return template.content.firstElementChild}
+  function packQuickNodes(nodes,width,gap=7){
+    const left=[...nodes],ordered=[],fits=row=>row.reduce((sum,node)=>sum+node.getBoundingClientRect().width,0)+gap*Math.max(0,row.length-1)<=width+.5;
+    while(left.length>=3){
+      let best=null,bestScore=-Infinity;
+      for(let a=0;a<left.length-2;a++)for(let b=a+1;b<left.length-1;b++)for(let c=b+1;c<left.length;c++){
+        const row=[left[a],left[b],left[c]];if(!fits(row))continue;
+        const used=row.reduce((sum,node)=>sum+node.getBoundingClientRect().width,0)+gap*2,score=used-(a+b+c)*.12;
+        if(score>bestScore){best=[a,b,c];bestScore=score}
+      }
+      if(!best)break;
+      const row=best.map(index=>left[index]);ordered.push(...row);best.slice().sort((a,b)=>b-a).forEach(index=>left.splice(index,1));
+    }
+    while(left.length>=2){
+      let best=null,bestScore=-Infinity;
+      for(let a=0;a<left.length-1;a++)for(let b=a+1;b<left.length;b++){
+        const row=[left[a],left[b]];if(!fits(row))continue;
+        const used=row.reduce((sum,node)=>sum+node.getBoundingClientRect().width,0)+gap,score=used-(a+b)*.08;
+        if(score>bestScore){best=[a,b];bestScore=score}
+      }
+      if(!best)break;
+      const row=best.map(index=>left[index]);ordered.push(...row);best.slice().sort((a,b)=>b-a).forEach(index=>left.splice(index,1));
+    }
+    return ordered.concat(left);
+  }
+  function optimizeQuickLayout(section){
+    const row=section?.querySelector('.launcher-quick-body-inner>.launcher-quick-chips');if(!row)return;
+    const control=row.querySelector('[data-quick-more]'),primary=[...row.querySelectorAll('.launcher-chip:not(.is-more-item)')],extra=[...row.querySelectorAll('.launcher-chip.is-more-item')],width=row.clientWidth;if(width<120)return;
+    const frag=document.createDocumentFragment();packQuickNodes(primary,width).forEach(node=>frag.append(node));packQuickNodes(extra,width).forEach(node=>frag.append(node));if(control)frag.append(control);row.append(frag);
+  }
   function renderQuickSections(){
     quickSections.innerHTML=QUICK_SECTIONS.map(section=>{
       const open=section.id===openSectionId,moreOpen=openMoreSectionIds.has(section.id),primary=section.items.map((item,index)=>quickChip(item,section.id,index)).join('');
       const more=(section.moreItems||[]).map((item,index)=>quickChip(item,section.id,section.items.length+index,index)).join('');
-      const morePart=section.moreItems?.length?(moreOpen?'<div class="launcher-quick-extra-pack" data-quick-extra-pack><div class="launcher-quick-chips launcher-quick-extra-chips">'+more+moreControl(section.id,true)+'</div></div>':moreControl(section.id,false)):'';
+      const morePart=section.moreItems?.length?(moreOpen?more+moreControl(section.id,true):moreControl(section.id,false)):'';
       return '<section class="launcher-quick-section'+(open?' is-open':'')+'" data-quick-section="'+esc(section.id)+'"><button class="launcher-quick-toggle" type="button" aria-expanded="'+String(open)+'"><span>'+esc(section.label)+'</span><span class="launcher-quick-chevron" aria-hidden="true">›</span></button><div class="launcher-quick-body" aria-hidden="'+String(!open)+'"><div class="launcher-quick-body-inner"><div class="launcher-quick-chips">'+primary+morePart+'</div></div></div></section>';
     }).join('');
+    quickSections.querySelectorAll('[data-quick-section]').forEach(optimizeQuickLayout);
   }
   function quickSectionNode(id){return [...quickSections.querySelectorAll('[data-quick-section]')].find(node=>node.dataset.quickSection===id)||null}
   function animateQuickMore(id){
     const section=quickSectionNode(id),config=QUICK_SECTIONS.find(item=>item.id===id),wasOpen=openMoreSectionIds.has(id),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;if(!section||!config?.moreItems?.length)return;
+    const row=section.querySelector('.launcher-quick-body-inner>.launcher-quick-chips'),control=row?.querySelector('[data-quick-more]');if(!row||!control)return;
     if(!wasOpen){
-      const control=section.querySelector('[data-quick-more]');if(!control)return;
-      const pack=document.createElement('div');pack.className='launcher-quick-extra-pack';pack.dataset.quickExtraPack='';
-      pack.innerHTML='<div class="launcher-quick-chips launcher-quick-extra-chips">'+config.moreItems.map((item,index)=>quickChip(item,id,config.items.length+index,index)).join('')+moreControl(id,true)+'</div>';
-      openMoreSectionIds.add(id);control.replaceWith(pack);
-      if(reduced)return;
-      const target=pack.firstElementChild?.scrollHeight||0;pack.style.height='0px';pack.style.opacity='0';pack.style.overflow='hidden';
-      const animation=pack.animate([{height:'0px',opacity:0},{height:target+'px',opacity:1}],{duration:360,easing:'cubic-bezier(.22,.68,.24,1)'});
-      animation.onfinish=()=>{pack.style.height='auto';pack.style.opacity='';pack.style.overflow=''};
+      openMoreSectionIds.add(id);control.textContent='Schowaj';control.setAttribute('aria-expanded','true');
+      const frag=document.createDocumentFragment();
+      config.moreItems.forEach((item,index)=>{const template=document.createElement('template');template.innerHTML=quickChip(item,id,config.items.length+index,index);frag.append(template.content.firstElementChild)});
+      row.insertBefore(frag,control);optimizeQuickLayout(section);
+      if(!reduced)[...row.querySelectorAll('.launcher-chip.is-more-item')].forEach((node,index)=>node.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:260,delay:Math.min(index,10)*22,easing:'cubic-bezier(.22,.68,.24,1)',fill:'both'}));
       return
     }
-    const pack=section.querySelector('[data-quick-extra-pack]');if(!pack)return;
-    if(reduced){openMoreSectionIds.delete(id);pack.replaceWith(moreControlNode(id,false));return}
-    const start=pack.getBoundingClientRect().height;pack.style.height=start+'px';pack.style.overflow='hidden';
-    pack.querySelectorAll('.launcher-chip.is-more-item').forEach(node=>node.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-5px)'}],{duration:240,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'}));
-    pack.querySelector('[data-quick-more]')?.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-4px)'}],{duration:220,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'});
-    const animation=pack.animate([{height:start+'px',opacity:1},{height:'0px',opacity:.12}],{duration:300,easing:'cubic-bezier(.4,0,.22,1)',fill:'forwards'});
-    animation.onfinish=()=>{openMoreSectionIds.delete(id);pack.replaceWith(moreControlNode(id,false))};
+    openMoreSectionIds.delete(id);const extras=[...row.querySelectorAll('.launcher-chip.is-more-item')];
+    const finish=()=>{extras.forEach(node=>node.remove());control.textContent='Więcej';control.setAttribute('aria-expanded','false');optimizeQuickLayout(section)};
+    if(reduced){finish();return}
+    let pending=extras.length;if(!pending){finish();return}
+    extras.forEach((node,index)=>{const animation=node.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-4px)'}],{duration:150,delay:Math.min(extras.length-1-index,8)*12,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'});animation.onfinish=()=>{node.remove();pending--;if(!pending){control.textContent='Więcej';control.setAttribute('aria-expanded','false');optimizeQuickLayout(section)}}});
   }
   function animateQuickSection(section,opening){
     const body=section?.querySelector('.launcher-quick-body'),toggle=section?.querySelector('.launcher-quick-toggle');if(!body||!toggle)return;

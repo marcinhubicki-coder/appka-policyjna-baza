@@ -6,7 +6,8 @@
 
   const style=document.createElement('style');
   style.textContent=`
-    mark.search-live-hit,mark.search-result-hit,mark.search-exact-hit{background:#ffe57a;color:inherit;border-radius:3px;padding:0 .08em;box-shadow:0 0 0 1px rgba(199,156,35,.13)}
+    mark.search-live-hit,mark.search-result-hit,mark.search-exact-hit,mark.launcher-persistent-hit{background:#ffe57a;color:inherit;border-radius:3px;padding:0 .08em;box-shadow:0 0 0 1px rgba(199,156,35,.13)}
+    mark.launcher-persistent-hit{background:#ffe070;box-shadow:0 0 0 1px rgba(199,156,35,.16)}
     mark.search-exact-hit{background:#ffd84f;box-shadow:0 0 0 3px rgba(226,178,35,.20);transition:background 1.4s ease,box-shadow 1.4s ease}
     mark.search-exact-hit.fade{background:#fff0a3;box-shadow:0 0 0 1px rgba(226,178,35,.08)}
     .search-match-info{display:block!important;margin-top:3px!important;font-size:10px!important;line-height:1.2!important;color:#65788b!important;font-weight:650!important}
@@ -57,6 +58,38 @@
         const m=markFirst(u,term,'search-live-hit');if(m&&++count>=4)break;
       }
     })}
+
+  function markAll(root,term,cls,limit=48){
+    if(!root||!term)return 0;const nodes=[],w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+    while(n=w.nextNode())if(allowedTextNode(n,root))nodes.push(n);
+    let count=0;
+    for(const original of nodes){
+      let node=original;
+      while(node&&count<limit){
+        const hit=locate(node.nodeValue||'',term);if(!hit)break;
+        const tail=node.splitText(hit.s),after=tail.splitText(hit.e-hit.s),m=document.createElement('mark');m.className=cls;m.textContent=tail.nodeValue;tail.replaceWith(m);count++;node=after;
+      }
+      if(count>=limit)break;
+    }
+    return count;
+  }
+  let launcherPersistent={term:'',id:''},launcherPersistentRaf=0;
+  function clearLauncherPersistent(){cancelAnimationFrame(launcherPersistentRaf);launcherPersistentRaf=0;clearMarks('launcher-persistent-hit')}
+  function applyLauncherPersistent(){
+    launcherPersistentRaf=0;clearMarks('launcher-persistent-hit');
+    if(!launcherPersistent.term||!launcherPersistent.id)return;
+    const root=document.getElementById(launcherPersistent.id);if(root)markAll(root,launcherPersistent.term,'launcher-persistent-hit');
+  }
+  function scheduleLauncherPersistent(){
+    if(!launcherPersistent.term||launcherPersistentRaf)return;launcherPersistentRaf=requestAnimationFrame(applyLauncherPersistent);
+  }
+  globalThis.__POLICE_LAUNCHER_HIGHLIGHT={
+    set(term,id){launcherPersistent={term:String(term||'').trim(),id:String(id||'')};applyLauncherPersistent()},
+    clear(){launcherPersistent={term:'',id:''};clearLauncherPersistent()},
+    state(){return{...launcherPersistent}}
+  };
+  window.addEventListener('police-law-rendered',scheduleLauncherPersistent);
+  window.addEventListener('scroll',()=>{if(launcherPersistent.term&&!document.querySelector('mark.launcher-persistent-hit'))scheduleLauncherPersistent()},{passive:true});
 
   globalThis.__POLICE_SEARCH_HIT=(id,term)=>{const el=document.getElementById(id);if(!el)return null;clearMarks('search-exact-hit');const mark=markFirst(el,term,'search-exact-hit');if(mark){setTimeout(()=>mark.classList.add('fade'),2200);setTimeout(()=>{if(mark.isConnected)mark.replaceWith(document.createTextNode(mark.textContent||''))},4200)}return mark};
 

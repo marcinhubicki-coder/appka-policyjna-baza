@@ -549,7 +549,6 @@
     const more=event.target.closest('[data-quick-more]');if(more){animateQuickMore(more.dataset.quickMore);return}
     const item=event.target.closest('[data-quick-item]');if(item&&beginNavigation())openQuickItem(item.dataset.quickItem,item.dataset.quickIndex,clickPoint(event,item));
   });
-  resultFilters?.addEventListener('pointerdown',event=>{if(event.target.closest('button'))event.preventDefault()});
   resultFilters?.addEventListener('click',event=>{
     const session=searchSession;if(!session)return;
     const more=event.target.closest('[data-result-filter-more]');if(more){session.filtersExpanded=!session.filtersExpanded;renderResultFilters();return}

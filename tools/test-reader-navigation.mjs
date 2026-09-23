@@ -38,6 +38,7 @@ assert.ok(w.document.getElementById('uop-art-478'),'target materializes synchron
 assert.ok(ids().every(n=>n>460&&n<500),'does not generate the intervening 470 articles');
 pump();assert.ok(ids().length<35);assert.ok(Math.max(...scrolls)-Math.min(...scrolls)<=103,'only the last 100px are animated');
 assert.ok(Math.abs(w.document.getElementById('uop-art-478').getBoundingClientRect().top-108)<1);
+assert.match(fs.readFileSync('app.js','utf8'),/settleLegalTarget\(id,alignTop\)/);
 // Scroll through the law in both directions; old articles leave the DOM.
 for(let i=0;i<35;i++){w.scrollTo({top:y+400});pump();assert.ok(ids().length<35)}
 const advanced=ids();assert.ok(advanced[0]>478);assert.equal(w.document.getElementById('uop-art-478'),null);

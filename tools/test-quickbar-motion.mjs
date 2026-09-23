@@ -35,6 +35,8 @@ assert.equal(w.__POLICE_SEARCH_SCROLL('kw'),true);tick(140);const middle=results
 assert.ok(middle>350&&middle<700);tick(160);assert.ok(Math.abs(results.scrollTop-699)<1);
 assert.equal(pills[1].classList.contains('on'),true);
 assert.equal(reveals.at(-1),'kw','active result law asks the permanent pill rail to reveal it');
+const lazy=w.document.createElement('section');lazy.className='search-group';lazy.dataset.searchAct='kpk';lazy.getBoundingClientRect=()=>({top:1500-results.scrollTop});results.append(lazy);
+assert.equal(w.__POLICE_SEARCH_SCROLL('kpk'),true,'lazy-rendered search group is immediately reachable from its pill');tick(300);
 w.__POLICE_SEARCH_SCROLL('uop');tick(64);results.dispatchEvent(new w.Event('pointerdown'));const stopped=results.scrollTop;tick(400);assert.equal(results.scrollTop,stopped);
 results.scrollTop=0;results.dispatchEvent(new w.Event('scroll'));tick(16);assert.equal(pills[0].classList.contains('on'),true);
 assert.equal(pills.filter(p=>p.classList.contains('on')).length,1);

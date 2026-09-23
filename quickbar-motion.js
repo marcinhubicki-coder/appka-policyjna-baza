@@ -43,8 +43,9 @@
     if(changed&&globalThis.__POLICE_SEARCH_STATE?.active)globalThis.__READER_QUICKBAR?.reveal(code);
     return changed;
   }
+  function refreshGroups(){groups=[...results.querySelectorAll('.search-group[data-search-act]')];return groups}
   function syncActive(){
-    activeFrame=0;if(!globalThis.__POLICE_SEARCH_STATE?.active||scrollTarget)return;
+    activeFrame=0;if(!globalThis.__POLICE_SEARCH_STATE?.active||scrollTarget)return;refreshGroups();
     const top=results.getBoundingClientRect().top;let current=groups[0];
     // Group bounds stay meaningful while their headings are sticky.
     for(const group of groups){if(group.getBoundingClientRect().top<=top+6)current=group;else break}
@@ -54,7 +55,7 @@
   function queueActive(){if(!activeFrame)activeFrame=requestAnimationFrame(syncActive)}
   function stopScroll(){if(scrollFrame)cancelAnimationFrame(scrollFrame);scrollFrame=0;scrollTarget='';queueActive()}
   function goToAct(code){
-    const group=groups.find(node=>node.dataset.searchAct===code);if(!group)return false;
+    refreshGroups();const group=groups.find(node=>node.dataset.searchAct===code);if(!group)return false;
     stopScroll();scrollTarget=code;const changed=highlight(code);if(!changed)globalThis.__READER_QUICKBAR?.reveal(code);
     const from=results.scrollTop,to=Math.max(0,Math.min(results.scrollHeight-results.clientHeight,from+group.getBoundingClientRect().top-results.getBoundingClientRect().top-1));
     if(reduced.matches||Math.abs(to-from)<1){results.scrollTop=to;scrollTarget='';return true}
@@ -72,6 +73,6 @@
   window.addEventListener('police-law-search-state',event=>{
     const detail=event.detail;stopScroll();updateBadges(detail);
     if(!detail.active){groups=[];highlight(typeof ACT!=='undefined'?ACT?.[0]:'');return}
-    if(!detail.pending){groups=[...results.querySelectorAll('.search-group[data-search-act]')];queueActive()}
+    if(!detail.pending){refreshGroups();queueActive()}
   });
 })();

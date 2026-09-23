@@ -1,5 +1,5 @@
 (function(){
-  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),suggestions=document.getElementById('launcherSuggestions'),resultsBox=document.getElementById('launcherResults'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),loadMore=document.getElementById('launcherLoadMore'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader'),fab=document.getElementById('launcherFab');
+  const shell=document.getElementById('launcherShell'),query=document.getElementById('launcherQuery'),searchWrap=document.getElementById('launcherSearch'),clear=document.getElementById('launcherClear'),quickSections=document.getElementById('launcherQuickSections'),suggestions=document.getElementById('launcherSuggestions'),resultsBox=document.getElementById('launcherResults'),resultFilters=document.getElementById('launcherResultFilters'),resultList=document.getElementById('launcherResultList'),resultStatus=document.getElementById('launcherResultStatus'),loadMore=document.getElementById('launcherLoadMore'),showAll=document.getElementById('launcherShowAll'),recentBox=document.getElementById('launcherRecent'),recentList=document.getElementById('launcherRecentList'),readerButton=document.getElementById('launcherReader'),fab=document.getElementById('launcherFab');
   if(!shell||!query)return;
   const RECENT_KEY='police-law-launcher-recent-v1',MAX_RESULTS=10,SUGGESTIONS=['Legitymowanie','Zatrzymanie','Kontrola osobista','Przeszukanie','ŚPB','Nietrzeźwy','Przemoc domowa','Nieletni','Ruch drogowy','Narkotyki'];
   const QUICK_SECTIONS=[
@@ -282,38 +282,61 @@
   }
   function resultMarkup({row,meta}){return '<button class="launcher-result" type="button" data-result="'+esc(meta.id)+'" data-act="'+esc(meta.act)+'"><span class="launcher-result-head"><b>'+esc(meta.heading+(meta.title?' · '+meta.title:''))+'</b><span class="launcher-result-act">'+esc(meta.short)+'</span></span><span class="launcher-result-title">'+esc(meta.actName)+'</span>'+(row[2]?'<span class="launcher-result-preview">'+esc(row[2])+'</span>':'')+'</button>'}
   function resetSearchSession(){
-    searchToken++;searchSession=null;resultObserver?.disconnect?.();if(loadMore)loadMore.hidden=true;
+    searchToken++;searchSession=null;resultObserver?.disconnect?.();if(loadMore)loadMore.hidden=true;if(resultFilters){resultFilters.hidden=true;resultFilters.replaceChildren()}
+  }
+  function searchFilterEntries(session=searchSession){
+    if(!session)return[];
+    const best=new Map();
+    for(const hit of session.matches){const code=hit.meta.act,current=best.get(code);if(!current||hit.score>current.score)best.set(code,hit)}
+    return [...session.counts].filter(([,count])=>count>0).map(([code,count])=>{const hit=best.get(code),meta=hit?.meta||{};return{code,count,label:meta.short||code,score:hit?.score||0}})
+      .sort((a,b)=>b.score-a.score||b.count-a.count||a.label.localeCompare(b.label,'pl'));
+  }
+  function renderResultFilters(){
+    if(!resultFilters)return;const session=searchSession,entries=searchFilterEntries(session);
+    if(!session||entries.length<2){resultFilters.hidden=true;resultFilters.replaceChildren();return}
+    const expanded=!!session.filtersExpanded,limit=4,visible=expanded?entries:entries.slice(0,limit),rest=Math.max(0,entries.length-visible.length),total=session.matches.length,active=session.filter||'';
+    const pill=(code,label,count)=>'<button class="launcher-result-filter'+(active===code?' is-active':'')+'" type="button" data-result-filter="'+esc(code)+'" aria-pressed="'+String(active===code)+'"><span>'+esc(label)+'</span><b>'+count+'</b></button>';
+    let html=pill('','Wszystkie',total)+visible.map(item=>pill(item.code,item.label,item.count)).join('');
+    if(entries.length>limit)html+='<button class="launcher-result-filter launcher-result-filter-more" type="button" data-result-filter-more="1" aria-expanded="'+String(expanded)+'">'+(expanded?'Mniej':'+'+rest)+'</button>';
+    resultFilters.innerHTML=html;resultFilters.hidden=false;
+  }
+  function visibleSearchMatches(session=searchSession){
+    if(!session)return[];return session.filter?session.matches.filter(hit=>hit.meta.act===session.filter):session.matches;
   }
   function observeResultMore(){
     resultObserver?.disconnect?.();if(!loadMore||loadMore.hidden||typeof IntersectionObserver!=='function')return;
     resultObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){resultObserver.disconnect();requestAnimationFrame(()=>scanNextResultPage())}},{root:shell,rootMargin:'0px 0px 220px 0px',threshold:.01});
     resultObserver.observe(loadMore);
   }
-  async function scanNextResultPage(){
-    const session=searchSession;if(!session||session.loading||session.done)return false;
-    session.loading=true;if(loadMore)loadMore.disabled=true;
-    const batch=[],rows=discovery||[];let scanned=0;
+  function renderSearchResultPage(reset=false){
+    const session=searchSession;if(!session||session.loading)return false;const matches=visibleSearchMatches(session);
+    if(reset){session.shown=0;resultList.replaceChildren()}
+    const end=Math.min(matches.length,session.shown+MAX_RESULTS),batch=matches.slice(session.shown,end);session.shown=end;
+    if(batch.length)resultList.insertAdjacentHTML('beforeend',batch.map(resultMarkup).join(''));
+    resultList.hidden=false;showAll.hidden=false;recentBox.hidden=!readRecent().length;
+    if(!matches.length){resultStatus.hidden=false;resultStatus.textContent=session.filter?'Brak wyników w wybranej ustawie.':'Brak szybkich trafień. Możesz sprawdzić pełne wyniki.'}
+    else{resultStatus.hidden=true;resultStatus.textContent=''}
+    if(loadMore){const left=matches.length-session.shown;loadMore.hidden=left<=0;loadMore.disabled=false;loadMore.textContent='Pokaż kolejne '+Math.min(MAX_RESULTS,left)}
+    if(session.shown<matches.length)observeResultMore();else resultObserver?.disconnect?.();
+    return !!batch.length;
+  }
+  function scanNextResultPage(){return renderSearchResultPage(false)}
+  async function collectSearchMatches(session){
+    const rows=discovery||[],matches=[],counts=new Map();session.loading=true;let scanned=0;
     try{
-      while(session.cursor<rows.length&&batch.length<MAX_RESULTS){
-        const row=rows[session.cursor++],meta=resultMeta(row[0]);if(meta){
+      for(let cursor=0;cursor<rows.length;cursor++){
+        const row=rows[cursor],meta=resultMeta(row[0]);if(meta){
           const hay=String(row[1]||'')+' '+norm(meta.heading+' '+meta.title+' '+meta.short+' '+meta.actName+' '+(row[2]||''));
-          if(session.terms.every(term=>hay.includes(term)))batch.push({row,meta,score:scoreResult(row,meta,session.needle,session.terms)});
+          if(session.terms.every(term=>hay.includes(term))){
+            const hit={row,meta,score:scoreResult(row,meta,session.needle,session.terms)};matches.push(hit);counts.set(meta.act,(counts.get(meta.act)||0)+1);
+          }
         }
-        if(++scanned>=240&&batch.length<MAX_RESULTS){scanned=0;await new Promise(resolve=>document.hidden?setTimeout(resolve,0):requestAnimationFrame(resolve));if(searchSession!==session)return false}
+        if(++scanned>=520){scanned=0;await new Promise(resolve=>document.hidden?setTimeout(resolve,0):requestAnimationFrame(resolve));if(searchSession!==session)return false}
       }
       if(searchSession!==session)return false;
-      batch.sort((a,b)=>b.score-a.score||a.meta.act.localeCompare(b.meta.act)||a.meta.id.localeCompare(b.meta.id));
-      if(batch.length){resultList.insertAdjacentHTML('beforeend',batch.map(resultMarkup).join(''));session.shown+=batch.length}
-      session.done=session.cursor>=rows.length;
-      resultList.hidden=false;showAll.hidden=false;recentBox.hidden=!readRecent().length;
-      if(!session.shown&&session.done){resultStatus.hidden=false;resultStatus.textContent='Brak szybkich trafień. Możesz sprawdzić pełne wyniki.'}
-      else{resultStatus.hidden=true;resultStatus.textContent=''};
-      if(loadMore){loadMore.hidden=session.done;loadMore.disabled=false;loadMore.textContent='Pokaż kolejne 10'}
-      if(!session.done)observeResultMore();else resultObserver?.disconnect?.();
-      return !!batch.length;
-    }finally{
-      session.loading=false;if(loadMore)loadMore.disabled=false;
-    }
+      matches.sort((a,b)=>b.score-a.score||a.meta.act.localeCompare(b.meta.act)||a.meta.id.localeCompare(b.meta.id));
+      session.matches=matches;session.counts=counts;session.done=true;session.cursor=rows.length;return true;
+    }finally{session.loading=false}
   }
   async function runSearch(){
     const value=query.value.trim(),needle=norm(value);searchWrap.classList.toggle('has-value',!!value);
@@ -321,9 +344,10 @@
     resetSearchSession();const token=searchToken;
     if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=!readRecent().length;resultsBox.hidden=false;resultList.hidden=true;resultList.replaceChildren();showAll.hidden=true;resultStatus.hidden=true;resultStatus.textContent='';
     const ready=await ensureData();if(token!==searchToken||query.value.trim()!==value)return;
-    if(!ready){resultStatus.textContent='Nie udało się wczytać szybkiej wyszukiwarki. Możesz użyć pełnych wyników.';showAll.hidden=false;return}
-    searchSession={token,value,needle,terms:needle.split(/\s+/).filter(Boolean),cursor:0,shown:0,done:false,loading:false};
-    await scanNextResultPage();
+    if(!ready){resultStatus.hidden=false;resultStatus.textContent='Nie udało się wczytać szybkiej wyszukiwarki. Możesz użyć pełnych wyników.';showAll.hidden=false;return}
+    const session={token,value,needle,terms:needle.split(/\s+/).filter(Boolean),cursor:0,shown:0,done:false,loading:false,matches:[],counts:new Map(),filter:'',filtersExpanded:false};searchSession=session;
+    const collected=await collectSearchMatches(session);if(!collected||searchSession!==session)return;
+    renderResultFilters();renderSearchResultPage(true);
   }
   function scheduleSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,110)}
   function fullSearch(){
@@ -524,6 +548,12 @@
     }
     const more=event.target.closest('[data-quick-more]');if(more){animateQuickMore(more.dataset.quickMore);return}
     const item=event.target.closest('[data-quick-item]');if(item&&beginNavigation())openQuickItem(item.dataset.quickItem,item.dataset.quickIndex,clickPoint(event,item));
+  });
+  resultFilters?.addEventListener('pointerdown',event=>{if(event.target.closest('button'))event.preventDefault()});
+  resultFilters?.addEventListener('click',event=>{
+    const session=searchSession;if(!session)return;
+    const more=event.target.closest('[data-result-filter-more]');if(more){session.filtersExpanded=!session.filtersExpanded;renderResultFilters();return}
+    const button=event.target.closest('[data-result-filter]');if(!button)return;query.blur();const code=button.dataset.resultFilter||'';session.filter=session.filter===code&&code?'':code;renderResultFilters();renderSearchResultPage(true);
   });
   resultList.addEventListener('click',event=>{const button=event.target.closest('[data-result]');if(button&&beginNavigation())openTarget(button.dataset.result,button.dataset.act,'',clickPoint(event,button))});loadMore?.addEventListener('click',scanNextResultPage);
   recentList.addEventListener('click',event=>{const button=event.target.closest('[data-recent]');if(!button)return;const item=readRecent().find(x=>x.id===button.dataset.recent);if(item&&beginNavigation())openTarget(item.id,item.act,item.label,clickPoint(event,button))});

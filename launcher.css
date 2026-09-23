@@ -51,6 +51,14 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 .launcher-recent-item b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.launcher-recent-item small{display:block;margin-top:3px;color:#83939f;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .launcher-recent-item span{color:#6e91a9;font-size:18px}
 .launcher-results{margin-top:12px}
+.launcher-result-filters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;align-items:center}
+.launcher-result-filters[hidden]{display:none!important}
+.launcher-result-filter{height:31px;min-width:0;border:1px solid #bdd3e0;border-radius:999px;background:#f9fcfe;color:#2a6389;padding:0 9px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font:750 10.2px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 2px 7px rgba(46,90,120,.035)}
+.launcher-result-filter b{min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:inline-grid;place-items:center;background:#e6f1f7;color:#3b7599;font-size:9px;font-weight:850}
+.launcher-result-filter.is-active{border-color:#2f78a7;background:#2f78a7;color:#fff;box-shadow:0 5px 14px rgba(47,120,167,.14)}
+.launcher-result-filter.is-active b{background:rgba(255,255,255,.2);color:#fff}
+.launcher-result-filter-more{min-width:48px;justify-content:center;font-weight:850}
+.launcher-result-filter:active{transform:none;filter:brightness(.98)}
 .launcher-result-status{padding:10px 4px 12px;text-align:center;color:#7c8f9c;font-size:12px}
 .launcher-result-list{display:grid;gap:8px}
 .launcher-result{border:1px solid #d2e2eb;background:rgba(255,255,255,.94);border-radius:17px;padding:13px 14px;text-align:left;color:#173f5c;box-shadow:0 3px 13px rgba(34,75,104,.045)}

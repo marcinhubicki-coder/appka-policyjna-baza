@@ -303,6 +303,14 @@
     const act=actByCode.get(article[1]),cfg=globalThis.__LAW_CONFIG?.acts?.[article[1]]||{};
     return{id,act:article[1],heading:article[3]||'',title:article[4]||'',short:cfg.short||act?.[2]||article[1],actName:cfg.name||act?.[3]||article[1]};
   }
+  function searchMatchTier(row,meta,session,fuzzy=false){
+    const heading=norm(meta.heading),title=norm(meta.title),act=norm(meta.short+' '+meta.actName),numberQuery=session.needle.match(/^(?:art\.?\s*)?(\d+[a-z]?)$/i),headingNumber=heading.match(/^(?:art\.?\s*|§\s*)?(\d+[a-z]?)/i)?.[1]||'';
+    if(numberQuery&&headingNumber===numberQuery[1].toLowerCase())return 0;
+    const titleHay=heading+' '+title+' '+act;
+    if(session.terms.every(term=>titleHay.includes(term)))return 1;
+    if(fuzzy&&session.terms.every(term=>titleHay.includes(term)||fuzzyTermMatch(term,titleHay)))return 1;
+    return fuzzy?3:2;
+  }
   function scoreResult(row,meta,needle,terms){
     const heading=norm(meta.heading),title=norm(meta.title),act=norm(meta.short+' '+meta.actName),preview=norm(row[2]||''),text=String(row[1]||''),numberQuery=needle.match(/^(?:art\.?\s*)?(\d+[a-z]?)$/i),headingNumber=heading.match(/^(?:art\.?\s*|§\s*)?(\d+[a-z]?)/i)?.[1]||'';
     let score=0;if(numberQuery&&headingNumber===numberQuery[1].toLowerCase())score+=5000;if(title===needle)score+=150;else if(title.includes(needle))score+=105;if(heading===needle)score+=135;else if(heading.includes(needle))score+=92;if(act.includes(needle))score+=52;if(preview.includes(needle))score+=26;if(text.includes(needle))score+=19;
@@ -316,9 +324,9 @@
   function searchFilterEntries(session=searchSession){
     if(!session)return[];
     const best=new Map();
-    for(const hit of session.matches){const code=hit.meta.act,current=best.get(code);if(!current||hit.score>current.score)best.set(code,hit)}
-    return [...session.counts].filter(([,count])=>count>0).map(([code,count])=>{const hit=best.get(code),meta=hit?.meta||{};return{code,count,label:meta.short||code,score:hit?.score||0}})
-      .sort((a,b)=>searchLawTier(a.code)-searchLawTier(b.code)||b.score-a.score||b.count-a.count||a.label.localeCompare(b.label,'pl'));
+    for(const hit of session.matches){const code=hit.meta.act,current=best.get(code);if(!current||(hit.tier??2)<(current.tier??2)||(hit.tier??2)===(current.tier??2)&&hit.score>current.score)best.set(code,hit)}
+    return [...session.counts].filter(([,count])=>count>0).map(([code,count])=>{const hit=best.get(code),meta=hit?.meta||{};return{code,count,label:meta.short||code,score:hit?.score||0,tier:hit?.tier??2}})
+      .sort((a,b)=>a.tier-b.tier||searchLawTier(a.code)-searchLawTier(b.code)||b.score-a.score||b.count-a.count||a.label.localeCompare(b.label,'pl'));
   }
   function renderResultFilters(){
     if(!resultFilters)return;const session=searchSession,entries=searchFilterEntries(session);
@@ -357,7 +365,7 @@
         const row=rows[cursor],meta=resultMeta(row[0]);if(meta){
           const hay=String(row[1]||'')+' '+norm(meta.heading+' '+meta.title+' '+meta.short+' '+meta.actName+' '+(row[2]||''));
           if(session.terms.every(term=>hay.includes(term))){
-            const hit={row,meta,score:scoreResult(row,meta,session.needle,session.terms),fuzzy:false};matches.push(hit);seen.add(meta.id);counts.set(meta.act,(counts.get(meta.act)||0)+1);
+            const hit={row,meta,score:scoreResult(row,meta,session.needle,session.terms),fuzzy:false};hit.tier=searchMatchTier(row,meta,session,false);matches.push(hit);seen.add(meta.id);counts.set(meta.act,(counts.get(meta.act)||0)+1);
           }
         }
         if(++scanned>=520){scanned=0;await new Promise(resolve=>document.hidden?setTimeout(resolve,0):requestAnimationFrame(resolve));if(searchSession!==session)return false}
@@ -368,13 +376,13 @@
         for(let cursor=0;cursor<rows.length;cursor++){
           const row=rows[cursor],meta=resultMeta(row[0]);if(!meta||seen.has(meta.id))continue;
           const fuzzyCount=fuzzyMismatchCount(row,meta,session);if(fuzzyCount>0){
-            const hit={row,meta,score:scoreResult(row,meta,session.needle,session.terms)+Math.max(4,16-fuzzyCount*5),fuzzy:true};matches.push(hit);seen.add(meta.id);counts.set(meta.act,(counts.get(meta.act)||0)+1);
+            const hit={row,meta,score:scoreResult(row,meta,session.needle,session.terms)+Math.max(4,16-fuzzyCount*5),fuzzy:true};hit.tier=searchMatchTier(row,meta,session,true);matches.push(hit);seen.add(meta.id);counts.set(meta.act,(counts.get(meta.act)||0)+1);
           }
           if(++scanned>=180){scanned=0;await new Promise(resolve=>document.hidden?setTimeout(resolve,0):requestAnimationFrame(resolve));if(searchSession!==session)return false}
         }
       }
       if(searchSession!==session)return false;
-      matches.sort((a,b)=>searchLawTier(a.meta.act)-searchLawTier(b.meta.act)||b.score-a.score||Number(a.fuzzy)-Number(b.fuzzy)||a.meta.act.localeCompare(b.meta.act)||a.meta.id.localeCompare(b.meta.id));
+      matches.sort((a,b)=>(a.tier??2)-(b.tier??2)||searchLawTier(a.meta.act)-searchLawTier(b.meta.act)||b.score-a.score||Number(a.fuzzy)-Number(b.fuzzy)||a.meta.act.localeCompare(b.meta.act)||a.meta.id.localeCompare(b.meta.id));
       session.matches=matches;session.counts=counts;session.done=true;session.cursor=rows.length;session.fuzzyUsed=matches.some(hit=>hit.fuzzy);return true;
     }finally{session.loading=false}
   }

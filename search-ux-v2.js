@@ -59,17 +59,16 @@
       }
     })}
 
-  function markAll(root,term,cls,limit=48){
+  function markAll(root,term,cls){
     if(!root||!term)return 0;const nodes=[],w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
     while(n=w.nextNode())if(allowedTextNode(n,root))nodes.push(n);
     let count=0;
     for(const original of nodes){
       let node=original;
-      while(node&&count<limit){
+      while(node){
         const hit=locate(node.nodeValue||'',term);if(!hit)break;
         const tail=node.splitText(hit.s),after=tail.splitText(hit.e-hit.s),m=document.createElement('mark');m.className=cls;m.textContent=tail.nodeValue;tail.replaceWith(m);count++;node=after;
       }
-      if(count>=limit)break;
     }
     return count;
   }

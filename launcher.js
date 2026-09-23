@@ -310,8 +310,8 @@
     if(/^art\.?\s*\d+/i.test(needle)&&heading.includes(needle.replace('.','')))score+=34;return score;
   }
   function resultMarkup({row,meta}){return '<button class="launcher-result" type="button" data-result="'+esc(meta.id)+'" data-act="'+esc(meta.act)+'"><span class="launcher-result-head"><b>'+esc(meta.heading+(meta.title?' · '+meta.title:''))+'</b><span class="launcher-result-act">'+esc(meta.short)+'</span></span><span class="launcher-result-title">'+esc(meta.actName)+'</span>'+(row[2]?'<span class="launcher-result-preview">'+esc(row[2])+'</span>':'')+'</button>'}
-  function resetSearchSession(){
-    searchToken++;searchSession=null;resultObserver?.disconnect?.();if(loadMore)loadMore.hidden=true;if(resultFilters){resultFilters.hidden=true;resultFilters.replaceChildren()}
+  function resetSearchSession(preserveVisual=false){
+    searchToken++;searchSession=null;resultObserver?.disconnect?.();if(loadMore&&!preserveVisual)loadMore.hidden=true;if(!preserveVisual&&resultFilters){resultFilters.hidden=true;resultFilters.replaceChildren()}
   }
   function searchFilterEntries(session=searchSession){
     if(!session)return[];
@@ -381,15 +381,20 @@
   async function runSearch(){
     const value=query.value.trim(),needle=norm(value);searchWrap.classList.toggle('has-value',!!value);
     if(needle.length<2){resetSearchSession();resultsBox.hidden=true;resultList.replaceChildren();if(suggestions)suggestions.closest('.launcher-suggestions').hidden=false;recentBox.hidden=!readRecent().length;return}
-    resetSearchSession();const token=searchToken;
-    if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=!readRecent().length;resultsBox.hidden=false;resultList.hidden=true;resultList.replaceChildren();showAll.hidden=true;resultStatus.hidden=true;resultStatus.textContent='';
+    const hadResults=!resultsBox.hidden&&resultList.childElementCount>0;resetSearchSession(true);const token=searchToken;
+    if(suggestions)suggestions.closest('.launcher-suggestions').hidden=true;recentBox.hidden=!readRecent().length;
+    if(!hadResults){resultsBox.hidden=true;resultStatus.hidden=true;resultStatus.textContent=''}
     const ready=await ensureData();if(token!==searchToken||query.value.trim()!==value)return;
-    if(!ready){resultStatus.hidden=false;resultStatus.textContent='Nie udało się wczytać szybkiej wyszukiwarki. Możesz użyć pełnych wyników.';showAll.hidden=false;return}
+    if(!ready){resultsBox.hidden=false;resultStatus.hidden=false;resultStatus.textContent='Nie udało się wczytać szybkiej wyszukiwarki. Możesz użyć pełnych wyników.';showAll.hidden=false;return}
     const session={token,value,needle,terms:needle.split(/\s+/).filter(Boolean),cursor:0,shown:0,done:false,loading:false,matches:[],counts:new Map(),filter:'',filtersExpanded:false};searchSession=session;
     const collected=await collectSearchMatches(session);if(!collected||searchSession!==session)return;
-    renderResultFilters();renderSearchResultPage(true);settleLoadedSearchView(session);
+    resultsBox.hidden=false;renderResultFilters();renderSearchResultPage(true);settleLoadedSearchView(session);
   }
-  function scheduleSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,110)}
+  function scheduleSearch(){
+    clearTimeout(searchTimer);
+    searchToken++;searchSession=null;resultObserver?.disconnect?.();
+    searchTimer=setTimeout(runSearch,300);
+  }
   function fullSearch(){
     const value=query.value.trim();if(norm(value).length<2)return;close(false);waitForApp().then(()=>{const q=document.getElementById('q');if(!q)return;q.value=value;try{q.focus({preventScroll:true})}catch(_){q.focus()}q.dispatchEvent(new Event('input',{bubbles:true}))});
   }
@@ -589,7 +594,7 @@
     openTarget(item.target,'',item.label||quickItemLabel(item),origin,item.fallback);
   }
   renderQuickSections();renderSuggestions();renderRecent();
-  query.addEventListener('input',()=>{scheduleSearch();if(document.activeElement===query)settleSearchPosition()});query.addEventListener('focus',()=>enterSearchView({focus:true}));
+  query.addEventListener('input',()=>{scheduleSearch();if(document.activeElement===query)requestAnimationFrame(()=>positionSearchAtTop(true))});query.addEventListener('focus',()=>enterSearchView({focus:true}));
   clear.addEventListener('click',()=>{query.value='';runSearch();enterSearchView({focus:true})});
   suggestions?.addEventListener('click',event=>{const button=event.target.closest('[data-suggestion]');if(!button)return;query.value=button.dataset.suggestion;searchWrap.classList.add('has-value');enterSearchView({focus:false});runSearch().then(()=>positionSearchAtTop(true))});
   quickSections.addEventListener('click',event=>{

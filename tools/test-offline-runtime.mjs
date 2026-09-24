@@ -30,3 +30,16 @@ assert.match(launcherCss,/launcher-quick-section\.is-closing \.launcher-quick-ch
 assert.match(launcherCss,/launcher-quick-chevron\{position:absolute;[^\n]*right:14px;top:22\.5px/);
 assert.match(launcherCss,/translateY\(-50%\) rotate\(90deg\)/);
 assert.match(launcherCss,/translateY\(-50%\) rotate\(-90deg\)/);
+
+assert.match(launcher,/label:'Kodeks wykroczeń'/);
+assert.match(launcher,/id:'inne-wykroczenia',label:'Inne ustawy',sort:'source'/);
+assert.match(launcher,/target:'alk-art-14'/);
+assert.match(launcher,/target:'alk-art-43'/);
+assert.match(launcher,/target:'tyton-art-5'/);
+assert.match(launcher,/target:'tyton-art-13'/);
+assert.match(launcher,/target:'nark-art-62'/);
+assert.match(launcher,/id:'prd',label:'Ruch drogowy'/);
+assert.match(launcher,/target:'kw-art-92a'/);
+assert.match(launcher,/target:'kk-art-178b'/);
+assert.match(launcher,/target:'prd-art-78'/);
+assert.match(launcher,/section\.sort==='source'/);

@@ -9,7 +9,7 @@
       {label:'Cudzoziemcy · A. 289',short:'Cudz. · A.289',medium:'Cudzoziemcy · A.289',target:'cudz-art-289',fallback:'cudzoziemcy art 289'},
       {label:'Cudzoziemcy · A. 293',short:'Cudz. · A.293',medium:'Cudzoziemcy · A.293',target:'cudz-art-293',fallback:'cudzoziemcy art 293'}
     ]},
-    {id:'wykroczenia',label:'Częste wykroczenia',items:[
+    {id:'wykroczenia',label:'Kodeks wykroczeń',items:[
       {label:'Zakłócanie spokoju',short:'Zakłóc. spokoju',medium:'Zakłócanie spokoju',target:'kw-art-51',fallback:'kw art 51'},
       {label:'Wprowadzanie w błąd',short:'Wprow. w błąd',medium:'Wprowadzanie w błąd',target:'kw-art-65',fallback:'kw art 65'},
       {label:'Niewykonanie polecenia',short:'Niewyk. polecenia',medium:'Niewykonanie polecenia',target:'kw-art-65a',fallback:'kw art 65a'},
@@ -37,6 +37,12 @@
       {label:'Urządzenia publiczne',short:'Urządz. publiczne',medium:'Urządzenia publiczne',target:'kw-art-143',fallback:'kw art 143'},
       {label:'Niszczenie zieleni',target:'kw-art-144',fallback:'kw art 144'}
     ]},
+    {id:'inne-wykroczenia',label:'Inne ustawy',sort:'source',items:[
+      {label:'Alkohol – miejsca zakazu',short:'Alkohol – miejsca',medium:'Alkohol – miejsca zakazu',target:'alk-art-14',fallback:'alkohol art 14 miejsca zakazu spożywania',order:1},
+      {label:'Alkohol – kara za spożywanie',short:'Alkohol – kara',medium:'Alkohol – kara za spożywanie',target:'alk-art-43',fallback:'alkohol art 43 spożywanie wbrew zakazowi grzywna',order:2},
+      {label:'Tytoń – miejsca zakazu',short:'Tytoń – miejsca',medium:'Tytoń – miejsca zakazu',target:'tyton-art-5',fallback:'tytoń art 5 miejsca zakazu palenia',order:3},
+      {label:'Tytoń – kara za palenie',short:'Tytoń – kara',medium:'Tytoń – kara za palenie',target:'tyton-art-13',fallback:'tytoń art 13 ust 2 palenie wbrew zakazowi grzywna',order:4}
+    ]},
     {id:'przestepstwa',label:'Częste przestępstwa',items:[
       {label:'Uszkodzenie ciała',short:'Uszkodz. ciała',medium:'Uszkodzenie ciała',target:'kk-art-157',fallback:'kk art 157'},
       {label:'Bójka / pobicie',target:'kk-art-158',fallback:'kk art 158'},
@@ -54,6 +60,7 @@
       {label:'Kradzież z włamaniem',short:'Włamanie',medium:'Kradzież z włam.',target:'kk-art-279',fallback:'kk art 279'},
       {label:'Rozbój',target:'kk-art-280',fallback:'kk art 280'},
       {label:'Oszustwo',target:'kk-art-286',fallback:'kk art 286'},
+      {label:'Posiadanie narkotyków',short:'Posiadanie narkot.',medium:'Posiadanie narkotyków',target:'nark-art-62',fallback:'ustawa o przeciwdziałaniu narkomanii art 62 posiadanie narkotyków'},
       {label:'Zniszczenie mienia',short:'Zniszcz. mienia',medium:'Zniszczenie mienia',target:'kk-art-288',fallback:'kk art 288'}
     ],moreItems:[
       {label:'Zabójstwo',target:'kk-art-148',fallback:'kk art 148'},
@@ -74,13 +81,32 @@
       {label:'Przywłaszczenie',target:'kk-art-284',fallback:'kk art 284'},
       {label:'Zabór pojazdu',target:'kk-art-289',fallback:'kk art 289'}
     ]},
-    {id:'prd',label:'Ruch drogowy · PRD',items:[
-      {label:'Prędkość · art. 20',short:'Prędkość · A.20',medium:'Prędkość · art. 20',target:'prd-art-20',fallback:'prd art 20 prędkość'},
-      {label:'Piesi · art. 26',short:'Piesi · A.26',medium:'Piesi · art. 26',target:'prd-art-26',fallback:'prd art 26 pieszy'},
-      {label:'Wypadek · art. 44',short:'Wypadek · A.44',medium:'Wypadek · art. 44',target:'prd-art-44',fallback:'prd art 44 wypadek'},
-      {label:'Zatrzymanie / postój · art. 46',short:'Postój · A.46',medium:'Zatrzymanie / postój',target:'prd-art-46',fallback:'prd art 46 zatrzymanie postój'},
-      {label:'Zakazy postoju · art. 49',short:'Zakazy · A.49',medium:'Zakazy postoju',target:'prd-art-49',fallback:'prd art 49 zatrzymanie postój'},
-      {label:'Kontrola · art. 129',short:'Kontrola · A.129',medium:'Kontrola · art. 129',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
+    {id:'prd',label:'Ruch drogowy',items:[
+      {label:'Zagrożenie w ruchu',short:'Zagroż. w ruchu',medium:'Zagrożenie w ruchu',target:'kw-art-86',fallback:'kw art 86 zagrożenie w ruchu'},
+      {label:'Jazda po alkoholu',target:'kw-art-87',fallback:'kw art 87 jazda po alkoholu'},
+      {label:'Znaki i polecenia',short:'Znaki / polecenia',medium:'Znaki i polecenia',target:'kw-art-92',fallback:'kw art 92 znaki polecenia'},
+      {label:'Brak uprawnień / dopuszczenia',short:'Brak uprawnień',medium:'Brak uprawnień / dopuszcz.',target:'kw-art-94',fallback:'kw art 94 brak uprawnień dopuszczenia pojazdu'},
+      {label:'Inne przepisy ruchu',short:'Inne przep. ruchu',medium:'Inne przepisy ruchu',target:'kw-art-97',fallback:'kw art 97 ruch drogowy'},
+      {label:'Wypadek komunikacyjny',short:'Wypadek komunik.',medium:'Wypadek komunikacyjny',target:'kk-art-177',fallback:'kk art 177 wypadek komunikacyjny'},
+      {label:'Nietrzeźwy kierujący',short:'Nietrzeźwy kier.',medium:'Nietrzeźwy kierujący',target:'kk-art-178a',fallback:'kk art 178a nietrzeźwy kierujący'},
+      {label:'Niezatrzymanie do kontroli',short:'Brak zatrzymania',medium:'Niezatrzymanie do kontroli',target:'kk-art-178b',fallback:'kk art 178b niezatrzymanie do kontroli'},
+      {label:'Cofnięte uprawnienia',short:'Cofnięte uprawn.',medium:'Cofnięte uprawnienia',target:'kk-art-180a',fallback:'kk art 180a cofnięte uprawnienia'},
+      {label:'Prędkość',target:'prd-art-20',fallback:'prd art 20 prędkość'},
+      {label:'Wypadek – obowiązki',short:'Wypadek – obowiązki',medium:'Wypadek – obowiązki',target:'prd-art-44',fallback:'prd art 44 wypadek obowiązki'},
+      {label:'Kontrola drogowa',short:'Kontrola',medium:'Kontrola drogowa',target:'prd-art-129',fallback:'prd art 129 kontrola ruchu drogowego'}
+    ],moreItems:[
+      {label:'Brak oświetlenia',target:'kw-art-88',fallback:'kw art 88 oświetlenie pojazdu'},
+      {label:'Przekroczenie prędkości',short:'Prędkość – kara',medium:'Przekroczenie prędkości',target:'kw-art-92a',fallback:'kw art 92a przekroczenie prędkości'},
+      {label:'Nieudzielenie pomocy po wypadku',short:'Pomoc po wypadku',medium:'Nieudzielenie pomocy',target:'kw-art-93',fallback:'kw art 93 pomoc po wypadku'},
+      {label:'Brak dokumentów',target:'kw-art-95',fallback:'kw art 95 dokumenty kierującego'},
+      {label:'Dopuszczenie do prowadzenia',short:'Dopuszczenie kier.',medium:'Dopuszczenie do prowadzenia',target:'kw-art-96',fallback:'kw art 96 dopuszczenie do prowadzenia pojazdu'},
+      {label:'Katastrofa komunikacyjna',short:'Katastrofa komunik.',medium:'Katastrofa komunikacyjna',target:'kk-art-173',fallback:'kk art 173 katastrofa komunikacyjna'},
+      {label:'Niebezpieczeństwo katastrofy',short:'Ryzyko katastrofy',medium:'Niebezpieczeństwo katastrofy',target:'kk-art-174',fallback:'kk art 174 niebezpieczeństwo katastrofy'},
+      {label:'Dopuszczenie pojazdu / kierującego',short:'Dopuszczenie pojazdu',medium:'Dopuszczenie pojazdu / kier.',target:'kk-art-179',fallback:'kk art 179 dopuszczenie pojazdu kierującego'},
+      {label:'Bezpieczeństwo ruchu',short:'Bezpiecz. ruchu',medium:'Bezpieczeństwo ruchu',target:'kk-art-180',fallback:'kk art 180 bezpieczeństwo ruchu pojazdów'},
+      {label:'Zatrzymanie / postój',short:'Postój',medium:'Zatrzymanie / postój',target:'prd-art-46',fallback:'prd art 46 zatrzymanie postój'},
+      {label:'Zakazy postoju',short:'Zakazy postoju',medium:'Zakazy postoju',target:'prd-art-49',fallback:'prd art 49 zakazy postoju'},
+      {label:'Obowiązki właściciela',short:'Właściciel pojazdu',medium:'Obowiązki właściciela',target:'prd-art-78',fallback:'prd art 78 obowiązki właściciela pojazdu'}
     ]}
   ];
   let router=null,discovery=null,articleById=new Map(),idById=new Map(),actByCode=new Map(),routerPromise=null,discoveryPromise=null,searchTimer=0,opened=false,openSectionId='',resultObserver=null,fabFrame=0,searchSession=null,searchToken=0,openMoreSectionIds=new Set(),quickModeBySection=new Map(),fabRevealAnimation=null,exitRevealFrame=0,transitionGlass=null,fabCircleFadeTimer=0,fabIconFadeTimer=0,navigationBusy=false;
@@ -195,6 +221,7 @@
   }
   function compareQuickItems(section,a,b,mode){
     const ia=quickItemFromNode(section,a),ib=quickItemFromNode(section,b);
+    if(section.sort==='source')return Number(ia?.order||0)-Number(ib?.order||0);
     if(mode==='numbers'){
       const aa=quickArticleParts(ia),bb=quickArticleParts(ib);if(aa.n!==bb.n)return aa.n-bb.n;const suffix=aa.suffix.localeCompare(bb.suffix,'pl',{sensitivity:'base'});if(suffix)return suffix
     }

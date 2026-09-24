@@ -17,7 +17,7 @@ assert.match(launcher,/if\(session\.terms\.every\(term=>titleHay\.includes\(term
 
 assert.match(launcher,/localeCompare\(String\(ib\?\.label\|\|''\),'pl'/);
 assert.match(launcher,/aa\.n!==bb\.n/);
-assert.match(launcher,/num\+' · '\+quickNumberDescription/);assert.doesNotMatch(launcher,/numMedium=num\?'art\. '/);
+assert.match(launcher,/num\?\(num\+' · '/);assert.doesNotMatch(launcher,/numMedium=num\?'art\. '/);
 
 assert.match(launcherCss,/\.launcher-quick-mode\{[^\n]*right:9px/);
 assert.match(launcherCss,/launcher-quick-toggle\[aria-expanded="true"\] \.launcher-quick-chevron\{opacity:0;/);

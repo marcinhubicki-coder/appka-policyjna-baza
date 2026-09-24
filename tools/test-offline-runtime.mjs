@@ -34,9 +34,9 @@ assert.match(launcherCss,/translateY\(-50%\) rotate\(-90deg\)/);
 
 
 assert.match(launcher,/target:'alk-art-14'/);
-assert.match(launcher,/target:'alk-art-43'/);
+assert.match(launcher,/target:'alk-art-43s1-ust-1'/);
 assert.match(launcher,/target:'tyton-art-5'/);
-assert.match(launcher,/target:'tyton-art-13'/);
+assert.match(launcher,/target:'tyton-art-13-ust-2'/);
 assert.match(launcher,/target:'nark-art-62'/);
 assert.match(launcher,/id:'prd',label:'Ruch drogowy'/);
 assert.match(launcher,/target:'kw-art-92a'/);

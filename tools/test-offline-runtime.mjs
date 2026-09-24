@@ -58,3 +58,10 @@ assert.match(launcher,/data-quick-group/);
 assert.match(launcher,/quickMoreKey/);
 assert.match(launcherCss,/launcher-quick-subtitle/);
 assert.match(launcherCss,/launcher-quick-subsection\+\.launcher-quick-subsection/);
+
+assert.match(launcher,/alk:'Alko'/);
+assert.match(launcher,/number:'43¹',target:'alk-art-43s1-ust-1'/);
+assert.match(launcher,/target:'tyton-art-13-ust-2'/);
+assert.match(launcher,/label:'Mandat za spożywanie',short:'Mandat',medium:'Mandat'/);
+assert.match(launcher,/label:'Mandat za palenie',short:'Mandat',medium:'Mandat'/);
+assert.match(launcher,/if\(item\?\.number\)return String\(item\.number\)/);

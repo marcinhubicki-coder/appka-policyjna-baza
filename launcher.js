@@ -39,10 +39,10 @@
         {label:'Niszczenie zieleni',target:'kw-art-144',fallback:'kw art 144'}
       ]},
       {id:'other',label:'Inne ustawy',showSource:true,sort:'source',items:[
-        {label:'Miejsca zakazu spożywania',short:'Miejsca zakazu',medium:'Miejsca zakazu',target:'alk-art-14',fallback:'alkohol art 14 miejsca zakazu spożywania',order:1},
-        {label:'Kara za spożywanie',short:'Kara za spożywanie',medium:'Kara za spożywanie',target:'alk-art-43',fallback:'alkohol art 43 spożywanie wbrew zakazowi grzywna',order:2},
-        {label:'Miejsca zakazu palenia',short:'Miejsca zakazu',medium:'Miejsca zakazu palenia',target:'tyton-art-5',fallback:'tytoń art 5 miejsca zakazu palenia',order:3},
-        {label:'Kara za palenie',short:'Kara za palenie',medium:'Kara za palenie',target:'tyton-art-13',fallback:'tytoń art 13 ust 2 palenie wbrew zakazowi grzywna',order:4}
+        {label:'Miejsca zakazu spożywania',short:'Miejsca',medium:'Miejsca',target:'alk-art-14',fallback:'alkohol art 14 miejsca zakazu spożywania',order:1},
+        {label:'Mandat za spożywanie',short:'Mandat',medium:'Mandat',number:'43¹',target:'alk-art-43s1-ust-1',fallback:'alkohol art 43¹ ust 1 spożywanie wbrew zakazowi grzywna',order:2},
+        {label:'Miejsca zakazu palenia',short:'Miejsca',medium:'Miejsca',target:'tyton-art-5',fallback:'tytoń art 5 miejsca zakazu palenia',order:3},
+        {label:'Mandat za palenie',short:'Mandat',medium:'Mandat',target:'tyton-art-13-ust-2',fallback:'tytoń art 13 ust 2 palenie wbrew zakazowi grzywna',order:4}
       ]}
     ]},
     {id:'przestepstwa',label:'Częste przestępstwa',groups:[
@@ -166,7 +166,7 @@
     const items=readRecent();recentBox.hidden=!items.length;if(!items.length){recentList.replaceChildren();return}
     recentList.innerHTML=items.map(item=>'<button class="launcher-recent-item" type="button" data-recent="'+esc(item.id)+'"><span><b>'+esc(item.label||item.id)+'</b><small>'+esc(item.sub||item.act)+'</small></span><span>›</span></button>').join('');
   }
-  function quickArticleNumber(item){const match=String(item?.target||'').match(/-art-([0-9]+[a-z]?)/i);return match?.[1]||''}
+  function quickArticleNumber(item){if(item?.number)return String(item.number);const match=String(item?.target||'').match(/-art-([0-9]+[a-z]?)/i);return match?.[1]||''}
   function quickArticleParts(item){const value=quickArticleNumber(item).toLowerCase(),match=value.match(/^(\d+)([a-z]*)$/);return match?{n:Number(match[1]),suffix:match[2]}:{n:Number.MAX_SAFE_INTEGER,suffix:value}}
   function quickGroups(section){return section?.groups?.length?section.groups:[{id:'main',label:'',items:section?.items||[],moreItems:section?.moreItems||[]}]}
   function quickSectionItems(section){return quickGroups(section).flatMap(group=>[...(group.items||[]),...(group.moreItems||[])])}
@@ -174,7 +174,7 @@
   function quickCleanDescription(value){return String(value||'').replace(/\s*[·–-]\s*(?:art\.?|a\.)\s*\d+[a-z]?(?:\s*\/\s*[\w.]+)*/ig,'').replace(/\s+/g,' ').trim()}
   function quickSourceCode(item){return String(item?.target||'').split('-')[0]||''}
   function quickSourceLabel(item,short=false){
-    const code=quickSourceCode(item),labels={kw:'KW',kk:'KK',prd:'PRD',alk:'Alkohol',tyton:'Tytoń',nark:'Narkotyki',uop:'UoP',cudz:short?'Cudz.':'Cudzoziemcy'};
+    const code=quickSourceCode(item),labels={kw:'KW',kk:'KK',prd:'PRD',alk:'Alko',tyton:'Tytoń',nark:'Narkotyki',uop:'UoP',cudz:short?'Cudz.':'Cudzoziemcy'};
     return labels[code]||code.toUpperCase()
   }
   function quickNumberDescription(item,sectionId,short=false){

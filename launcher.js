@@ -239,11 +239,11 @@
   }
   function animateQuickSection(section,opening){
     const body=section?.querySelector('.launcher-quick-body'),toggle=section?.querySelector('.launcher-quick-toggle');if(!body||!toggle)return;
-    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;body.getAnimations().forEach(animation=>animation.cancel());
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;body.getAnimations().forEach(animation=>animation.cancel());section.classList.remove('is-closing');
     const start=body.getBoundingClientRect().height;toggle.setAttribute('aria-expanded',String(opening));body.setAttribute('aria-hidden',String(!opening));
     if(reduced){section.classList.toggle('is-open',opening);body.style.height=opening?'auto':'0px';body.style.opacity='';return}
     if(opening){section.classList.add('is-open');body.style.height='auto';const end=body.scrollHeight;body.style.height=start+'px';const animation=body.animate([{height:start+'px',opacity:start?1:0},{height:end+'px',opacity:1}],{duration:360,easing:'cubic-bezier(.22,.68,.24,1)'});animation.onfinish=()=>{body.style.height='auto';body.style.opacity=''}}
-    else{body.style.height=start+'px';const animation=body.animate([{height:start+'px',opacity:1},{height:'0px',opacity:0}],{duration:320,easing:'cubic-bezier(.4,0,.22,1)'});animation.onfinish=()=>{section.classList.remove('is-open');body.style.height='0px';body.style.opacity=''}}
+    else{section.classList.add('is-closing');body.style.height=start+'px';const animation=body.animate([{height:start+'px',opacity:1},{height:'0px',opacity:0}],{duration:320,easing:'cubic-bezier(.4,0,.22,1)'});animation.onfinish=()=>{section.classList.remove('is-closing','is-open');body.style.height='0px';body.style.opacity=''}}
   }
   function renderSuggestions(){
     if(!suggestions)return;suggestions.innerHTML=SUGGESTIONS.map(value=>'<button class="launcher-chip" type="button" data-suggestion="'+esc(value)+'" data-qshort="'+esc(value)+'" data-qmedium="'+esc(value)+'" data-qfull="'+esc(value)+'">'+esc(value)+'</button>').join('');optimizePlainChipCloud(suggestions);

@@ -19,5 +19,10 @@ assert.match(launcher,/localeCompare\(String\(ib\?\.label\|\|''\),'pl'/);
 assert.match(launcher,/aa\.n!==bb\.n/);
 assert.match(launcher,/num\+' · '\+quickNumberDescription/);assert.doesNotMatch(launcher,/numMedium=num\?'art\. '/);
 
-assert.match(launcherCss,/\.launcher-quick-mode\{[^\n]*right:14px/);
+assert.match(launcherCss,/\.launcher-quick-mode\{[^\n]*right:9px/);
 assert.match(launcherCss,/launcher-quick-toggle\[aria-expanded="true"\] \.launcher-quick-chevron\{opacity:0\}/);
+
+assert.match(launcher,/classList\.add\('is-closing'\)/);
+assert.match(launcherCss,/launcher-quick-section\.is-closing \.launcher-quick-mode\{opacity:0/);
+assert.match(launcherCss,/launcher-quick-mode button\.is-active\{background:#2f78a7;color:#fff;box-shadow:inset/);
+assert.match(launcherCss,/launcher-quick-section\.is-closing \.launcher-quick-chevron\{opacity:1\}/);

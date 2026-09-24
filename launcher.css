@@ -21,13 +21,15 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 .launcher-quick-section.is-open{background:rgba(255,255,255,.94);border-color:#abc9da}
 .launcher-quick-toggle{width:100%;min-height:45px;border:0;background:transparent;color:#245c80;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font:800 13px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;text-align:left}
 .launcher-quick-section.is-open .launcher-quick-toggle{padding-right:118px}
-.launcher-quick-mode{display:none;position:absolute;z-index:3;top:9px;right:14px;height:27px;padding:2px;border:1px solid #c5d9e5;border-radius:14px;background:rgba(244,249,252,.96);box-shadow:0 2px 8px rgba(45,88,116,.06)}
-.launcher-quick-section.is-open .launcher-quick-mode{display:flex}
-.launcher-quick-mode button{height:21px;border:0;border-radius:11px;background:transparent;color:#6b8799;padding:0 6px;font:750 8.4px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
-.launcher-quick-mode button.is-active{background:#fff;color:#2c6e98;box-shadow:0 1px 4px rgba(39,83,111,.12)}
+.launcher-quick-mode{display:none;position:absolute;z-index:3;top:9px;right:9px;height:27px;padding:2px;border:1px solid #c5d9e5;border-radius:14px;background:rgba(244,249,252,.96);box-shadow:inset 0 1px 2px rgba(31,79,109,.08);opacity:0;transform:scale(.985);pointer-events:none;transition:opacity .12s ease,transform .16s cubic-bezier(.22,.68,.24,1)}
+.launcher-quick-section.is-open .launcher-quick-mode{display:flex;opacity:1;transform:none;pointer-events:auto}
+.launcher-quick-section.is-closing .launcher-quick-mode{opacity:0;transform:scale(.965);pointer-events:none}
+.launcher-quick-mode button{height:21px;border:0;border-radius:11px;background:transparent;color:#6b8799;padding:0 6px;font:750 8.4px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:none;transition:background-color .14s ease,color .14s ease,box-shadow .14s ease}
+.launcher-quick-mode button.is-active{background:#2f78a7;color:#fff;box-shadow:inset 0 1px 1px rgba(255,255,255,.22),inset 0 -2px 4px rgba(16,71,107,.18)}
 .launcher-quick-mode button:active{transform:none}
-.launcher-quick-chevron{font-size:24px;line-height:1;color:#75a0ba;transform:rotate(90deg);transition:transform .3s cubic-bezier(.22,.68,.24,1),opacity .15s ease}
+.launcher-quick-chevron{font-size:24px;line-height:1;color:#75a0ba;transform:rotate(90deg);transition:transform .3s cubic-bezier(.22,.68,.24,1),opacity .12s ease}
 .launcher-quick-toggle[aria-expanded="true"] .launcher-quick-chevron{opacity:0}
+.launcher-quick-section.is-closing .launcher-quick-chevron{opacity:1}
 .launcher-quick-body{height:0;opacity:0;overflow:hidden}
 .launcher-quick-section.is-open .launcher-quick-body{height:auto;opacity:1}
 .launcher-quick-body-inner{padding:2px 12px 12px}

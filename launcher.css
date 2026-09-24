@@ -33,6 +33,8 @@ body.launcher-open{overflow:hidden!important;overscroll-behavior:none!important}
 .launcher-quick-body{height:0;opacity:0;overflow:hidden}
 .launcher-quick-section.is-open .launcher-quick-body{height:auto;opacity:1}
 .launcher-quick-body-inner{padding:2px 12px 12px}
+.launcher-quick-subsection+.launcher-quick-subsection{margin-top:12px;padding-top:10px;border-top:1px solid rgba(177,207,224,.52)}
+.launcher-quick-subtitle{margin:0 3px 7px;color:#63859a;font:800 9.8px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;letter-spacing:.01em}
 .launcher-quick-chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
 .launcher-quick-more,.launcher-chip{height:34px;min-height:34px;max-height:34px;box-sizing:border-box;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1}
 .launcher-quick-more{width:78px;min-width:78px;max-width:78px;margin:0;padding:0 10px;border:1px solid #2f78a7;background:#2f78a7;color:#fff;font:800 10.5px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:0 5px 14px rgba(47,120,167,.15)}

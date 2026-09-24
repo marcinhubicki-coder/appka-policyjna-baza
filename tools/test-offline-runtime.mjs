@@ -42,7 +42,7 @@ assert.match(launcher,/id:'prd',label:'Ruch drogowy'/);
 assert.match(launcher,/target:'kw-art-92a'/);
 assert.match(launcher,/target:'kk-art-178b'/);
 assert.match(launcher,/target:'prd-art-78'/);
-assert.match(launcher,/section\.sort==='source'/);
+assert.match(launcher,/scope\?\.sort==='source'/);
 
 assert.match(launcher,/id:'wykroczenia',label:'Częste wykroczenia',groups:/);
 assert.match(launcher,/id:'kw',label:'Kodeks wykroczeń'/);

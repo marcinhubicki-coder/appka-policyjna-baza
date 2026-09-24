@@ -26,3 +26,7 @@ assert.match(launcher,/classList\.add\('is-closing'\)/);
 assert.match(launcherCss,/launcher-quick-section\.is-closing \.launcher-quick-mode\{opacity:0/);
 assert.match(launcherCss,/launcher-quick-mode button\.is-active\{background:#2f78a7;color:#fff;box-shadow:inset/);
 assert.match(launcherCss,/launcher-quick-section\.is-closing \.launcher-quick-chevron\{opacity:1\}/);
+
+assert.match(launcherCss,/launcher-quick-chevron\{position:absolute;[^\n]*right:14px;top:22\.5px/);
+assert.match(launcherCss,/translateY\(-50%\) rotate\(90deg\)/);
+assert.match(launcherCss,/translateY\(-50%\) rotate\(-90deg\)/);
